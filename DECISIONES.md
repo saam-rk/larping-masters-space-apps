@@ -22,13 +22,16 @@ Registrar acuerdos con fecha, responsable y evidencia. Propuestas y preguntas no
 | D-015 | 2026-11-10 | El panel de configuración tendrá un desplegable con Nobile Rim 1, Nobile Rim 2 y Shackleton Rim como puntos de referencia predefinidos. Mostrará las coordenadas del lugar seleccionado, permitirá elegir fecha y hora en UTC, iniciará en 2026-11-14 12:00 UTC y tendrá un botón para actualizar la vista. La entrada de coordenadas personalizadas queda fuera de la primera demo. El panel de resultados mostrará azimut y elevación del Sol y la Tierra en grados, el lugar y hora, fuentes, estados explicados en lenguaje sencillo y la advertencia de que el relieve no está modelado. `delta` y `deldot` quedan fuera del resumen principal. | Aceptado explícitamente por el usuario. Coordenadas de la tabla A2.1-1 del Lunar Surface Data Book de NASA. Ver `docs/GUIA_PRIMERA_DEMO.md`. La consulta web directa a Horizons requiere una ruta de servidor por la política CORS de JPL; el mockup puede usar el caso guardado. |
 | D-016 | 2026-11-11 | Stack previsto: TypeScript + React; español predeterminado con opción de inglés; el usuario será responsable del backend; Vercel es el alojamiento previsto. React Three Fiber sobre Three.js es la opción recomendada para 3D; es una decisión de implementación inicial, revisable si el stack presenta problemas. Tope de gasto de DeepSeek: 10 €. | Confirmado por el usuario en conversación. Vercel se probará primero y el equipo acepta cambiar de alojamiento durante la hackathon si no encaja. Revisar las condiciones del plan al desplegar. |
 | D-017 | 2026-11-11 | Para la escena 3D se recomienda React Three Fiber sobre Three.js, ya que integra el render 3D con los componentes React. Andrés no tiene preferencia entre esta opción y Three.js directo; React Three Fiber queda como recomendación inicial y Vercel puede cambiarse durante la hackathon si no encaja. | Recomendación técnica tras consultar documentación oficial; el usuario deja la elección a criterio del asistente tras indicar la preferencia de Andrés. El stack base TypeScript/React y el alojamiento previsto Vercel están en D-016. |
+| D-018 | 2026-11-11 | Compartir únicamente la skill `clps-hackathon-assistant` como skill de proyecto para Claude Code y Codex. Mantener fuera del repositorio todas las skills personales del usuario. | Confirmado por el usuario. Claude Code descubre `.claude/skills/`; Codex descubre `.agents/skills/`. |
 
 
 ## Pendientes
 - [x] Inscripción y acceso de los tres integrantes al repositorio, confirmados por el usuario.
 - [x] Stack base, responsable de backend, idioma predeterminado e inglés seleccionable, alojamiento previsto y tope de DeepSeek acordados.
 - [x] Validación de acceso a modelos/herramientas, catálogo `/subagents-models` y endpoint IA probado, según confirmación del usuario el 2026-11-11.
-- [ ] Añadir al primer commit solo el conjunto compartido acordado y revisar que no incluya secretos/configuración personal.
+- [x] Publicar el paquete reducido de preparación en `main` (commits `chore: add initial shared project docs` y `docs: add shared hackathon preparation`).
+- [ ] Publicar la única skill compartida de Claude Code y Codex; comprobar que las skills personales siguen excluidas.
+- [ ] Clonar el repositorio actualizado en la carpeta definitiva de trabajo.
 - [ ] Preparar workflow de GitHub Actions cuando el esqueleto incluya `package.json` y scripts reales.
 - [ ] Durante el hackathon, revisar reglas/entrega y actualizar el plan solo si la organización da requisitos distintos.
 - [ ] Si se implementa la consulta Horizons, verificar parámetros/método con Diego y guardar un caso reproducible.
@@ -62,3 +65,4 @@ Registrar acuerdos con fecha, responsable y evidencia. Propuestas y preguntas no
 - **Motivo y evidencia/enlaces:**
 - **Consecuencias o límites:**
 - **Revisar si:**
+
