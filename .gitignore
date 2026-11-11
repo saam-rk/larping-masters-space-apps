@@ -18,6 +18,20 @@ build/
 .pi/
 skills-lock.json
 
+# Share only the CLPS assistant skill with the team
+!.agents/
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/clps-hackathon-assistant/
+!.agents/skills/clps-hackathon-assistant/**
+!.claude/
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/clps-hackathon-assistant/
+!.claude/skills/clps-hackathon-assistant/**
+
 # Local continuity notes
 PROGRESS.md
 
