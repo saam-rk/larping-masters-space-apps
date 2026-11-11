@@ -21,10 +21,11 @@
 
 ## Repositorio y CI
 
-- GitHub: `saam-rk/larping-masters-space-apps`, rama `main`; el remoto se verificó vacío durante esta revisión. El usuario confirma que Andrés y Diego tienen acceso.
-- El checkout local contiene documentos sin seguimiento, pero aún no hay `package.json` ni aplicación. No se ha añadido ni subido contenido.
+- GitHub: `saam-rk/larping-masters-space-apps`, rama `main`; los documentos base se publicaron el 2026-11-11. El usuario confirma que Andrés y Diego tienen acceso.
+- Aún no hay `package.json` ni aplicación. La skill compartida del hackathon se prepara en las rutas de proyecto de Claude Code y Codex.
 - GitHub Actions se configurará cuando exista un proyecto con scripts reales para instalar, revisar tipos, lint, probar y compilar.
 
 ## Siguiente paso
 
-Revisar con el usuario el paquete reducido de documentos para compartir antes del primer push. Después, al iniciar la app, añadir un workflow de CI que ejecute sus comprobaciones reales.
+Clonar el repositorio actualizado en la carpeta de trabajo definitiva y comprobar que la skill de proyecto está disponible en Claude Code y Codex. Después, al iniciar la app, añadir un workflow de CI que ejecute sus comprobaciones reales.
+
