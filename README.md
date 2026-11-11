@@ -21,5 +21,10 @@ Para retomar con un agente: “Lee `README.md`, `AGENTS.md`, `ESTADO.md` y `DECI
 - [Estado](ESTADO.md)
 - [Instrucciones para agentes](AGENTS.md)
 
+## Skills del proyecto
+
+El asistente del hackathon está disponible como skill de proyecto para Codex en `.agents/skills/clps-hackathon-assistant/` y para Claude Code en `.claude/skills/clps-hackathon-assistant/`. Invócalo por nombre o deja que el agente lo seleccione por la tarea. Solo se comparte esta skill; las skills personales quedan fuera del repositorio.
+
 El enunciado oficial enlazado prevalece sobre su guía en español. Las decisiones indican acuerdos del equipo; el plan se adapta a las reglas que confirme la organización.
+
 
