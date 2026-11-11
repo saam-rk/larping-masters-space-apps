@@ -1,0 +1,23 @@
+# Dependencies and build output
+node_modules/
+dist/
+build/
+.vite/
+.vercel/
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+*.pem
+
+# Local editor and agent settings; share selected project instructions explicitly
+.obsidian/
+.agents/
+.claude/
+.pi/
+skills-lock.json
+
+# Local continuity notes
+PROGRESS.md
+
