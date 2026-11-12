@@ -1,5 +1,17 @@
 # Contexto para agentes
 
+## Proyecto
+- Producto: **CLPS Lunar Mission Browser**, para el reto NASA Space Apps **Lunar Landing Site Navigator**. La primera demo permite elegir uno de tres puntos lunares y una fecha/hora UTC, y muestra posiciones geométricas del Sol y la Tierra en una vista 3D y un resumen con unidades, fuentes y límites. El relieve no está modelado; no presentes los resultados como garantía de energía, comunicaciones ni idoneidad de aterrizaje.
+- Antes de proponer o ampliar alcance, consulta `ESTADO.md`, `DECISIONES.md` y el documento de tarea. Distingue lo confirmado de lo pendiente y no inventes datos científicos: conserva fuente, unidades, marco, método y limitaciones.
+- Stack base: TypeScript + React; español predeterminado e inglés seleccionable. El usuario coordina, integra, lleva backend y hace el merge; Diego lleva ciencia/datos y Andrés interfaz.
+
+## Ramas y pull requests
+- Si la tarea requiere editar archivos, comprueba primero `git status` y la rama actual. Conserva cambios ajenos y no trabajes directamente en la rama base: actualízala y crea una rama propia por tarea antes de editar (`feat/<tema>`, `fix/<tema>` o `docs/<tema>`). Si ya estás en una rama de tarea adecuada, úsala.
+- Si hay cambios previos en el árbol o no está clara la rama base/remoto, no limpies ni adivines: limita el trabajo seguro y consulta al integrador antes de una acción que pueda mezclar o publicar cambios.
+- Mantén la PR acotada. Explica el objetivo, cómo validar, fuentes o métodos científicos afectados (o “no aplica”), límites y checks observados. No marques como pasados checks que no hayas ejecutado.
+- Pide revisión a otra persona. El usuario integrador revisa y hace merge; agentes y autores no hacen merge ni publican por su cuenta. No hagas commit o push salvo que el encargo lo pida explícitamente.
+- Sigue el procedimiento y la plantilla de `GIT_WORKFLOW.md`. Si contradice estas instrucciones, consulta al integrador antes de cambiar la rama base o publicar.
+
 ## Idioma del proyecto
 - Escribe en inglés todo el código y los artefactos técnicos del proyecto: nombres de variables, funciones, tipos, comentarios, mensajes de interfaz internos, documentación técnica, archivos de configuración y mensajes de commit.
 - La aplicación debe ofrecer español e inglés como idiomas seleccionables por la persona usuaria. El idioma predeterminado es español.
