@@ -1,6 +1,6 @@
 /**
- * Narrow settings rail: visual effects switch (which also toggles the
- * high-legibility mode), language, and (bottom, round button) the start screen.
+ * Narrow settings rail: visual effects switch (full / low performance),
+ * language, and (bottom, round button) the start screen.
  */
 
 import { useI18n } from '../../i18n/context';
@@ -34,7 +34,7 @@ export function Sidebar() {
       >
         <span className="visually-hidden">{settings.effects}</span>
         <span className="sidebar__glyph" aria-hidden="true">
-          {effectsOn ? 'ON' : 'OFF'}
+          {settings.effectGlyphs[preferences.effects]}
         </span>
         <span className="sidebar__label" aria-hidden="true">
           FX

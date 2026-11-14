@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { BodyObservation } from './ephemeris.js';
 import { isApiErrorResponse } from './ephemeris.js';
 import { interpretEarthMarker, interpretSolarMarker, presenceOfTarget } from './presence.js';
-import { findSite, isSiteId, REFERENCE_SITES, SITE_IDS } from './sites.js';
+import { checkCoordinates, findSite, isSiteId, normalizeLongitudeEast, REFERENCE_SITES, siteAt, SITE_IDS } from './sites.js';
 import { parseUtcInstant, toUtcIsoSeconds } from './time.js';
 
 describe('reference sites', () => {
@@ -20,6 +20,32 @@ describe('reference sites', () => {
     expect(isSiteId('shackleton-rim')).toBe(true);
     expect(isSiteId('Shackleton Rim')).toBe(false);
     expect(isSiteId(null)).toBe(false);
+  });
+});
+
+describe('custom coordinates', () => {
+  it.each([
+    [0, 0],
+    [180, 180],
+    [-180, 180],
+    [190, -170],
+    [360, 0],
+    [-171.87, -171.87],
+  ])('normalizes east longitude %d to %d', (input, expected) => {
+    expect(normalizeLongitudeEast(input)).toBeCloseTo(expected, 10);
+  });
+
+  it('rounds, normalizes and range-checks', () => {
+    expect(checkCoordinates(-85.12345678, 188.13)).toEqual({ ok: true, latitudeDeg: -85.123457, longitudeEastDeg: -171.87 });
+    expect(checkCoordinates(-0.0000001, 0)).toEqual({ ok: true, latitudeDeg: 0, longitudeEastDeg: 0 });
+    expect(checkCoordinates(-90.1, 0)).toEqual({ ok: false, reason: 'latitude' });
+    expect(checkCoordinates(Number.NaN, 0)).toEqual({ ok: false, reason: 'latitude' });
+    expect(checkCoordinates(0, -181)).toEqual({ ok: false, reason: 'longitude' });
+  });
+
+  it('matches reference sites exactly and labels anything else as custom', () => {
+    expect(siteAt(-89.7668, -171.87).id).toBe('shackleton-rim');
+    expect(siteAt(-89.7668, -171.8701)).toMatchObject({ id: 'custom', source: null });
   });
 });
 

@@ -23,7 +23,7 @@ type Paragraphs = readonly string[];
 
 export interface Messages {
   readonly app: { readonly title: string };
-  /** Section headings (block letters with effects on, plain text with effects off). */
+  /** Section headings, drawn with block letters. */
   readonly banner: { readonly config: string; readonly horizon: string };
   /** Short bracketed status tags shown next to headings. */
   readonly status: {
@@ -45,6 +45,8 @@ export interface Messages {
     readonly heading: string;
     readonly effects: string;
     readonly effectStates: Readonly<Record<EffectMode, string>>;
+    /** Short value shown on the sidebar switch (at most 4 characters). */
+    readonly effectGlyphs: Readonly<Record<EffectMode, string>>;
     readonly language: string;
     /** Fits under the sidebar button. */
     readonly languageShort: string;
@@ -62,11 +64,40 @@ export interface Messages {
   readonly config: {
     readonly site: string;
     readonly siteInfo: Paragraphs;
-    readonly utc: string;
-    readonly utcInfo: Paragraphs;
+    /** Box tag shown while the coordinates match no reference site. */
+    readonly customTag: string;
+    /** Display name of user-entered coordinates. */
+    readonly customName: string;
+    readonly search: string;
+    readonly searchPlaceholder: string;
+    /** Confirms how custom coordinates were read. */
+    readonly searchReading: (coordinates: string) => string;
+    readonly searchErrors: {
+      readonly empty: string;
+      readonly format: string;
+      readonly latitude: string;
+      readonly longitude: string;
+      readonly ambiguous: (names: string) => string;
+    };
+    readonly dateTime: string;
+    readonly dateTimeInfo: Paragraphs;
+    readonly date: string;
+    readonly time: string;
+    readonly timeZone: string;
+    /** Option for UTC, the time standard NASA uses for launches. */
+    readonly zoneUtc: string;
+    /** Option for the browser's own time zone; `id` is its IANA identifier (e.g. Europe/Madrid). */
+    readonly zoneLocal: (id: string) => string;
+    readonly zoneUtcHint: string;
+    /** Offset of the local zone at the chosen date (e.g. `UTC+01:00`) and the same instant in UTC. */
+    readonly zoneLocalHint: (offset: string, utc: string) => string;
     readonly update: string;
     readonly updating: string;
+    /** Shown on the disabled button while the view matches the selection. */
+    readonly upToDate: string;
     readonly invalidTime: string;
+    /** The local time falls in a daylight-saving gap. */
+    readonly nonexistentTime: string;
   };
   readonly compass: { readonly north: string; readonly east: string; readonly south: string; readonly west: string };
   readonly hemisphere: { readonly north: string; readonly south: string; readonly east: string; readonly west: string };
@@ -92,6 +123,8 @@ export interface Messages {
     readonly provenanceLive: (retrievedAt: string) => string;
     readonly sources: string;
     readonly siteSource: string;
+    readonly siteSourceCustom: string;
+    readonly coordinates: string;
     readonly positionSource: string;
     readonly partial: string;
     readonly versionUnverified: string;
@@ -127,7 +160,8 @@ const es: Messages = {
   settings: {
     heading: 'Ajustes',
     effects: 'Efectos visuales',
-    effectStates: { on: 'Activados', off: 'Desactivados (alta legibilidad)' },
+    effectStates: { on: 'Completos', off: 'Bajo rendimiento' },
+    effectGlyphs: { on: 'ALTO', off: 'BAJO' },
     language: 'Idioma',
     languageShort: 'IDIOMA',
     languageNames: { es: 'Español', en: 'English' },
@@ -137,23 +171,46 @@ const es: Messages = {
   setup: {
     language: 'Idioma',
     effects: 'Efectos visuales',
-    start: { on: 'Con efectos', off: 'Sin efectos' },
-    startDetail: { on: 'Estilo CRT retro', off: 'Alta legibilidad' },
+    start: { on: 'Efectos completos', off: 'Bajo rendimiento' },
+    startDetail: { on: 'CRT animado con curvatura', off: 'Estático, fuente de alta visibilidad, menos CPU' },
   },
   config: {
     site: 'Punto de referencia',
     siteInfo: [
       'Elige el punto del polo sur lunar desde el que se calcula el cielo.',
       'Son los centros de regiones candidatas publicadas por NASA (Lunar Surface Data Book). No son lugares de aterrizaje aprobados.',
+      'También puedes escribir unas coordenadas en grados (latitud, longitud; sur y oeste en negativo o con S/O) o buscar un punto por su nombre. Un punto personalizado se calcula con el mismo método, a altura 0 km y sin relieve, y no tiene fuente publicada.',
     ],
-    utc: 'Fecha y hora (UTC)',
-    utcInfo: [
-      'Fecha y hora en UTC, entre 2000 y 2099.',
+    customTag: 'PERSONALIZADO',
+    customName: 'Punto personalizado',
+    search: 'Coordenadas o nombre',
+    searchPlaceholder: '-85.4381, 37.36667 · Shackleton',
+    searchReading: (coordinates) => `Punto personalizado: ${coordinates}`,
+    searchErrors: {
+      empty: 'Escribe unas coordenadas o el nombre de un punto.',
+      format: 'Escribe latitud y longitud en grados (p. ej. -85.44, 37.37) o el nombre de un punto.',
+      latitude: 'La latitud debe estar entre -90° y 90°.',
+      longitude: 'La longitud debe estar entre -180° y 360°.',
+      ambiguous: (names) => `Varios puntos coinciden: ${names}.`,
+    },
+    dateTime: 'Fecha y hora',
+    dateTimeInfo: [
+      'Fecha y hora entre 2000 y 2099, con la zona horaria que elijas.',
+      'UTC es el horario que usa la NASA para los lanzamientos y el que usa el cálculo. «Local» es la zona de tu dispositivo: se convierte a UTC (se muestra la hora UTC equivalente) y cambiar de zona conserva el mismo instante.',
       'Tras cambiar el lugar o la fecha, pulsa «Actualizar vista» para consultar JPL Horizons.',
     ],
+    date: 'Fecha',
+    time: 'Hora',
+    timeZone: 'Zona horaria',
+    zoneUtc: 'UTC · NASA (lanzamientos)',
+    zoneLocal: (id) => `Local · ${id}`,
+    zoneUtcHint: 'UTC es la hora que usa la NASA para los lanzamientos.',
+    zoneLocalHint: (offset, utc) => `Hora local (${offset}) = ${utc} UTC.`,
     update: 'Actualizar vista',
     updating: 'Consultando…',
-    invalidTime: 'Introduce una fecha y hora UTC válidas entre 2000 y 2099.',
+    upToDate: 'Vista actualizada',
+    invalidTime: 'Introduce una fecha y hora válidas entre 2000 y 2099.',
+    nonexistentTime: 'Esa hora local no existe por el cambio de horario. Elige otra hora.',
   },
   compass: { north: 'N', east: 'E', south: 'S', west: 'O' },
   hemisphere: { north: 'N', south: 'S', east: 'E', west: 'O' },
@@ -186,6 +243,8 @@ const es: Messages = {
     provenanceLive: (date) => `Consulta a JPL Horizons obtenida el ${date}.`,
     sources: 'Fuentes',
     siteSource: 'Punto de referencia',
+    siteSourceCustom: 'coordenadas introducidas a mano, sin fuente publicada',
+    coordinates: 'Coordenadas',
     positionSource: 'Posiciones',
     partial: 'Resultado incompleto: uno de los objetos no se pudo calcular.',
     versionUnverified: 'Horizons devolvió una versión de API no comprobada; revisa los valores.',
@@ -241,7 +300,8 @@ const en: Messages = {
   settings: {
     heading: 'Settings',
     effects: 'Visual effects',
-    effectStates: { on: 'On', off: 'Off (high legibility)' },
+    effectStates: { on: 'Full', off: 'Low performance' },
+    effectGlyphs: { on: 'HIGH', off: 'LOW' },
     language: 'Language',
     languageShort: 'LANG',
     languageNames: { es: 'Español', en: 'English' },
@@ -251,23 +311,46 @@ const en: Messages = {
   setup: {
     language: 'Language',
     effects: 'Visual effects',
-    start: { on: 'With effects', off: 'Without effects' },
-    startDetail: { on: 'Retro CRT style', off: 'High legibility' },
+    start: { on: 'Full effects', off: 'Low performance' },
+    startDetail: { on: 'Animated, curved CRT', off: 'Static, high-visibility font, less CPU' },
   },
   config: {
     site: 'Reference point',
     siteInfo: [
       'Choose the lunar south-pole point the sky is computed from.',
       'They are the centers of candidate regions published by NASA (Lunar Surface Data Book). They are not approved landing sites.',
+      'You can also type coordinates in degrees (latitude, longitude; south and west negative or with S/W) or search a point by name. A custom point is computed with the same method, at 0 km height and without terrain, and has no published source.',
     ],
-    utc: 'Date and time (UTC)',
-    utcInfo: [
-      'Date and time in UTC, between 2000 and 2099.',
+    customTag: 'CUSTOM',
+    customName: 'Custom point',
+    search: 'Coordinates or name',
+    searchPlaceholder: '-85.4381, 37.36667 · Shackleton',
+    searchReading: (coordinates) => `Custom point: ${coordinates}`,
+    searchErrors: {
+      empty: 'Type coordinates or the name of a point.',
+      format: 'Type latitude and longitude in degrees (e.g. -85.44, 37.37) or the name of a point.',
+      latitude: 'Latitude must be between -90° and 90°.',
+      longitude: 'Longitude must be between -180° and 360°.',
+      ambiguous: (names) => `Several points match: ${names}.`,
+    },
+    dateTime: 'Date and time',
+    dateTimeInfo: [
+      'Date and time between 2000 and 2099, in the time zone you choose.',
+      'UTC is the time standard NASA uses for launches and the one the calculation uses. “Local” is your device’s time zone: it is converted to UTC (the equivalent UTC time is shown) and switching zones keeps the same instant.',
       'After changing the place or the date, press “Update view” to query JPL Horizons.',
     ],
+    date: 'Date',
+    time: 'Time',
+    timeZone: 'Time zone',
+    zoneUtc: 'UTC · NASA (launches)',
+    zoneLocal: (id) => `Local · ${id}`,
+    zoneUtcHint: 'UTC is the time NASA uses for launches.',
+    zoneLocalHint: (offset, utc) => `Local time (${offset}) = ${utc} UTC.`,
     update: 'Update view',
     updating: 'Querying…',
-    invalidTime: 'Enter a valid UTC date and time between 2000 and 2099.',
+    upToDate: 'View up to date',
+    invalidTime: 'Enter a valid date and time between 2000 and 2099.',
+    nonexistentTime: 'That local time does not exist because of a daylight-saving change. Pick another time.',
   },
   compass: { north: 'N', east: 'E', south: 'S', west: 'W' },
   hemisphere: { north: 'N', south: 'S', east: 'E', west: 'W' },
@@ -300,6 +383,8 @@ const en: Messages = {
     provenanceLive: (date) => `JPL Horizons query retrieved ${date}.`,
     sources: 'Sources',
     siteSource: 'Reference point',
+    siteSourceCustom: 'coordinates typed by hand, no published source',
+    coordinates: 'Coordinates',
     positionSource: 'Positions',
     partial: 'Incomplete result: one of the objects could not be computed.',
     versionUnverified: 'Horizons returned an unverified API version; check the values.',

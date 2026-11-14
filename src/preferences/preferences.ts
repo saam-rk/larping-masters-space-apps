@@ -2,9 +2,11 @@
  * Display preferences chosen on the first visit (or later from the sidebar),
  * persisted in a first-party cookie so the setup screen is not shown again.
  *
- * A single switch controls the look: with effects `on` the app shows the
- * retro CRT layers and the pixel terminal font; with effects `off` it switches
- * to a high-visibility mode (plain background, readable font, plain headings).
+ * A single switch controls the effects: `on` shows the animated CRT (parallax,
+ * noise, flicker, screen curvature, hyperspace jump); `off` is the low
+ * performance mode, which keeps the retro look but static (stars without
+ * parallax, fixed scanlines and grain, no curvature filter) and swaps the pixel
+ * font and block headings for a high-visibility font (`data-font`, see styles.css).
  *
  * Cookie format: `clps_prefs=v=2&lang=es&fx=on` (URL-encoded).
  * Parsing is defensive: unknown or missing fields fall back to defaults, and

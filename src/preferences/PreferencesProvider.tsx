@@ -23,14 +23,19 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<InitialState>(readInitialState);
   const { preferences, configured } = state;
 
-  // Root attributes drive the CSS:
-  // - data-look: `retro` (terminal font, block headings) or `clear` (high visibility).
-  // - data-fx: decorative layers; kept `off` until the setup screen is confirmed.
+  // `data-fx` drives the CSS: `on` = full (animated) effects, `off` = low
+  // performance (same look, static). Kept `off` until the setup screen is confirmed.
   useEffect(() => {
-    const root = document.documentElement;
-    root.dataset.look = preferences.effects === 'on' ? 'retro' : 'clear';
-    root.dataset.fx = configured ? preferences.effects : 'off';
+    document.documentElement.dataset.fx = configured ? preferences.effects : 'off';
   }, [preferences.effects, configured]);
+
+  // `data-font` drives the typeface: low performance uses the high-visibility
+  // font. Unlike `data-fx` it ignores `configured`, so reopening the setup
+  // screen does not flip the font of the (inert) interface behind it; on a
+  // first visit it follows the suggested mode until the choice is confirmed.
+  useEffect(() => {
+    document.documentElement.dataset.font = preferences.effects === 'off' ? 'legible' : 'retro';
+  }, [preferences.effects]);
 
   const update = useCallback((change: Partial<Preferences>) => {
     setState((current) => {
