@@ -5,8 +5,8 @@
  *   data-look = retro | clear   (pixel DOS font + block headings vs high-legibility mode)
  *   data-fx   = on | off        (decorative layers; see Backdrop.tsx)
  *
- * The whole app fits in one viewport: the page never scrolls. Columns are flex
- * stacks whose flexible parts (3D view, data table) shrink to the space left.
+ * The app fills one viewport. The workspace scrolls when the controls, minimum
+ * 3D view and complete results cannot fit, while the settings rail stays put.
  */
 
 :root {
@@ -148,6 +148,7 @@ button {
   height: 100%;
   min-height: 0;
   min-width: 0;
+  overflow: auto;
   padding: clamp(0.75rem, 2.2vh, 1.5rem) clamp(1rem, 2.5vw, 2.5rem);
 }
 
@@ -156,7 +157,7 @@ button {
   flex-direction: column;
   gap: var(--stack-gap);
   min-width: 0;
-  min-height: 0;
+  min-height: min-content;
 }
 
 /* ───────────────────────── Section headings ───────────────────────── */
@@ -757,10 +758,11 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
 }
 
 .results {
-  flex: 0 1 auto;
+  /* Keep readings and the terrain warning readable; let the workspace scroll. */
+  flex: none;
 }
 
-/* Last resort on very short screens: the data scrolls inside its box, never the page. */
+/* Retain horizontal scrolling for unusually wide result content. */
 .results > .box__body {
   overflow: auto;
 }
@@ -1193,7 +1195,7 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
 @media (max-width: 1040px) {
   .workspace {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: auto minmax(min-content, 1fr);
   }
 
   /* Box titles already name each part. */
