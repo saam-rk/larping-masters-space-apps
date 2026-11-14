@@ -1,5 +1,6 @@
 /**
- * Computes Sun and Earth positions for one reference site and instant by
+ * Computes Sun and Earth positions for one observer point (a reference site or
+ * custom coordinates) and instant by
  * querying Horizons once per body. Each body succeeds or fails on its own;
  * failures stay explicit in the response.
  */
@@ -13,7 +14,7 @@ import {
   type Provenance,
   type WarningCode,
 } from '../../shared/ephemeris.js';
-import type { ReferenceSite } from '../../shared/sites.js';
+import { CUSTOM_SITE_ID, type ObserverSite } from '../../shared/sites.js';
 import { toUtcIsoSeconds } from '../../shared/time.js';
 import { fetchObserverTable, type HorizonsClientOptions, type ObserverTableResult } from '../horizons/client.js';
 import { VERIFIED_HORIZONS_API_VERSIONS } from '../horizons/parse.js';
@@ -42,12 +43,13 @@ export function createDefaultCache(): TtlCache<EphemerisResponse> {
 }
 
 export async function computeEphemeris(
-  site: ReferenceSite,
+  site: ObserverSite,
   instant: Date,
   options: EphemerisServiceOptions = {},
   signal?: AbortSignal,
 ): Promise<EphemerisResponse> {
-  const cacheKey = `${site.id}|${toUtcIsoSeconds(instant)}`;
+  const place = site.id === CUSTOM_SITE_ID ? `${site.latitudeDeg},${site.longitudeEastDeg}` : site.id;
+  const cacheKey = `${place}|${toUtcIsoSeconds(instant)}`;
   const cached = options.cache?.get(cacheKey);
   if (cached) return cached;
 
@@ -85,7 +87,7 @@ export async function computeEphemeris(
  * to derive the saved sample from the raw fixtures.
  */
 export function buildEphemerisResponse(
-  site: ReferenceSite,
+  site: ObserverSite,
   instant: Date,
   results: Readonly<Record<BodyId, ObserverTableResult>>,
   provenance: Provenance,

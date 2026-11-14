@@ -1,9 +1,15 @@
 /*
  * Terminal / CRT visual language.
  *
- * Root attributes set by PreferencesProvider:
- *   data-look = retro | clear   (pixel DOS font + block headings vs high-legibility mode)
- *   data-fx   = on | off        (decorative layers; see Backdrop.tsx)
+ * Root attributes:
+ *   data-fx    = on | off   full (animated) effects vs low performance (same look, static);
+ *                           set by PreferencesProvider, see Backdrop.tsx
+ *   data-curve = on | off   CRT screen curvature filter ready; set by CrtCurvature.tsx
+ *   data-font  = retro | legible
+ *                           legible = high-visibility font in low performance mode (set by
+ *                           PreferencesProvider). Only the font family, glyph size (through
+ *                           `size-adjust`) and title weight change: --font-size and every
+ *                           margin/padding stay identical, so the layout does not move.
  *
  * The app fills one viewport. The workspace scrolls when the controls, minimum
  * 3D view and complete results cannot fit, while the settings rail stays put.
@@ -24,8 +30,11 @@
   --amber: #ffc233;
   --magenta: #ff3ea5;
   --red: #ff4b4b;
+  --green-deep: #1fbf63;
 
-  --font-ui: 'VT323', 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+  --font-retro: 'VT323', 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+  --font-legible: 'Iosevka Legible', 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+  --font-ui: var(--font-retro);
   --font-size: 21px;
   --line-height: 1.2;
   --title-weight: 400;
@@ -36,23 +45,41 @@
   --font-hand: 'Caveat', 'Segoe Print', cursive;
   --border: 2px;
   --stack-gap: clamp(0.6rem, 1.8vh, 1.25rem);
+  --column-gap: clamp(1.25rem, 2.5vw, 2.5rem);
 }
 
-/* High legibility (effects off): readable sans-serif, higher contrast, no glow. */
-:root[data-look='clear'] {
-  --bg: #050806;
-  --panel: #0b120d;
-  --panel-solid: #0b120d;
-  --line: #c9dcc4;
-  --line-dim: #5d7a63;
-  --text: #f4faf2;
-  --muted: #bccdbf;
-  --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-size: 16px;
-  --line-height: 1.45;
-  --title-weight: 650;
-  --title-case: none;
-  --title-spacing: 0.01em;
+/*
+ * High-visibility font (low performance mode): Iosevka, an even-stroked
+ * monospace that stays crisp without the CRT phosphor effects. It was picked
+ * because it is the narrowest legible monospace: like VT323 it is tall and
+ * narrow (advance / capital height 0.68 against VT323's 0.71; IBM Plex Mono
+ * is 0.86), so words take about the same width and spacing in both modes.
+ * `size-adjust` scales the glyphs without touching `font-size`, so every
+ * `em`-based margin and padding stays exactly as in the retro font. VT323
+ * draws small for its em (21px: advance 8.4px); 86% gives Iosevka a capital
+ * H of ~13.3px, a little taller than VT323, with a 9.0px advance.
+ */
+@font-face {
+  font-family: 'Iosevka Legible';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  size-adjust: 86%;
+  src: url('../node_modules/@fontsource/iosevka/files/iosevka-latin-400-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Iosevka Legible';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  size-adjust: 86%;
+  src: url('../node_modules/@fontsource/iosevka/files/iosevka-latin-600-normal.woff2') format('woff2');
+}
+
+:root[data-font='legible'] {
+  --font-ui: var(--font-legible);
+  --title-weight: 600;
 }
 
 *,
@@ -82,10 +109,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-:root[data-look='clear'] body {
-  background: var(--bg);
-}
-
 ::selection {
   background: var(--accent);
   color: #000;
@@ -96,7 +119,8 @@ a {
   text-underline-offset: 0.2em;
 }
 
-a:hover {
+:where(:root:not([data-curve='on'])) a:hover,
+a[data-hover] {
   background: var(--cyan);
   color: #000;
 }
@@ -144,7 +168,7 @@ button {
 .workspace {
   display: grid;
   grid-template-columns: minmax(18rem, 30rem) minmax(0, 1fr);
-  gap: var(--stack-gap) clamp(1.25rem, 2.5vw, 2.5rem);
+  gap: var(--stack-gap) var(--column-gap);
   height: 100%;
   min-height: 0;
   min-width: 0;
@@ -160,6 +184,25 @@ button {
   min-height: min-content;
 }
 
+/*
+ * Separator between the control and view columns: a vertical rule centered in
+ * the column gap. Stacked layouts (see the media queries below) draw the same
+ * rule horizontally in the row gap, above the view column.
+ */
+.column--view {
+  position: relative;
+}
+
+.column--view::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--column-gap) / -2 - var(--border) / 2);
+  border-left: var(--border) dashed var(--muted);
+  pointer-events: none;
+}
+
 /* ───────────────────────── Section headings ───────────────────────── */
 
 .ascii-heading {
@@ -173,29 +216,53 @@ button {
 }
 
 .ascii-heading__title {
+  /* --cols = characters per line; 0.6 = approximate advance of a monospace glyph. */
+  --art-size: min(16px, calc(100cqw / (var(--cols) * 0.6)));
+  display: flex;
+  align-items: flex-end;
   margin: 0;
+  font-size: 1em; /* Not the browser's larger default for <h2>. */
   font-weight: 400;
+  /* The block art is 3 lines tall; the plain text of the legible font keeps the same height so nothing below moves. */
+  min-height: calc(3 * var(--art-size));
+}
+
+/* Accessible text of the heading: hidden while the block art is shown, the heading itself in the legible font. */
+:root:not([data-font='legible']) .ascii-heading__text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+:root[data-font='legible'] .ascii-heading__text {
+  font-size: 1.5em;
+  font-weight: var(--title-weight);
+  line-height: 1;
+  letter-spacing: var(--title-spacing);
+  text-transform: var(--title-case);
+  color: var(--text);
+}
+
+:root[data-font='legible'] .ascii-heading__art {
+  display: none;
 }
 
 .ascii-heading__art {
   display: block;
   font-family: var(--font-blocks);
-  /* --cols = characters per line; 0.6 = approximate advance of a monospace glyph. */
-  font-size: min(16px, calc(100cqw / (var(--cols) * 0.6)));
+  font-size: var(--art-size);
   line-height: 1;
   white-space: pre;
   color: var(--text);
   text-shadow: 0 0 10px rgba(200, 255, 215, 0.3);
   /* Horizontal gaps, like the phosphor rows of a CRT. */
   mask-image: repeating-linear-gradient(to bottom, #000 0 2px, rgba(0, 0, 0, 0.45) 2px 3px);
-}
-
-.ascii-heading__plain {
-  display: block;
-  font-size: 1.5em;
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: 0.01em;
 }
 
 .ascii-heading__aside {
@@ -319,9 +386,11 @@ button {
   cursor: pointer;
 }
 
-.icon-button:hover,
+:where(:root:not([data-curve='on'])) .icon-button:hover,
+.icon-button[data-hover],
 .icon-button:focus-visible,
-.text-button:hover,
+:where(:root:not([data-curve='on'])) .text-button:hover,
+.text-button[data-hover],
 .text-button:focus-visible {
   color: #000;
   background: var(--cyan);
@@ -408,6 +477,7 @@ button {
 /* ───────────────────────── Sidebar ───────────────────────── */
 
 .sidebar {
+  position: relative;
   z-index: 5;
   display: flex;
   flex-direction: column;
@@ -429,7 +499,7 @@ button {
 }
 
 .sidebar__button,
-.sidebar__power {
+.sidebar__settings {
   color: var(--text);
   background: transparent;
   border: var(--border) solid var(--line);
@@ -451,11 +521,6 @@ button {
   letter-spacing: 0.05em;
 }
 
-:root[data-look='clear'] .sidebar__glyph {
-  font-size: 0.9em;
-  font-weight: 700;
-}
-
 .sidebar__button--switch[aria-pressed='true'] .sidebar__glyph {
   color: var(--accent);
 }
@@ -470,7 +535,7 @@ button {
   color: var(--muted);
 }
 
-.sidebar__power {
+.sidebar__settings {
   margin-top: auto;
   display: grid;
   place-items: center;
@@ -482,21 +547,25 @@ button {
   border-color: var(--magenta);
 }
 
-.sidebar__button:hover,
+:where(:root:not([data-curve='on'])) .sidebar__button:hover,
+.sidebar__button[data-hover],
 .sidebar__button:focus-visible {
   background: var(--text);
   color: #000;
 }
 
-.sidebar__button:hover .sidebar__label,
+:where(:root:not([data-curve='on'])) .sidebar__button:hover .sidebar__label,
+.sidebar__button[data-hover] .sidebar__label,
 .sidebar__button:focus-visible .sidebar__label,
-.sidebar__button:hover .sidebar__glyph,
+:where(:root:not([data-curve='on'])) .sidebar__button:hover .sidebar__glyph,
+.sidebar__button[data-hover] .sidebar__glyph,
 .sidebar__button:focus-visible .sidebar__glyph {
   color: #000;
 }
 
-.sidebar__power:hover,
-.sidebar__power:focus-visible {
+:where(:root:not([data-curve='on'])) .sidebar__settings:hover,
+.sidebar__settings[data-hover],
+.sidebar__settings:focus-visible {
   background: var(--magenta);
   color: #000;
 }
@@ -546,11 +615,6 @@ button {
   text-overflow: ellipsis;
 }
 
-:root[data-look='clear'] .site-option__name {
-  letter-spacing: 0;
-  font-weight: 600;
-}
-
 .site-option__coords {
   color: var(--muted);
   font-size: 0.85em;
@@ -558,7 +622,8 @@ button {
   white-space: nowrap;
 }
 
-.site-option:hover {
+:where(:root:not([data-curve='on'])) .site-option:hover,
+.site-option[data-hover] {
   background: rgba(211, 235, 204, 0.08);
 }
 
@@ -591,18 +656,30 @@ button {
   color: var(--red);
 }
 
-.date-field {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+/* Date and time side by side, with the time zone selector below. */
+.datetime {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  gap: 0 0.75rem;
 }
 
-.date-field__prompt,
-.date-field__zone {
+.datetime__field {
+  min-width: 0;
+}
+
+.datetime__field .text-input {
+  width: 100%;
+}
+
+.datetime__field .search-field__label:first-child {
+  margin-top: 0;
+}
+
+.search-field__prompt {
   color: var(--accent);
 }
 
-input[type='datetime-local'] {
+.text-input {
   flex: 1;
   min-width: 0;
   padding: 0.3rem 0.5rem;
@@ -614,14 +691,40 @@ input[type='datetime-local'] {
   font-variant-numeric: tabular-nums;
 }
 
-:root[data-look='clear'] input[type='datetime-local'] {
-  color: var(--text);
+.text-input::placeholder {
+  color: var(--line-dim);
+  opacity: 1;
 }
 
-input[type='datetime-local']:focus-visible {
+.text-input:focus-visible {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 12px rgba(57, 255, 136, 0.35);
+}
+
+/* The native clear (x) button does not match the terminal look; Escape still clears. */
+.text-input[type='search'] {
+  appearance: none;
+}
+
+.text-input[type='search']::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+/* Reference point search box, under the site list. */
+.search-field__label {
+  display: block;
+  margin: 0.65rem 0 0.25rem;
+  color: var(--muted);
+  font-size: 0.85em;
+  letter-spacing: 0.06em;
+  text-transform: var(--title-case);
+}
+
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 input[aria-invalid='true'] {
@@ -629,9 +732,21 @@ input[aria-invalid='true'] {
   color: var(--red);
 }
 
-input[type='datetime-local']::-webkit-calendar-picker-indicator {
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='time']::-webkit-calendar-picker-indicator {
   filter: invert(72%) sepia(90%) saturate(500%) hue-rotate(80deg);
   cursor: pointer;
+}
+
+/* Time zone selector: same frame as the text inputs; the list itself is drawn by the browser. */
+.select-input {
+  width: 100%;
+  cursor: pointer;
+}
+
+.select-input option {
+  color: var(--text);
+  background: var(--panel-solid);
 }
 
 .button {
@@ -644,11 +759,6 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
   letter-spacing: 0.2em;
   text-transform: uppercase;
   cursor: pointer;
-}
-
-:root[data-look='clear'] .button {
-  letter-spacing: 0.04em;
-  font-weight: 650;
 }
 
 .button--primary {
@@ -667,32 +777,70 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
   white-space: nowrap;
 }
 
-/* The selection changed since the data on screen was computed. */
-.button--attention {
-  color: var(--amber);
-  border-color: var(--amber);
+/*
+ * Update button states:
+ *   --go    the selection differs from the view: green, pulsing gently between two greens
+ *   --idle  the view already matches the selection (or the input is invalid): grey, disabled
+ *   --busy  a query is running: grey, dashed
+ */
+.button--go {
+  position: relative;
+  isolation: isolate;
+  color: #021a0b;
+  background: var(--green-deep);
+  border-color: var(--accent);
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.7),
-    0 0 16px rgba(255, 194, 51, 0.3);
+    0 0 18px rgba(57, 255, 136, 0.35);
+  text-shadow: none !important;
 }
 
-.button:hover:not(:disabled),
-.button:focus-visible {
+/* The pulse animates only the opacity of this layer, which the compositor can run off the main thread. */
+.button--go::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--accent);
+}
+
+.button--idle,
+.button--busy {
+  color: var(--muted);
+  background: rgba(20, 28, 22, 0.9);
+  border-color: var(--line-dim);
+  box-shadow: none;
+}
+
+.button--idle {
+  cursor: not-allowed;
+}
+
+.button--busy {
+  cursor: progress;
+  border-style: dashed;
+}
+
+:where(:root:not([data-curve='on'])) .button:hover:not(:disabled),
+.button[data-hover]:not(:disabled),
+.button:focus-visible:not(:disabled) {
   background: var(--accent);
   border-color: var(--accent);
   color: #000;
   outline-offset: 4px;
 }
 
-.button--attention:hover:not(:disabled),
-.button--attention:focus-visible {
-  background: var(--amber);
-  border-color: var(--amber);
+:where(:root:not([data-curve='on'])) .button--go:hover,
+.button--go[data-hover],
+.button--go:focus-visible {
+  background: #8dffbb !important;
 }
 
-.button:disabled {
-  cursor: progress;
-  border-style: dashed;
+:where(:root:not([data-curve='on'])) .button--go:hover::before,
+.button--go[data-hover]::before,
+.button--go:focus-visible::before {
+  animation: none;
+  opacity: 0;
 }
 
 /* ───────────────────────── View column: scene & data ───────────────────────── */
@@ -708,10 +856,37 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
   flex-direction: column;
 }
 
+.scene-stage {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .scene {
   position: relative;
   flex: 1;
   min-height: 0;
+  transition: opacity 0.55s ease;
+}
+
+/* Jump to new coordinates: only this box changes; it keeps its place in the layout. */
+.scene-stage[data-jumping='true'] .scene {
+  opacity: 0.22;
+  transition-duration: 0.3s;
+}
+
+:root[data-fx='on'] .scene-stage[data-jumping='true'] .scene {
+  opacity: 0;
+}
+
+.hyperspace {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 /* The R3F wrapper sets an inline 100% size; pin it to the flexible box instead. */
@@ -781,6 +956,20 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
   margin: 0;
 }
 
+.results__place {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.75rem;
+}
+
+.results__coords {
+  color: var(--muted);
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .results__site {
   text-transform: var(--title-case);
   letter-spacing: 0.06em;
@@ -812,12 +1001,6 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
   letter-spacing: 0.06em;
   text-transform: var(--title-case);
   border-bottom: 1px dashed var(--line-dim);
-}
-
-.readings th:nth-child(2),
-.readings th:nth-child(3),
-.readings__value {
-  text-align: right;
 }
 
 .readings__value {
@@ -899,29 +1082,120 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
   color: var(--red);
 }
 
-/* ───────────────────────── Start screen ───────────────────────── */
+/* ───────────────────────── Landing window ───────────────────────── */
 
+/*
+ * Intro and logo on the left, options on the right; stacked when the window
+ * is narrower than both columns (container query, so it follows the window,
+ * not the viewport). The overlay scrolls on short screens.
+ */
 .setup {
   position: fixed;
   inset: 0;
   z-index: 40;
-  display: grid;
-  place-items: center;
+  display: flex;
   padding: 1rem;
   overflow-y: auto;
   background: rgba(0, 0, 0, 0.82);
 }
 
 .setup__window {
-  width: min(32rem, 100%);
+  container-type: inline-size;
+  width: min(60rem, 100%);
+  margin: auto;
   background: var(--panel-solid);
 }
 
 .setup__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 1.25rem 2rem;
+  padding-top: 0.75rem;
+}
+
+.setup__intro {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  padding-top: 0.75rem;
+  align-items: center;
+  gap: 0.75rem;
+  padding-right: 2rem;
+  border-right: var(--border) dashed var(--line-dim);
+}
+
+.landing-logo {
+  display: block;
+  width: min(100%, 19rem);
+  height: auto;
+  overflow: visible;
+}
+
+.landing-logo__chalk {
+  color: var(--line);
+}
+
+.landing-logo__moon {
+  filter: drop-shadow(0 0 10px rgba(255, 194, 51, 0.35));
+}
+
+.landing-logo__night {
+  fill: #1c1606;
+}
+
+.landing-logo__day {
+  fill: var(--amber);
+}
+
+.landing-logo__crater {
+  fill: #d99a17;
+  stroke: #b97c0c;
+  stroke-width: 1.5;
+}
+
+.landing-logo__rim {
+  fill: none;
+  stroke: var(--amber);
+  stroke-width: 3;
+}
+
+.setup__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.setup__copy p {
+  margin: 0;
+}
+
+.setup__copy p + p {
+  margin-top: 0.5rem;
+}
+
+.setup__tagline {
+  color: var(--accent);
+  font-size: 0.85em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.setup__options {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.1rem;
+}
+
+.setup__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.setup__label {
+  color: var(--muted);
+  font-size: 0.85em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .segmented {
@@ -948,36 +1222,97 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
   background: var(--text);
 }
 
-.segmented__option[aria-pressed='false']:hover {
+:where(:root:not([data-curve='on'])) .segmented__option[aria-pressed='false']:hover,
+.segmented__option[aria-pressed='false'][data-hover] {
   color: var(--text);
   background: rgba(211, 235, 204, 0.1);
 }
 
-.setup__starts {
+.setup__modes {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
-.button--start {
+.setup__mode {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.2rem;
-  padding: 0.9rem 0.75rem;
-  letter-spacing: 0.12em;
+  gap: 0.15rem;
+  padding: 0.5rem 0.75rem 0.5rem 2.7rem;
+  position: relative;
+  color: var(--text);
+  background: transparent;
+  border: var(--border) solid var(--line-dim);
+  text-align: left;
+  cursor: pointer;
 }
 
-.button__detail {
-  font-size: 0.8em;
-  letter-spacing: 0.03em;
-  text-transform: none;
+/* Radio mark drawn in text: ( ) / (•). */
+.setup__mode::before {
+  content: '( )';
+  position: absolute;
+  left: 0.6rem;
+  top: 0.5rem;
   color: var(--muted);
 }
 
-.button:hover .button__detail,
-.button:focus-visible .button__detail {
-  color: #1d2b1f;
+.setup__mode[aria-pressed='true'] {
+  border-color: var(--accent);
+  box-shadow: 0 0 14px rgba(57, 255, 136, 0.15);
+}
+
+.setup__mode[aria-pressed='true']::before {
+  content: '(•)';
+  color: var(--accent);
+}
+
+.setup__mode-name {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.setup__mode[aria-pressed='true'] .setup__mode-name {
+  color: var(--accent);
+}
+
+.setup__mode-detail {
+  font-size: 0.8em;
+  color: var(--muted);
+}
+
+:where(:root:not([data-curve='on'])) .setup__mode[aria-pressed='false']:hover,
+.setup__mode[aria-pressed='false'][data-hover],
+.setup__mode:focus-visible {
+  border-color: var(--line);
+  background: rgba(211, 235, 204, 0.08);
+}
+
+.setup__save {
+  margin-top: 0.25rem;
+  padding: 0.65rem 1rem;
+  font-size: 1.05em;
+  letter-spacing: 0.14em;
+}
+
+.setup__storage {
+  margin: -0.4rem 0 0;
+  font-size: 0.75em;
+  color: var(--muted);
+}
+
+@container (max-width: 40rem) {
+  .setup__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .setup__intro {
+    padding: 0 0 1.25rem;
+    border-right: none;
+    border-bottom: var(--border) dashed var(--line-dim);
+  }
+
+  .landing-logo {
+    width: min(100%, 14rem);
+  }
 }
 
 /* ───────────────────────── Backdrop (behind the UI) ───────────────────────── */
@@ -1008,7 +1343,6 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
   position: absolute;
   inset: 0;
   color: #c3dcb9;
-  transition: opacity 0.6s ease;
 }
 
 .sketch {
@@ -1025,21 +1359,6 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
 
 .sketch text {
   font-family: var(--font-hand);
-}
-
-/* Star jump: schematics and data fade while the stars stream past. */
-.backdrop[data-warping='true'] .backdrop__sketches {
-  opacity: 0;
-  transition-duration: 0.35s;
-}
-
-.warp-fade {
-  transition: opacity 0.55s ease;
-}
-
-.app[data-warping='true'] .warp-fade {
-  opacity: 0;
-  transition-duration: 0.3s;
 }
 
 /* ───────────────────────── CRT / VHS overlay (in front of the UI) ───────────────────────── */
@@ -1095,6 +1414,23 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
     radial-gradient(ellipse 75% 70% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.6) 100%);
 }
 
+/*
+ * Curvature overscan (CrtCurvature.tsx): near the sides the filter draws
+ * content sampled from outside the frame. The sidebar background continues
+ * past the screen edge so that area is not left empty and the backdrop does
+ * not show beside the sidebar.
+ */
+:root[data-curve='on'] .sidebar::before {
+  content: '';
+  position: absolute;
+  top: calc(-1 * var(--curve-pad, 0px));
+  bottom: calc(-1 * var(--curve-pad, 0px));
+  right: 100%;
+  width: var(--curve-pad, 0px);
+  background: var(--panel);
+  pointer-events: none;
+}
+
 /* Rounded tube corners and dark curved edges. */
 .crt__bezel {
   border-radius: 22px / 26px;
@@ -1104,7 +1440,18 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
     inset 0 0 2px 1px rgba(170, 255, 200, 0.1);
 }
 
-/* Effects on: chromatic fringes on text, like a misconverged tube. */
+/*
+ * Chromatic fringes on text, like a misconverged tube. Low performance keeps
+ * the two sharp offsets (cheap) and drops the blurred glow.
+ */
+.workspace,
+.sidebar,
+.dialog {
+  text-shadow:
+    0.055em 0 rgba(255, 45, 95, 0.38),
+    -0.055em 0 rgba(45, 225, 255, 0.38);
+}
+
 :root[data-fx='on'] .workspace,
 :root[data-fx='on'] .sidebar,
 :root[data-fx='on'] .dialog {
@@ -1114,21 +1461,96 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
     0 0 7px rgba(190, 255, 210, 0.22);
 }
 
+/* Low performance: the grain stays as a fixed texture, a little lighter. */
+.crt[data-mode='lite'] > .crt__noise {
+  opacity: 0.04;
+}
+
+/* CRT screen curvature (see CrtCurvature.tsx). Only the interface is distorted; the stars already bulge. */
+.crt-curvature {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+:root[data-curve='on'] .app__frame {
+  filter: url(#crt-curvature);
+}
+
+/*
+ * Pointer remapping (curvaturePointer.ts): while the filter is on, hover is
+ * mirrored on [data-hover] (the :where(:root:not([data-curve='on'])) rules
+ * above switch the real :hover off) and the cursor of the element drawn under
+ * the pointer is applied to the whole frame.
+ */
+:root[data-curve='on'][data-curve-cursor] .app__frame,
+:root[data-curve='on'][data-curve-cursor] .app__frame * {
+  cursor: var(--curve-cursor, default) !important;
+}
+
+/*
+ * Performance probe (CrtCurvature.tsx): while it runs, this near-black 2px dot
+ * flips between two shades every frame so the filtered frame has to repaint.
+ */
+.app__frame[data-probe]::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 2px;
+  pointer-events: none;
+}
+
+.app__frame[data-probe='a']::after {
+  background: #010101;
+}
+
+.app__frame[data-probe='b']::after {
+  background: #020202;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .blink {
     animation: blink 1.05s steps(1) infinite;
   }
 
-  .crt__noise {
+  /*
+   * Pulse between the two greens of the update button (both modes: it is a cue,
+   * not decoration). Low performance blinks in two steps instead of fading: a
+   * smooth fade recomposites the screen every frame (measured ~40% of a core
+   * vs ~8% stepped on the dev laptop); with full effects the CRT layers already
+   * animate every frame, so the fade costs nothing extra there.
+   */
+  .button--go::before {
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+
+  :root[data-fx='off'] .button--go::before {
+    animation-timing-function: steps(1, end);
+  }
+
+  .crt[data-mode='full'] .crt__noise {
     animation: noise 0.6s steps(1) infinite;
   }
 
-  .crt__tracking {
+  .crt[data-mode='full'] .crt__tracking {
     animation: tracking 11s linear infinite;
   }
 
-  .crt__glass {
+  .crt[data-mode='full'] .crt__glass {
     animation: flicker 4s steps(1) infinite;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
   }
 }
 
@@ -1181,11 +1603,11 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
 /* ───────────────────────── Short screens ───────────────────────── */
 
 @media (max-height: 760px) {
-  .ascii-heading__art {
-    font-size: min(11px, calc(100cqw / (var(--cols) * 0.6)));
+  .ascii-heading__title {
+    --art-size: min(11px, calc(100cqw / (var(--cols) * 0.6)));
   }
 
-  .ascii-heading__plain {
+  :root[data-font='legible'] .ascii-heading__text {
     font-size: 1.25em;
   }
 }
@@ -1195,7 +1617,17 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
 @media (max-width: 1040px) {
   .workspace {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto minmax(min-content, 1fr);
+    /* `max-content`, not `auto`: the controls row must not shrink below its content and overlap the view. */
+    grid-template-rows: max-content minmax(min-content, 1fr);
+  }
+
+  .column--view::before {
+    top: calc(var(--stack-gap) / -2 - var(--border) / 2);
+    bottom: auto;
+    left: 0;
+    right: 0;
+    border-left: none;
+    border-top: var(--border) dashed var(--muted);
   }
 
   /* Box titles already name each part. */
@@ -1228,10 +1660,6 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
     --font-size: 19px;
   }
 
-  :root[data-look='clear'] {
-    --font-size: 15px;
-  }
-
   .app__frame {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr);
@@ -1245,6 +1673,18 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
     border-bottom: var(--border) solid var(--line);
   }
 
+  /* The bar spans the screen: the overscan is also needed above it and on its right. */
+  :root[data-curve='on'] .sidebar::after {
+    content: '';
+    position: absolute;
+    top: calc(-1 * var(--curve-pad, 0px));
+    bottom: 0;
+    left: 100%;
+    width: var(--curve-pad, 0px);
+    background: var(--panel);
+    pointer-events: none;
+  }
+
   .sidebar__logo {
     margin: 0 0.25rem 0 0;
   }
@@ -1253,7 +1693,7 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
     width: 4rem;
   }
 
-  .sidebar__power {
+  .sidebar__settings {
     margin: 0 0 0 auto;
     width: 2.3rem;
     height: 2.3rem;
@@ -1288,8 +1728,8 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
     gap: 0.3rem;
   }
 
-  /* The pixel font stays legible smaller; the readable font keeps its size. */
-  :root[data-look='retro'] .results__content {
+  /* The pixel font stays legible smaller. */
+  .results__content {
     font-size: 0.85em;
   }
 
@@ -1312,8 +1752,3 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
   }
 }
 
-@media (max-width: 420px) {
-  .setup__starts {
-    grid-template-columns: 1fr;
-  }
-}

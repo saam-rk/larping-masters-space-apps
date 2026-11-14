@@ -2,7 +2,7 @@
 
 Builds a georeferenced terrain mesh around a lunar site from a polar-stereographic elevation GeoTIFF, saves an editable Blender scene and exports a terrain-only GLB for the web viewer. This is research tooling, not application code. The output is a **visualization of LOLA-derived topography**. Lighting in the `.blend` is illustrative. Nothing here establishes power, communications, visibility or landing suitability.
 
-First output: `nobile-rim-1/` (NASA PGDA product 78, Site06, 5 m/pixel).
+The Nobile Rim 1 outputs and `sites/nobile-rim-1.json` were removed from the repository; the commands below keep their original paths as a template for the uniform-grid pipeline, so substitute an existing site config such as `sites/nobile-rim-2.json`.
 
 Budgeted adaptive output: [Nobile Rim 2](nobile-rim-2/README.md), using DM2,
 50,000 vertices, 99,198 triangles and a 1,796,720-byte uncompressed GLB.
@@ -63,7 +63,7 @@ ns["build"](prep_json=..., grid_npz=..., out_blend=..., out_glb=...)
 
 ### Another site or GeoTIFF
 
-Copy `sites/nobile-rim-1.json` and change `siteId`, the coordinates, `raster` metadata, `referencePoints` and `checkPoints`. `prepare_grid.py` accepts any single-band, north-up GeoTIFF whose CRS is spherical south-polar stereographic (`proj=stere`, `lat_0=-90`, zero false offsets). It stops if the site is on missing data, the crop leaves the raster, or a configured point lies outside the mesh. The crop must divide evenly by `stepPixels`, because the half-size is rounded up to a whole number of steps. A north-polar or ellipsoidal source needs a code change.
+Copy `sites/nobile-rim-2.json` and change `siteId`, the coordinates, `raster` metadata, `referencePoints` and `checkPoints`. `prepare_grid.py` accepts any single-band, north-up GeoTIFF whose CRS is spherical south-polar stereographic (`proj=stere`, `lat_0=-90`, zero false offsets). It stops if the site is on missing data, the crop leaves the raster, or a configured point lies outside the mesh. The crop must divide evenly by `stepPixels`, because the half-size is rounded up to a whole number of steps. A north-polar or ellipsoidal source needs a code change.
 
 ## Coordinate contract (summary; see metadata)
 

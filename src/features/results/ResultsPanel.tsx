@@ -1,36 +1,47 @@
 /**
- * Compact text summary (docs/GUIA_PRIMERA_DEMO.md): place and time, azimuth
+ * Compact text summary (docs/GUIA_PRIMERA_DEMO.md): place, its coordinates
+ * and time, azimuth
  * and elevation of the Sun and Earth in degrees, short plain-language states
  * (full sentence as tooltip), and the visible terrain warning. Sources and the
  * method open in dialogs from the box title. Range and range-rate are
  * intentionally not shown. Missing values are labeled, never shown as zero.
+ *
+ * While a query runs (`busy`) the values scramble and decode into the new
+ * result when it arrives; the previous values stay readable to assistive
+ * technology until then.
  */
 
 import type { ReactNode } from 'react';
 import { BODY_IDS, type BodyId, type BodyResult, type EphemerisResponse } from '../../../shared/ephemeris';
 import { presenceOfTarget } from '../../../shared/presence';
+import { CUSTOM_SITE_ID } from '../../../shared/sites';
 import type { ClientError } from '../../api/ephemerisClient';
-import { formatDegrees, formatUtc } from '../../format';
+import { formatCoordinates, formatDegrees, formatUtc } from '../../format';
 import { useI18n } from '../../i18n/context';
 import { Box } from '../../ui/Box';
 import { DialogButton } from '../../ui/DialogButton';
+import { ScrambleText } from '../../ui/ScrambleText';
 
 interface ResultsPanelProps {
   readonly data: EphemerisResponse;
   readonly error: ClientError | null;
+  /** A query is running: scramble the values until the new result arrives. */
+  readonly busy: boolean;
   /** Data status tag (sample, live, pending…) shown in the title rule. */
   readonly status?: ReactNode;
 }
 
-export function ResultsPanel({ data, error, status }: ResultsPanelProps) {
-  const { messages } = useI18n();
+export function ResultsPanel({ data, error, busy, status }: ResultsPanelProps) {
+  const { locale, messages } = useI18n();
   const { results } = messages;
+  const siteName = data.site.id === CUSTOM_SITE_ID ? messages.config.customName : data.site.name;
+  const coordinates = formatCoordinates(data.site.latitudeDeg, data.site.longitudeEastDeg, locale, messages.hemisphere);
 
   return (
     <Box
       title={results.heading}
       titleAs="h3"
-      className="results warp-fade"
+      className="results"
       tag={status}
       help={results.info}
       actions={
@@ -39,10 +50,16 @@ export function ResultsPanel({ data, error, status }: ResultsPanelProps) {
         </DialogButton>
       }
     >
-      <div aria-live="polite" className="results__content">
+      <div aria-live="polite" aria-busy={busy} className="results__content">
         <p className="results__case">
-          <span className="results__site">{data.site.name}</span>
-          <span className="results__time">{formatUtc(data.ephemerisUtc ?? data.requestedUtc)}</span>
+          <span className="results__place">
+            <ScrambleText className="results__site" text={siteName} active={busy} />
+            <span className="results__coords">
+              <span className="visually-hidden">{results.coordinates}: </span>
+              <ScrambleText text={coordinates} active={busy} />
+            </span>
+          </span>
+          <ScrambleText className="results__time" text={formatUtc(data.ephemerisUtc ?? data.requestedUtc)} active={busy} />
         </p>
 
         {error && <p className="callout callout--error">{messages.errors[error.key]}</p>}
@@ -60,7 +77,7 @@ export function ResultsPanel({ data, error, status }: ResultsPanelProps) {
           </thead>
           <tbody>
             {BODY_IDS.map((body) => (
-              <BodyRow key={body} body={body} result={data.bodies[body]} />
+              <BodyRow key={body} body={body} result={data.bodies[body]} busy={busy} />
             ))}
           </tbody>
         </table>
@@ -84,10 +101,16 @@ function Sources({ data }: { data: EphemerisResponse }) {
       <ul className="sources">
         <li>
           {results.siteSource}:{' '}
-          <a href={data.site.source.url} target="_blank" rel="noreferrer">
-            {data.site.source.name}
-          </a>
-          {data.site.source.locator ? `, ${data.site.source.locator}` : ''}
+          {data.site.source ? (
+            <>
+              <a href={data.site.source.url} target="_blank" rel="noreferrer">
+                {data.site.source.name}
+              </a>
+              {data.site.source.locator ? `, ${data.site.source.locator}` : ''}
+            </>
+          ) : (
+            results.siteSourceCustom
+          )}
         </li>
         <li>
           {results.positionSource}:{' '}
@@ -101,7 +124,7 @@ function Sources({ data }: { data: EphemerisResponse }) {
   );
 }
 
-function BodyRow({ body, result }: { body: BodyId; result: BodyResult }) {
+function BodyRow({ body, result, busy }: { body: BodyId; result: BodyResult; busy: boolean }) {
   const { locale, messages } = useI18n();
   const name = (
     <th scope="row" className={`readings__body readings__body--${body}`}>
@@ -114,7 +137,7 @@ function BodyRow({ body, result }: { body: BodyId; result: BodyResult }) {
       <tr>
         {name}
         <td colSpan={3} className="readings__error">
-          {messages.results.bodyError} {messages.errors[result.error.code]}
+          <ScrambleText text={`${messages.results.bodyError} ${messages.errors[result.error.code]}`} active={busy} />
         </td>
       </tr>
     );
@@ -132,12 +155,23 @@ function BodyRow({ body, result }: { body: BodyId; result: BodyResult }) {
   return (
     <tr>
       {name}
-      <td className="readings__value">{formatDegrees(observation.azimuthDeg, locale) ?? messages.results.noValue}</td>
-      <td className="readings__value">{formatDegrees(observation.elevationDeg, locale) ?? messages.results.noValue}</td>
+      <td className="readings__value">
+        <ScrambleText text={formatDegrees(observation.azimuthDeg, locale) ?? messages.results.noValue} active={busy} />
+      </td>
+      <td className="readings__value">
+        <ScrambleText text={formatDegrees(observation.elevationDeg, locale) ?? messages.results.noValue} active={busy} />
+      </td>
       <td className={`readings__state readings__state--${presence}`} title={fullState}>
-        {messages.presence.short[presence]}
-        {straddles && <span className="readings__aside"> ({messages.presence.earthStraddlesShort})</span>}
-        <span className="visually-hidden">. {fullState}</span>
+        <span aria-hidden="true">
+          <ScrambleText text={messages.presence.short[presence]} active={busy} />
+          {straddles && (
+            <span className="readings__aside">
+              {' '}
+              (<ScrambleText text={messages.presence.earthStraddlesShort} active={busy} />)
+            </span>
+          )}
+        </span>
+        <span className="visually-hidden">{fullState}</span>
       </td>
     </tr>
   );

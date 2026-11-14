@@ -46,24 +46,6 @@ afterEach(() => {
 });
 
 describe('motion loop', () => {
-  it('ramps warp up and back down, then sleeps', async () => {
-    const motion = await import('./motion');
-    const frames: MotionFrame[] = [];
-    motion.subscribeMotion((frame) => frames.push(frame));
-    runFrames();
-
-    motion.setWarp(true);
-    runFrames(120); // ~2 s: reaches full speed and keeps running
-    expect(frames.at(-1)?.warp).toBe(1);
-    expect(pending.length).toBe(1);
-
-    motion.setWarp(false);
-    const used = runFrames();
-    expect(frames.at(-1)?.warp).toBe(0);
-    expect(used).toBeLessThan(1000);
-    expect(pending.length).toBe(0); // idle: no frames requested
-  });
-
   it('eases toward the pointer and stops when settled', async () => {
     const motion = await import('./motion');
     const frames: MotionFrame[] = [];

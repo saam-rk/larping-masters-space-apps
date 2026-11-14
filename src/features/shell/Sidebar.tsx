@@ -1,11 +1,32 @@
 /**
- * Narrow settings rail: visual effects switch (which also toggles the
- * high-legibility mode), language, and (bottom, round button) the start screen.
+ * Narrow settings rail: visual effects switch (full / low performance),
+ * language, and (bottom, round settings button) the landing window with the
+ * preferences.
  */
 
 import { useI18n } from '../../i18n/context';
 import { LOCALES } from '../../i18n/messages';
 import { usePreferences } from '../../preferences/context';
+
+/**
+ * Settings cog for a 24×24 box: square teeth around a ring with a hole
+ * (even-odd fill), drawn here because icon fonts are not loaded.
+ */
+function cogPath(teeth: number, outer: number, inner: number, hole: number): string {
+  const fmt = (value: number) => value.toFixed(2);
+  const point = (radius: number, angle: number) => `${fmt(12 + Math.cos(angle) * radius)} ${fmt(12 + Math.sin(angle) * radius)}`;
+  const step = (Math.PI * 2) / teeth;
+  const half = step * 0.22;
+  let d = '';
+  for (let i = 0; i < teeth; i++) {
+    const mid = i * step - Math.PI / 2;
+    d += `${i === 0 ? 'M' : 'L'}${point(inner, mid - half * 1.35)}L${point(outer, mid - half)}L${point(outer, mid + half)}L${point(inner, mid + half * 1.35)}`;
+    d += `A${inner} ${inner} 0 0 1 ${point(inner, mid + step - half * 1.35)}`;
+  }
+  return `${d}ZM${fmt(12 + hole)} 12A${hole} ${hole} 0 1 0 ${fmt(12 - hole)} 12A${hole} ${hole} 0 1 0 ${fmt(12 + hole)} 12Z`;
+}
+
+const COG_PATH = cogPath(8, 11, 8, 3.4);
 
 function nextOf<T>(options: readonly T[], current: T): T {
   const index = options.indexOf(current);
@@ -34,7 +55,7 @@ export function Sidebar() {
       >
         <span className="visually-hidden">{settings.effects}</span>
         <span className="sidebar__glyph" aria-hidden="true">
-          {effectsOn ? 'ON' : 'OFF'}
+          {settings.effectGlyphs[preferences.effects]}
         </span>
         <span className="sidebar__label" aria-hidden="true">
           FX
@@ -52,10 +73,9 @@ export function Sidebar() {
         <span className="sidebar__label">{settings.languageShort}</span>
       </button>
 
-      <button type="button" className="sidebar__power" aria-label={settings.setup} title={settings.setup} onClick={reopenSetup}>
-        {/* Drawn power symbol: the ⏻ glyph is missing from most fonts. */}
-        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
-          <path d="M12 3v9M7 6.4a8 8 0 1 0 10 0" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="square" />
+      <button type="button" className="sidebar__settings" aria-label={settings.setup} title={settings.setup} onClick={reopenSetup}>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+          <path d={COG_PATH} fill="currentColor" fillRule="evenodd" />
         </svg>
       </button>
     </nav>
