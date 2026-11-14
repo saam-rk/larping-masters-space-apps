@@ -491,11 +491,12 @@ button {
 }
 
 .sidebar__logo {
-  font-size: 2em;
-  line-height: 1;
-  color: var(--amber);
-  text-shadow: 0 0 12px rgba(255, 194, 51, 0.5);
+  width: 100%;
   margin-bottom: 0.5rem;
+}
+
+.sidebar__logo .landing-logo {
+  width: 100%;
 }
 
 .sidebar__button,
@@ -780,7 +781,8 @@ input[type='time']::-webkit-calendar-picker-indicator {
 /*
  * Update button states:
  *   --go    the selection differs from the view: green, pulsing gently between two greens
- *   --idle  the view already matches the selection (or the input is invalid): grey, disabled
+ *   --done  a complete live result matches the selection: green outline, "Updated", still pressable (retry)
+ *   --idle  the input is invalid: grey, disabled
  *   --busy  a query is running: grey, dashed
  */
 .button--go {
@@ -802,6 +804,13 @@ input[type='time']::-webkit-calendar-picker-indicator {
   inset: 0;
   z-index: -1;
   background: var(--accent);
+}
+
+.button--done {
+  color: var(--accent);
+  background: rgba(10, 30, 18, 0.9);
+  border-color: var(--accent);
+  box-shadow: none;
 }
 
 .button--idle,
@@ -1686,6 +1695,7 @@ input[type='time']::-webkit-calendar-picker-indicator {
   }
 
   .sidebar__logo {
+    width: 3.6rem;
     margin: 0 0.25rem 0 0;
   }
 

@@ -61,6 +61,12 @@ export function App() {
   const streaks = fullEffects && !prefersReducedMotion();
   const transition = useUpdateTransition(ephemeris.loading, streaks);
   const busy = transition.active || ephemeris.loading;
+  // A complete live result for the current selection is on screen (not the saved sample, not a partial result).
+  const upToDate =
+    !ephemeris.stale &&
+    !ephemeris.error &&
+    ephemeris.data.provenance === 'live' &&
+    !ephemeris.data.warnings.includes('PARTIAL_RESULT');
 
   function handleUpdate() {
     transition.start();
@@ -83,6 +89,7 @@ export function App() {
             <ConfigPanel
               selection={ephemeris.selection}
               loading={busy}
+              upToDate={upToDate}
               onSiteChange={ephemeris.setSiteId}
               onCoordinatesChange={ephemeris.setCoordinates}
               onUtcChange={ephemeris.setUtc}
