@@ -1,5 +1,6 @@
 /**
- * Web-standard handler for `GET /api/ephemeris?site=<SiteId>&utc=<ISO UTC>`.
+ * Web-standard handler for `GET /api/ephemeris?site=<SiteId>&utc=<ISO UTC>`
+ * (or `?lat=<deg>&lon=<deg east>&utc=<ISO UTC>` for a custom point).
  * Used by the Vercel function (`api/ephemeris.ts`) and the Vite dev server.
  *
  * Status codes:
@@ -11,7 +12,7 @@
  */
 
 import { BODY_IDS, type EphemerisResponse } from '../../shared/ephemeris.js';
-import { findSite, isSiteId, SITE_IDS, type ReferenceSite } from '../../shared/sites.js';
+import { checkCoordinates, findSite, isSiteId, siteAt, SITE_IDS, type ObserverSite } from '../../shared/sites.js';
 import { parseUtcInstant, SUPPORTED_UTC_RANGE } from '../../shared/time.js';
 import { errorResponse, jsonResponse } from '../http.js';
 import { allFailed, computeEphemeris, createDefaultCache, type EphemerisServiceOptions } from './service.js';
@@ -20,10 +21,43 @@ import { allFailed, computeEphemeris, createDefaultCache, type EphemerisServiceO
 const SUCCESS_CACHE_CONTROL = 'public, max-age=300, s-maxage=86400';
 
 export type EphemerisQueryResult =
-  | { readonly ok: true; readonly site: ReferenceSite; readonly instant: Date }
+  | { readonly ok: true; readonly site: ObserverSite; readonly instant: Date }
   | { readonly ok: false; readonly detail: string };
 
-/** Validates `site` and `utc` query parameters. */
+/** Plain decimal degrees, e.g. `-85.4381` or `37`; no exponents, units or hemisphere letters. */
+const DECIMAL_DEGREES = /^[+-]?\d{1,3}(?:\.\d+)?$/;
+
+type SiteQueryResult = { readonly ok: true; readonly site: ObserverSite } | { readonly ok: false; readonly detail: string };
+
+/** `site=<SiteId>`, or `lat` and `lon` in degrees (east longitude) for a custom point. */
+function parseSiteQuery(params: URLSearchParams): SiteQueryResult {
+  const siteParam = params.get('site');
+  const latParam = params.get('lat');
+  const lonParam = params.get('lon');
+
+  if (siteParam !== null) {
+    if (!isSiteId(siteParam)) return { ok: false, detail: `"site" must be one of: ${SITE_IDS.join(', ')}` };
+    if (latParam !== null || lonParam !== null) return { ok: false, detail: 'send either "site" or "lat"/"lon", not both' };
+    return { ok: true, site: findSite(siteParam) };
+  }
+
+  if (latParam === null && lonParam === null) {
+    return { ok: false, detail: `"site" must be one of: ${SITE_IDS.join(', ')}; or send "lat" and "lon" in degrees` };
+  }
+  if (latParam === null || lonParam === null || !DECIMAL_DEGREES.test(latParam) || !DECIMAL_DEGREES.test(lonParam)) {
+    return { ok: false, detail: '"lat" and "lon" must both be decimal degrees, e.g. lat=-85.4381&lon=37.36667' };
+  }
+  const checked = checkCoordinates(Number(latParam), Number(lonParam));
+  if (!checked.ok) {
+    return {
+      ok: false,
+      detail: checked.reason === 'latitude' ? '"lat" must be within [-90, 90]' : '"lon" must be within [-180, 360]',
+    };
+  }
+  return { ok: true, site: siteAt(checked.latitudeDeg, checked.longitudeEastDeg) };
+}
+
+/** Validates the site (`site`, or `lat` + `lon`) and `utc` query parameters. */
 export function parseEphemerisQuery(requestUrl: string): EphemerisQueryResult {
   let params: URLSearchParams;
   try {
@@ -32,10 +66,8 @@ export function parseEphemerisQuery(requestUrl: string): EphemerisQueryResult {
     return { ok: false, detail: 'request URL could not be parsed' };
   }
 
-  const siteParam = params.get('site');
-  if (!isSiteId(siteParam)) {
-    return { ok: false, detail: `"site" must be one of: ${SITE_IDS.join(', ')}` };
-  }
+  const site = parseSiteQuery(params);
+  if (!site.ok) return site;
 
   const utcParam = params.get('utc');
   if (utcParam === null) {
@@ -50,7 +82,7 @@ export function parseEphemerisQuery(requestUrl: string): EphemerisQueryResult {
     return { ok: false, detail };
   }
 
-  return { ok: true, site: findSite(siteParam), instant: parsedTime.instant };
+  return { ok: true, site: site.site, instant: parsedTime.instant };
 }
 
 export function createEphemerisHandler(options: EphemerisServiceOptions = {}) {

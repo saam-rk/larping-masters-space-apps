@@ -4,6 +4,9 @@
  * Source: NASA, "Lunar Surface Data Book", table A2.1-1 (M2M-30044, baseline).
  * The points are the centers of the original candidate-region polygons. They
  * are reference points for this demo, not approved landing sites.
+ *
+ * The user may also enter custom coordinates (`CUSTOM_SITE_ID`). Those are
+ * computed with the same method and carry no publication source.
  */
 
 export const SITE_IDS = ['nobile-rim-1', 'nobile-rim-2', 'shackleton-rim'] as const;
@@ -18,14 +21,26 @@ export interface DataSource {
   readonly locator?: string;
 }
 
-export interface ReferenceSite {
-  readonly id: SiteId;
-  /** Proper name as published by the source; not translated. */
+/** Id used for user-entered coordinates. */
+export const CUSTOM_SITE_ID = 'custom';
+
+export type ObserverSiteId = SiteId | typeof CUSTOM_SITE_ID;
+
+/** Observer point: a predefined reference site or user-entered coordinates. */
+export interface ObserverSite {
+  readonly id: ObserverSiteId;
+  /** Proper name as published by the source (not translated), or `CUSTOM_SITE_NAME`. */
   readonly name: string;
   /** Planetocentric latitude in degrees; negative is south. */
   readonly latitudeDeg: number;
   /** Longitude in degrees, positive east, range (-180, 180]. */
   readonly longitudeEastDeg: number;
+  /** Publication the coordinates come from; `null` for user-entered coordinates. */
+  readonly source: DataSource | null;
+}
+
+export interface ReferenceSite extends ObserverSite {
+  readonly id: SiteId;
   readonly source: DataSource;
 }
 
@@ -73,4 +88,68 @@ export function findSite(id: SiteId): ReferenceSite {
     throw new Error(`Unknown site id: ${id}`);
   }
   return site;
+}
+
+export function isObserverSiteId(value: unknown): value is ObserverSiteId {
+  return value === CUSTOM_SITE_ID || isSiteId(value);
+}
+
+/** English fallback name of a custom point; the interface shows its own translated label. */
+export const CUSTOM_SITE_NAME = 'Custom point';
+
+/** User-entered coordinates are rounded to this many decimals (~0.03 m on the Moon at 1e-6°). */
+export const COORDINATE_DECIMALS = 6;
+
+export type CoordinateCheck =
+  | { readonly ok: true; readonly latitudeDeg: number; readonly longitudeEastDeg: number }
+  | { readonly ok: false; readonly reason: 'latitude' | 'longitude' };
+
+function round(value: number): number {
+  // `+ 0` turns -0 into 0.
+  return Number(value.toFixed(COORDINATE_DECIMALS)) + 0;
+}
+
+/** Maps any east longitude to the range (-180, 180]. */
+export function normalizeLongitudeEast(longitudeEastDeg: number): number {
+  const wrapped = ((((longitudeEastDeg + 180) % 360) + 360) % 360) - 180;
+  return wrapped === -180 ? 180 : wrapped;
+}
+
+/**
+ * Validates coordinates in degrees: latitude in [-90, 90], east longitude in
+ * [-180, 360]. Returns them rounded, with the longitude in (-180, 180].
+ */
+export function checkCoordinates(latitudeDeg: number, longitudeEastDeg: number): CoordinateCheck {
+  if (!Number.isFinite(latitudeDeg) || latitudeDeg < -90 || latitudeDeg > 90) return { ok: false, reason: 'latitude' };
+  if (!Number.isFinite(longitudeEastDeg) || longitudeEastDeg < -180 || longitudeEastDeg > 360) {
+    return { ok: false, reason: 'longitude' };
+  }
+  return {
+    ok: true,
+    latitudeDeg: round(latitudeDeg),
+    longitudeEastDeg: round(normalizeLongitudeEast(round(longitudeEastDeg))),
+  };
+}
+
+/** The reference site at exactly these (already checked) coordinates, if any. */
+export function findSiteAt(latitudeDeg: number, longitudeEastDeg: number): ReferenceSite | undefined {
+  return REFERENCE_SITES.find(
+    (site) => site.latitudeDeg === latitudeDeg && site.longitudeEastDeg === longitudeEastDeg,
+  );
+}
+
+/**
+ * Observer for checked coordinates: the reference site when they match one
+ * exactly, otherwise a custom point.
+ */
+export function siteAt(latitudeDeg: number, longitudeEastDeg: number): ObserverSite {
+  return (
+    findSiteAt(latitudeDeg, longitudeEastDeg) ?? {
+      id: CUSTOM_SITE_ID,
+      name: CUSTOM_SITE_NAME,
+      latitudeDeg,
+      longitudeEastDeg,
+      source: null,
+    }
+  );
 }

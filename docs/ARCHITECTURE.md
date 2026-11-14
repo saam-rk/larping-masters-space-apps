@@ -36,7 +36,7 @@ server/              Backend logic, framework-independent            backend
   http.ts              JSON/error response helpers
 shared/              Contract shared by browser and server            backend + science
   ephemeris.ts         API request/response types and error codes
-  sites.ts             the three reference sites and their source
+  sites.ts             the three reference sites, their source, custom points
   time.ts              UTC input parsing and the supported range
   presence.ts          meaning of the Horizons sky-presence markers
   samples/             saved sample derived from the fixtures
@@ -58,15 +58,22 @@ results are presented.
 ## API contract
 
 `GET /api/ephemeris?site=<site>&utc=<YYYY-MM-DDTHH:mm[:ss]Z>`
+`GET /api/ephemeris?lat=<deg>&lon=<deg>&utc=<YYYY-MM-DDTHH:mm[:ss]Z>`
 
 - `site`: `nobile-rim-1`, `nobile-rim-2` or `shackleton-rim`.
+- `lat`, `lon` (instead of `site`): custom point in plain decimal degrees,
+  latitude in [-90, 90] (south negative), east longitude in [-180, 360].
+  Values are rounded to 6 decimals and the longitude is returned in
+  (-180, 180]. Coordinates equal to a reference site resolve to that site;
+  otherwise `site.id` is `custom` and `site.source` is `null` (user-entered,
+  no publication). The method is the same as for the reference sites.
 - `utc`: UTC instant ending in `Z`, within [2000-01-01, 2100-01-01). The range
   is an application guard, not a Horizons limit.
 
 | Status | Meaning | Body |
 |---|---|---|
 | 200 | At least one body computed | `EphemerisResponse`; check each `bodies.sun/earth.status` |
-| 400 | Invalid `site` or `utc` | `{ error: { code: "INVALID_REQUEST", detail } }` |
+| 400 | Invalid `site`, `lat`/`lon` or `utc` | `{ error: { code: "INVALID_REQUEST", detail } }` |
 | 405 | Method other than GET/HEAD | `METHOD_NOT_ALLOWED` |
 | 502 | Horizons failed for both bodies | `UPSTREAM_UNAVAILABLE`, `UPSTREAM_REJECTED` or `UPSTREAM_FORMAT` |
 | 500 | Unexpected server error | `INTERNAL` |
@@ -103,7 +110,8 @@ route.
   or a communication link.
 - Range and range-rate are returned but not shown in the main summary.
 - The three points are reference points from the NASA Lunar Surface Data
-  Book, not approved landing sites.
+  Book, not approved landing sites. Custom points are user input with no
+  source; they are not checked against any terrain or landing data.
 
 ## Deployment
 

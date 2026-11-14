@@ -2,6 +2,7 @@
  * HTTP contract for `GET /api/ephemeris`, shared by the browser and the server.
  *
  * Request:  GET /api/ephemeris?site=<SiteId>&utc=<YYYY-MM-DDTHH:mm[:ss]Z>
+ *      or:  GET /api/ephemeris?lat=<deg>&lon=<deg east>&utc=<...>   (custom point)
  * Success:  200 with `EphemerisResponse` (each body may still carry an error).
  * Failure:  4xx/5xx with `ApiErrorResponse`.
  *
@@ -9,7 +10,7 @@
  * with zero. All angles are degrees unless the field name says otherwise.
  */
 
-import type { DataSource, SiteId } from './sites.js';
+import type { DataSource, ObserverSiteId } from './sites.js';
 
 export const EPHEMERIS_ENDPOINT = '/api/ephemeris';
 
@@ -80,13 +81,15 @@ export type BodyResult =
   | { readonly status: 'error'; readonly body: BodyId; readonly error: ApiError };
 
 export interface EphemerisSite {
-  readonly id: SiteId;
+  /** Reference site id, or `custom` for user-entered coordinates. */
+  readonly id: ObserverSiteId;
   readonly name: string;
   readonly latitudeDeg: number;
   readonly longitudeEastDeg: number;
   /** Observer height used in the query. 0 km on the Horizons reference sphere, not measured terrain. */
   readonly altitudeKm: number;
-  readonly source: DataSource;
+  /** Publication of the coordinates; `null` for user-entered coordinates. */
+  readonly source: DataSource | null;
 }
 
 export interface HorizonsProvenance {

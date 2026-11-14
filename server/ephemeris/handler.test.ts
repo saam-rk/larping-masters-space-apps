@@ -72,8 +72,30 @@ describe('parseEphemerisQuery', () => {
     expect(result.ok && result.instant.toISOString()).toBe('2030-01-02T03:04:05.000Z');
   });
 
+  it('accepts a custom point and normalizes its longitude', () => {
+    const result = parseEphemerisQuery(`${BASE}?lat=-80.5&lon=200.25&utc=2030-01-02T03:04:05Z`);
+    expect(result.ok && result.site).toEqual({
+      id: 'custom',
+      name: 'Custom point',
+      latitudeDeg: -80.5,
+      longitudeEastDeg: -159.75,
+      source: null,
+    });
+  });
+
+  it('resolves coordinates equal to a reference site to that site', () => {
+    const result = parseEphemerisQuery(`${BASE}?lat=-85.4381&lon=37.36667&utc=2030-01-02T03:04:05Z`);
+    expect(result.ok && result.site.id).toBe('nobile-rim-1');
+  });
+
   it.each([
     ['missing site', '?utc=2026-11-14T12:00Z', '"site" must be one of'],
+    ['site and coordinates', '?site=nobile-rim-1&lat=-80&lon=10&utc=2026-11-14T12:00Z', 'not both'],
+    ['only latitude', '?lat=-80&utc=2026-11-14T12:00Z', 'must both be decimal degrees'],
+    ['non-numeric longitude', '?lat=-80&lon=10E&utc=2026-11-14T12:00Z', 'must both be decimal degrees'],
+    ['exponent', '?lat=-8e1&lon=10&utc=2026-11-14T12:00Z', 'must both be decimal degrees'],
+    ['latitude out of range', '?lat=-90.5&lon=10&utc=2026-11-14T12:00Z', '"lat" must be within'],
+    ['longitude out of range', '?lat=-80&lon=361&utc=2026-11-14T12:00Z', '"lon" must be within'],
     ['missing utc', '?site=nobile-rim-1', '"utc" is required'],
     ['local time', '?site=nobile-rim-1&utc=2026-11-14T12:00', 'format'],
     ['offset time', '?site=nobile-rim-1&utc=2026-11-14T12:00%2B01:00', 'format'],

@@ -4,11 +4,15 @@
  */
 
 import { EPHEMERIS_ENDPOINT, isApiErrorResponse, type EphemerisResponse } from '../../shared/ephemeris';
-import type { SiteId } from '../../shared/sites';
+import { CUSTOM_SITE_ID, type ObserverSiteId } from '../../shared/sites';
 import type { ClientErrorKey } from '../i18n/messages';
 
 export interface EphemerisSelection {
-  readonly siteId: SiteId;
+  /** Reference site, or `custom` when the coordinates match none of them. */
+  readonly siteId: ObserverSiteId;
+  /** Checked coordinates (see `checkCoordinates`); equal to the site's own for a reference site. */
+  readonly latitudeDeg: number;
+  readonly longitudeEastDeg: number;
   /** ISO 8601 UTC, e.g. `2026-11-14T12:00:00Z`. */
   readonly utc: string;
 }
@@ -24,7 +28,11 @@ export type EphemerisFetchResult =
   | { readonly ok: false; readonly error: ClientError };
 
 export async function fetchEphemeris(selection: EphemerisSelection, signal?: AbortSignal): Promise<EphemerisFetchResult> {
-  const params = new URLSearchParams({ site: selection.siteId, utc: selection.utc });
+  const params = new URLSearchParams(
+    selection.siteId === CUSTOM_SITE_ID
+      ? { lat: String(selection.latitudeDeg), lon: String(selection.longitudeEastDeg), utc: selection.utc }
+      : { site: selection.siteId, utc: selection.utc },
+  );
 
   let response: Response;
   try {
