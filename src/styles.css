@@ -536,8 +536,10 @@ button {
   margin-bottom: 0.5rem;
 }
 
-.sidebar__logo .landing-logo {
+.sidebar__logo svg {
+  display: block;
   width: 100%;
+  height: 3.25rem;
 }
 
 .sidebar__button,
@@ -1816,34 +1818,7 @@ input[aria-invalid='true'] {
   width: min(100%, 19rem);
   height: auto;
   overflow: visible;
-}
-
-.landing-logo__chalk {
   color: var(--line);
-}
-
-.landing-logo__moon {
-  filter: drop-shadow(0 0 0.625rem rgba(255, 194, 51, 0.35));
-}
-
-.landing-logo__night {
-  fill: #1c1606;
-}
-
-.landing-logo__day {
-  fill: var(--amber);
-}
-
-.landing-logo__crater {
-  fill: #d99a17;
-  stroke: #b97c0c;
-  stroke-width: 1.5;
-}
-
-.landing-logo__rim {
-  fill: none;
-  stroke: var(--amber);
-  stroke-width: 3;
 }
 
 .setup__copy {
