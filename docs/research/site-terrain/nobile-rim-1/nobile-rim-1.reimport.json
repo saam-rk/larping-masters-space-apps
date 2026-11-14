@@ -1,0 +1,91 @@
+{
+  "blenderVersion": "5.2.2 LTS",
+  "importedObjects": [
+    "Terrain_nobile-rim-1"
+  ],
+  "terrainObject": "Terrain_nobile-rim-1",
+  "matrixWorldIsIdentity": true,
+  "vertices": 160801,
+  "triangles": 320000,
+  "polygons": 320000,
+  "bboxMinBlender": [
+    -4997.5,
+    -4997.5,
+    -2782.354736328125
+  ],
+  "bboxMaxBlender": [
+    5002.5,
+    5002.5,
+    840.2900390625
+  ],
+  "bboxDimensionsM": [
+    10000.0,
+    10000.0,
+    3622.644775390625
+  ],
+  "expectedExtentLocalM": {
+    "xMin": -4997.5,
+    "xMax": 5002.5,
+    "yMin": -4997.5,
+    "yMax": 5002.5
+  },
+  "extentErrorM": {
+    "xMin": 0.0,
+    "xMax": 0.0,
+    "yMin": 0.0,
+    "yMax": 0.0
+  },
+  "expectedElevationRangeLocalM": [
+    -2782.354736328125,
+    840.2900390625
+  ],
+  "meanPolygonNormalZ": 0.9515498322416097,
+  "materials": [
+    "Terrain_neutral_grey"
+  ],
+  "extras": {
+    "siteId": "nobile-rim-1",
+    "crs": "+proj=stere +lat_0=-90 +lat_ts=-90 +lon_0=0 +x_0=0 +y_0=0 +R=1737400 +units=m +no_defs=True",
+    "frame": "MOON_ME reference frame of ephemeris DE421 (stated by the provider README; not encoded in the GeoTIFF CRS)",
+    "originProjectedXM": 84000.0,
+    "originProjectedYM": 110000.0,
+    "originElevationM": 5947.0,
+    "gltfAxes": "x=projX-originX, y=elevation-originZ, z=-(projY-originY)",
+    "source": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_surf.tif"
+  },
+  "rayCastProbes": {
+    "site": {
+      "hit": true,
+      "blenderXYZ": [
+        0.01002578902989626,
+        0.010791721753776073,
+        -0.10333251953125
+      ],
+      "elevationM": 5946.896667480469,
+      "sourceBilinearElevationM": 5946.899465547409,
+      "differenceM": -0.0027980669401586056
+    },
+    "ridge-reference": {
+      "hit": true,
+      "blenderXYZ": [
+        -118.90243530273438,
+        3744.123779296875,
+        437.4740905761719
+      ],
+      "elevationM": 6384.474090576172,
+      "sourceBilinearElevationM": 6384.412975779012,
+      "differenceM": 0.06111479715946189
+    },
+    "southwest-check": {
+      "hit": true,
+      "blenderXYZ": [
+        -2057.0126953125,
+        336.3260192871094,
+        -249.67578125
+      ],
+      "elevationM": 5697.32421875,
+      "sourceBilinearElevationM": 5697.487755343793,
+      "differenceM": -0.16353659379274177
+    }
+  }
+}

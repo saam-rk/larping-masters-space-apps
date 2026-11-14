@@ -1,0 +1,298 @@
+{
+  "schema": "clps-site-terrain/1",
+  "generatedUtc": "2026-11-14T12:22:07.495951+00:00",
+  "siteId": "nobile-rim-1",
+  "siteName": "Nobile Rim 1",
+  "site": {
+    "latitudeDeg": -85.4381,
+    "longitudeEastDeg": 37.36667,
+    "latitudeConvention": "planetocentric, negative south",
+    "longitudeConvention": "positive east, (-180, 180]",
+    "source": "shared/sites.ts, from NASA Lunar Surface Data Book (M2M-30044) table A2.1-1. Center of an original candidate-region polygon; not an approved landing site."
+  },
+  "nature": "Terrain visualization of LOLA-derived topography. Lighting in the .blend is illustrative. Not a guarantee of power, communications, visibility or landing suitability.",
+  "source": {
+    "product": "NASA GSFC PGDA product 78, adjusted local LOLA 5 m/pixel elevation (Site06 = Nobile rim 1)",
+    "productUrl": "https://pgda.gsfc.nasa.gov/products/78",
+    "sourceUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_surf.tif",
+    "readmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+    "frame": "MOON_ME reference frame of ephemeris DE421 (stated by the provider README; not encoded in the GeoTIFF CRS)",
+    "valueMeaning": "Surface height Z in meters above a 1,737,400 m reference sphere; interpolation fills pixels without LOLA returns",
+    "citation": "Barker et al. (2021), Planetary and Space Science 203, 105119, https://doi.org/10.1016/j.pss.2020.105119",
+    "file": "Site06_final_adj_5mpp_surf.tif",
+    "sha256": "cca17e8067601dd659b583f889204db6bce685bc30c60a9e62427a8bce36b03d",
+    "bytes": 64025603,
+    "retrievedUtc": "2026-11-14",
+    "dimensions": [
+      4000,
+      4000
+    ],
+    "cellSizeM": 5.0,
+    "pixelRegistration": "Values at pixel centers (GMT pixel registration, AREA_OR_POINT=Area); centers at edge + 2.5 m",
+    "dtype": "float32",
+    "nodata": "NaN",
+    "missingSamplesInFile": 0,
+    "geoTransformGdal": [
+      74000.0,
+      5.0,
+      0.0,
+      120000.0,
+      0.0,
+      -5.0
+    ],
+    "boundsM": [
+      74000.0,
+      100000.0,
+      94000.0,
+      120000.0
+    ],
+    "license": "NASA data; redistribution/publication review remains a project release gate."
+  },
+  "crs": {
+    "proj4": "+proj=stere +lat_0=-90 +lat_ts=-90 +lon_0=0 +x_0=0 +y_0=0 +R=1737400 +units=m +no_defs=True",
+    "wkt": "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+    "projection": "Polar stereographic, south pole origin (lat_0=-90), central meridian 0, scale 1 at the pole, false easting/northing 0",
+    "sphereRadiusM": 1737400.0,
+    "frame": "MOON_ME reference frame of ephemeris DE421 (stated by the provider README; not encoded in the GeoTIFF CRS)",
+    "frameCaveat": "MOON_ME (DE421) and MOON_PA differ by about 875 m on the surface; do not mix frames."
+  },
+  "units": {
+    "horizontal": "meter",
+    "vertical": "meter",
+    "verticalExaggeration": 1.0
+  },
+  "verticalReference": "Height above the 1,737,400 m reference sphere (radius = height + 1,737,400 m); not a geoid.",
+  "localOrigin": {
+    "projectedXM": 84000.0,
+    "projectedYM": 110000.0,
+    "elevationM": 5947.0,
+    "rule": "Site projected X/Y and source bilinear elevation rounded to whole meters"
+  },
+  "axes": {
+    "blender": "Z-up, right-handed: X = projected X - origin X, Y = projected Y - origin Y, Z = height - origin height",
+    "glb": "glTF Y-up, right-handed: x = projected X - origin X, y = height - origin height, z = -(projected Y - origin Y)",
+    "gridNorthNote": "Projected +Y is grid north (toward 0° E away from the pole), not geographic north.",
+    "geographicNorthGridBearingAtSiteDeg": 37.36667,
+    "azimuthToGridBearing": "gridBearing = geographicAzimuth + longitudeEastDeg (local, clockwise from projected +Y); varies by about ±3° across the crop"
+  },
+  "markerPlacement": {
+    "steps": [
+      "rho = 2 * R * tan(pi/4 + latRad/2) with R = 1737400 (latRad negative)",
+      "X = rho * sin(lonEastRad); Y = rho * cos(lonEastRad)",
+      "glTF = [X - origin.projectedXM, h - origin.elevationM, -(Y - origin.projectedYM)]",
+      "h: source raster height (bilinear) or the GLB surface height at (X, Y) plus a marker offset"
+    ],
+    "inverse": [
+      "X = gltf.x + origin.projectedXM; Y = origin.projectedYM - gltf.z; h = gltf.y + origin.elevationM",
+      "lonEast = atan2(X, Y); lat = -(pi/2 - 2 * atan(hypot(X, Y) / (2R)))"
+    ],
+    "points": {
+      "site": {
+        "latitudeDeg": -85.4381,
+        "longitudeEastDeg": 37.36667,
+        "projectedXM": 84000.01002578877,
+        "projectedYM": 110000.01079172149,
+        "sourceBilinearElevationM": 5946.899465547409,
+        "gltfAtSourceElevationM": [
+          0.010025788767961785,
+          -0.1005344525910914,
+          -0.0107917214918416
+        ],
+        "blenderAtSourceElevationM": [
+          0.010025788767961785,
+          0.0107917214918416,
+          -0.1005344525910914
+        ]
+      },
+      "ridge-reference": {
+        "latitudeDeg": -85.34185,
+        "longitudeEastDeg": 36.40708,
+        "projectedXM": 83881.09756627696,
+        "projectedYM": 113744.1237488099,
+        "sourceBilinearElevationM": 6384.412975779012,
+        "gltfAtSourceElevationM": [
+          -118.90243372303667,
+          437.4129757790124,
+          -3744.1237488098996
+        ],
+        "blenderAtSourceElevationM": [
+          -118.90243372303667,
+          3744.1237488098996,
+          437.4129757790124
+        ]
+      },
+      "southwest-check": {
+        "latitudeDeg": -85.47,
+        "longitudeEastDeg": 36.6,
+        "projectedXM": 81942.98731959405,
+        "projectedYM": 110336.32602686669,
+        "sourceBilinearElevationM": 5697.487755343793,
+        "gltfAtSourceElevationM": [
+          -2057.0126804059546,
+          -249.51224465620726,
+          -336.3260268666927
+        ],
+        "blenderAtSourceElevationM": [
+          -2057.0126804059546,
+          336.3260268666927,
+          -249.51224465620726
+        ]
+      }
+    }
+  },
+  "coverage": {
+    "meshExtentProjectedM": {
+      "xMin": 79002.5,
+      "xMax": 89002.5,
+      "yMin": 105002.5,
+      "yMax": 115002.5
+    },
+    "meshExtentLocalM": {
+      "xMin": -4997.5,
+      "xMax": 5002.5,
+      "yMin": -4997.5,
+      "yMax": 5002.5
+    },
+    "sourceWindow": {
+      "rowOff": 999,
+      "colOff": 1000,
+      "height": 2001,
+      "width": 2001
+    },
+    "sourceWindowEdgesProjectedM": {
+      "xMin": 79000.0,
+      "xMax": 89005.0,
+      "yMin": 105000.0,
+      "yMax": 115005.0
+    },
+    "cornersGeographic": [
+      {
+        "xM": 79002.5,
+        "yM": 115002.5,
+        "latitudeDeg": -85.40126104716033,
+        "longitudeEastDeg": 34.48763772742176
+      },
+      {
+        "xM": 89002.5,
+        "yM": 115002.5,
+        "latitudeDeg": -85.20714762987228,
+        "longitudeEastDeg": 37.73693137479657
+      },
+      {
+        "xM": 89002.5,
+        "yM": 105002.5,
+        "latitudeDeg": -85.46303229901373,
+        "longitudeEastDeg": 40.285366444691725
+      },
+      {
+        "xM": 79002.5,
+        "yM": 105002.5,
+        "latitudeDeg": -85.66864919916065,
+        "longitudeEastDeg": 36.95732145782159
+      }
+    ],
+    "geographicEnvelope": {
+      "latitudeMinDeg": -85.66864919916065,
+      "latitudeMaxDeg": -85.20714762987228,
+      "longitudeMinEastDeg": 34.48763772742176,
+      "longitudeMaxEastDeg": 40.285366444691725,
+      "note": "Envelope of the projected square; the square itself is the coverage, not this lat/lon box."
+    },
+    "insideTest": "A coordinate is covered when its projected X/Y lies inside meshExtentProjectedM (a square in projected meters, not a lat/lon box).",
+    "missingSourcePixelsInWindow": 0,
+    "validQuads": 160000,
+    "totalQuads": 160000,
+    "gapPolicy": "A 25 m quad is omitted if any source pixel in its footprint is missing; none were missing in this crop.",
+    "elevationRangeM": [
+      3164.645263671875,
+      6787.2900390625
+    ],
+    "interpolationNote": "The provider fills pixels without LOLA returns by interpolation (about 90% of pixels in the studied polar 5 m grids per PGDA product 78). Valid elevation does not mean direct measurement."
+  },
+  "mesh": {
+    "sourceCellSizeM": 5.0,
+    "vertexSpacingM": 25.0,
+    "stepPixels": 5,
+    "gridVertices": [
+      401,
+      401
+    ],
+    "vertexSampling": "Exact source values at every step-th source pixel center (no averaging)",
+    "triangulation": "Each quad split along the diagonal from its north-west vertex to its south-east vertex (grid axes)",
+    "simplificationErrorVsAllSourcePixelsM": {
+      "comparedPixels": 4004001,
+      "mean": -0.005665040391492731,
+      "rms": 0.33145280154165285,
+      "p95Abs": 0.6350585937498181,
+      "p99Abs": 1.17529296875,
+      "maxAbs": 18.01708984375
+    },
+    "ridgeSilhouetteChangeDeg": {
+      "maxAbsElevationAngleDiffDeg": 0.027736416670864905,
+      "meanElevationAngleDiffDeg": -0.004533443295875505,
+      "targetBearingAngleDiffDeg": 0.0007338276329722504,
+      "targetBearingMeshAngleDeg": 6.634955929102383,
+      "targetBearingMeshHorizonDistanceM": 3753.75
+    },
+    "geometryModel": "2.5D height field on the projected plane: horizontal distances are grid distances (true ground distance ≈ grid / 1.001587 at the site); lunar curvature is not applied (sphere drop about 7.2 m at 5 km)."
+  },
+  "glb": {
+    "file": "nobile-rim-1.glb",
+    "bytes": 7700876,
+    "sha256": "2f91baf240b8db4e427c4e193720dc8b95575e4d1cd2f88c8b2a534c65ed86e3",
+    "vertices": 160801,
+    "triangles": 320000,
+    "attributes": [
+      "NORMAL",
+      "POSITION"
+    ],
+    "indexComponentType": 5125,
+    "compression": "none",
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "exportOptions": {
+      "export_format": "GLB",
+      "use_selection": true,
+      "export_yup": true,
+      "export_apply": false,
+      "export_texcoords": false,
+      "export_normals": true,
+      "export_tangents": false,
+      "export_materials": "EXPORT",
+      "export_cameras": false,
+      "export_lights": false,
+      "export_extras": true,
+      "export_animations": false,
+      "export_skins": false,
+      "export_morph": false,
+      "export_draco_mesh_compression_enable": false
+    },
+    "nodeName": "Terrain_nobile-rim-1"
+  },
+  "blend": {
+    "file": "nobile-rim-1.blend",
+    "bytes": 6919612,
+    "blenderVersion": "5.2.2 LTS",
+    "objects": [
+      "Terrain (exported)",
+      "Marker_<site> and Marker_ridge-reference (empties at exact points; poles start 10 m above)",
+      "Camera_overview",
+      "Camera_ground_to_ridge (site, 2 m above the mesh, aimed at the ridge reference)",
+      "Sun_illustrative_grazing and Fill_illustrative (illustrative lights)"
+    ],
+    "illustrativeSun": {
+      "gridBearingDeg": 135.0,
+      "elevationDeg": 5.0,
+      "strength": 5.0
+    }
+  },
+  "verification": {
+    "file": "nobile-rim-1.verification.json",
+    "allPassed": true,
+    "pointDifferencesGlbMinusSourceBilinearM": {
+      "site": -0.002802384420647286,
+      "ridge-reference": 0.06110208180234622,
+      "southwest-check": -0.16364352919299563
+    }
+  },
+  "reproduction": "See README.md in the site-terrain directory."
+}

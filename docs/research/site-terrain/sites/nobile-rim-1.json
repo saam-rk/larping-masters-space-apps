@@ -1,0 +1,54 @@
+{
+  "siteId": "nobile-rim-1",
+  "siteName": "Nobile Rim 1",
+  "latitudeDeg": -85.4381,
+  "longitudeEastDeg": 37.36667,
+  "siteSource": "shared/sites.ts, from NASA Lunar Surface Data Book (M2M-30044) table A2.1-1. Center of an original candidate-region polygon; not an approved landing site.",
+  "raster": {
+    "product": "NASA GSFC PGDA product 78, adjusted local LOLA 5 m/pixel elevation (Site06 = Nobile rim 1)",
+    "productUrl": "https://pgda.gsfc.nasa.gov/products/78",
+    "sourceUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_surf.tif",
+    "readmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+    "frame": "MOON_ME reference frame of ephemeris DE421 (stated by the provider README; not encoded in the GeoTIFF CRS)",
+    "valueMeaning": "Surface height Z in meters above a 1,737,400 m reference sphere; interpolation fills pixels without LOLA returns",
+    "citation": "Barker et al. (2021), Planetary and Space Science 203, 105119, https://doi.org/10.1016/j.pss.2020.105119"
+  },
+  "crop": {
+    "halfSizeM": 5000
+  },
+  "mesh": {
+    "stepPixels": 5,
+    "analyzeStepsPixels": [2, 4, 5, 8, 10]
+  },
+  "referencePoints": [
+    {
+      "id": "ridge-reference",
+      "name": "Ridge reference",
+      "latitudeDeg": -85.34185,
+      "longitudeEastDeg": 36.40708,
+      "source": "docs/LUNAR_SOUTH_POLE_RESEARCH.md: ridge on the Earth center azimuth; both 20 m and 5 m models gave about 6,384.4 m by bilinear sampling"
+    }
+  ],
+  "checkPoints": [
+    { "id": "site", "use": "site" },
+    { "id": "ridge-reference", "use": "referencePoint" },
+    {
+      "id": "southwest-check",
+      "name": "South-west slope check point",
+      "latitudeDeg": -85.47,
+      "longitudeEastDeg": 36.6,
+      "source": "Arbitrary off-grid verification coordinate chosen for this check; no scientific meaning."
+    }
+  ],
+  "silhouette": {
+    "observerHeightM": 2.0,
+    "targetPoint": "ridge-reference",
+    "azimuthHalfWidthDeg": 20,
+    "azimuthStepDeg": 0.5,
+    "radialStepM": 1.25
+  },
+  "groundCamera": {
+    "heightAboveSurfaceM": 2.0,
+    "lookAtPoint": "ridge-reference"
+  }
+}

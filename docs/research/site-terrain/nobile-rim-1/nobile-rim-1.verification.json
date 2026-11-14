@@ -1,0 +1,427 @@
+{
+  "generatedUtc": "2026-11-14T12:22:07.495951+00:00",
+  "allPassed": true,
+  "checks": [
+    {
+      "check": "glb-contains-only-terrain",
+      "passed": true,
+      "nodes": [
+        "Terrain_nobile-rim-1"
+      ],
+      "meshes": 1,
+      "cameras": 0,
+      "extensionsUsed": []
+    },
+    {
+      "check": "node-has-identity-transform",
+      "passed": true,
+      "nodeKeys": [
+        "extras",
+        "mesh",
+        "name"
+      ]
+    },
+    {
+      "check": "single-triangle-primitive",
+      "passed": true
+    },
+    {
+      "check": "vertices-on-source-pixel-centers",
+      "passed": true,
+      "vertices": 160801,
+      "uniqueGridCells": 160801,
+      "maxHorizontalErrorM": 0.0
+    },
+    {
+      "check": "vertex-heights-equal-source-pixels",
+      "passed": true,
+      "maxAbsDiffVsGridM": 0.0,
+      "maxAbsDiffVsSourcePixelM": 0.0,
+      "note": "Differences are float32 storage of local heights only."
+    },
+    {
+      "check": "triangulation-matches-analysed-mesh",
+      "passed": true,
+      "triangles": 320000,
+      "expectedTriangles": 320000
+    },
+    {
+      "check": "triangles-counter-clockwise-seen-from-up",
+      "passed": true,
+      "clockwiseTriangles": 0,
+      "note": "glTF front faces are CCW; +Y (up) is elevation."
+    },
+    {
+      "check": "normals-point-up",
+      "passed": true,
+      "minNormalY": 0.7789216041564941
+    },
+    {
+      "check": "glb-bounds-match-crop-and-axes",
+      "passed": true,
+      "gltfMin": [
+        -4997.5,
+        -2782.354736328125,
+        -5002.5
+      ],
+      "gltfMax": [
+        5002.5,
+        840.2900390625,
+        4997.5
+      ],
+      "expectedXRange": [
+        -4997.5,
+        5002.5
+      ],
+      "expectedZRange": [
+        -5002.5,
+        4997.5
+      ]
+    },
+    {
+      "check": "blender-reimport-scale-orientation-position",
+      "passed": true,
+      "extentErrorM": {
+        "xMin": 0.0,
+        "xMax": 0.0,
+        "yMin": 0.0,
+        "yMax": 0.0
+      },
+      "bboxDimensionsM": [
+        10000.0,
+        10000.0,
+        3622.644775390625
+      ],
+      "meanPolygonNormalZ": 0.9515498322416097
+    },
+    {
+      "check": "source-sampling-reproduces-repository-bilinear",
+      "passed": true,
+      "repositoryValueM": 5946.899465547405,
+      "thisRunM": 5946.899465547409,
+      "differenceM": 3.637978807091713e-12
+    },
+    {
+      "check": "glb-surface-agrees-with-analysed-mesh",
+      "passed": true,
+      "note": "Confirms the whole-crop simplification statistics apply to the exported GLB."
+    },
+    {
+      "check": "blender-reimport-ray-casts-agree-with-glb",
+      "passed": true,
+      "differencesM": {
+        "site": 4.317480488680303e-06,
+        "ridge-reference": 1.2715357115666848e-05,
+        "southwest-check": 0.00010693540025386028
+      }
+    },
+    {
+      "check": "check-points-are-on-the-mesh",
+      "passed": true
+    }
+  ],
+  "pointComparisons": {
+    "site": {
+      "latitudeDeg": -85.4381,
+      "longitudeEastDeg": 37.36667,
+      "projectedXM": 84000.01002578877,
+      "projectedYM": 110000.01079172149,
+      "gltfPositionAtSurfaceM": [
+        0.010025788767961785,
+        -0.10333683701173868,
+        -0.0107917214918416
+      ],
+      "sourceContainingCellM": 5946.12841796875,
+      "sourceBilinearM": 5946.899465547409,
+      "glbSurfaceM": 5946.896663162988,
+      "glbMinusSourceBilinearM": -0.002802384420647286,
+      "glbMinusContainingCellM": 0.7682451942382613,
+      "analysedMeshMinusGlbM": -9.094947017729282e-13,
+      "blenderReimportRayCastM": 5946.896667480469,
+      "blenderReimportMinusGlbM": 4.317480488680303e-06,
+      "glbTrianglesContainingPoint": 1
+    },
+    "ridge-reference": {
+      "latitudeDeg": -85.34185,
+      "longitudeEastDeg": 36.40708,
+      "projectedXM": 83881.09756627696,
+      "projectedYM": 113744.1237488099,
+      "gltfPositionAtSurfaceM": [
+        -118.90243372303667,
+        437.47407786081476,
+        -3744.1237488098996
+      ],
+      "sourceContainingCellM": 6384.4287109375,
+      "sourceBilinearM": 6384.412975779012,
+      "glbSurfaceM": 6384.474077860815,
+      "glbMinusSourceBilinearM": 0.06110208180234622,
+      "glbMinusContainingCellM": 0.04536692331475933,
+      "analysedMeshMinusGlbM": 0.0,
+      "blenderReimportRayCastM": 6384.474090576172,
+      "blenderReimportMinusGlbM": 1.2715357115666848e-05,
+      "glbTrianglesContainingPoint": 1
+    },
+    "southwest-check": {
+      "latitudeDeg": -85.47,
+      "longitudeEastDeg": 36.6,
+      "projectedXM": 81942.98731959405,
+      "projectedYM": 110336.32602686669,
+      "gltfPositionAtSurfaceM": [
+        -2057.0126804059546,
+        -249.67588818540025,
+        -336.3260268666927
+      ],
+      "sourceContainingCellM": 5697.35986328125,
+      "sourceBilinearM": 5697.487755343793,
+      "glbSurfaceM": 5697.3241118146,
+      "glbMinusSourceBilinearM": -0.16364352919299563,
+      "glbMinusContainingCellM": -0.03575146665025386,
+      "analysedMeshMinusGlbM": -9.094947017729282e-13,
+      "blenderReimportRayCastM": 5697.32421875,
+      "blenderReimportMinusGlbM": 0.00010693540025386028,
+      "glbTrianglesContainingPoint": 1
+    }
+  },
+  "siteDifferenceExplanation": "The repository value and this run's source bilinear agree because both interpolate the four 5 m source pixel centers around the site. The GLB surface instead interpolates linearly inside one triangle whose vertices are source pixel centers 25 m apart, so it omits sub-25 m relief; the difference at each point is that simplification error, not a change of datum or position.",
+  "simplificationOverWholeCrop": {
+    "stepPixels": 5,
+    "vertexSpacingM": 25.0,
+    "vertices": 160801,
+    "triangles": 320000,
+    "estimatedGlbBytesPositionsNormalsUint32Indices": 7699224,
+    "elevationErrorVsSourcePixelsM": {
+      "comparedPixels": 4004001,
+      "mean": -0.005665040391492731,
+      "rms": 0.33145280154165285,
+      "p95Abs": 0.6350585937498181,
+      "p99Abs": 1.17529296875,
+      "maxAbs": 18.01708984375
+    },
+    "ridgeSilhouette": {
+      "maxAbsElevationAngleDiffDeg": 0.027736416670864905,
+      "meanElevationAngleDiffDeg": -0.004533443295875505,
+      "targetBearingAngleDiffDeg": 0.0007338276329722504,
+      "targetBearingMeshAngleDeg": 6.634955929102383,
+      "targetBearingMeshHorizonDistanceM": 3753.75
+    }
+  },
+  "simplificationCandidates": [
+    {
+      "stepPixels": 2,
+      "vertexSpacingM": 10.0,
+      "vertices": 1002001,
+      "triangles": 2000000,
+      "estimatedGlbBytesPositionsNormalsUint32Indices": 48048024,
+      "elevationErrorVsSourcePixelsM": {
+        "comparedPixels": 4004001,
+        "mean": -0.0006669438818138563,
+        "rms": 0.1302331583378888,
+        "p95Abs": 0.20947265625,
+        "p99Abs": 0.51953125,
+        "maxAbs": 16.109375
+      },
+      "ridgeSilhouette": {
+        "maxAbsElevationAngleDiffDeg": 0.011444192453454072,
+        "meanElevationAngleDiffDeg": -0.0011387617620742328,
+        "targetBearingAngleDiffDeg": -0.0017554315967336365,
+        "targetBearingMeshAngleDeg": 6.632466669872677,
+        "targetBearingMeshHorizonDistanceM": 3756.25
+      }
+    },
+    {
+      "stepPixels": 4,
+      "vertexSpacingM": 20.0,
+      "vertices": 251001,
+      "triangles": 500000,
+      "estimatedGlbBytesPositionsNormalsUint32Indices": 12024024,
+      "elevationErrorVsSourcePixelsM": {
+        "comparedPixels": 4004001,
+        "mean": -0.0023276036077042846,
+        "rms": 0.27114439042618776,
+        "p95Abs": 0.507080078125,
+        "p99Abs": 0.984130859375,
+        "maxAbs": 21.633056640625
+      },
+      "ridgeSilhouette": {
+        "maxAbsElevationAngleDiffDeg": 0.01804447872097059,
+        "meanElevationAngleDiffDeg": -0.0033661434358608724,
+        "targetBearingAngleDiffDeg": -0.0051204350318210246,
+        "targetBearingMeshAngleDeg": 6.62910166643759,
+        "targetBearingMeshHorizonDistanceM": 3745.0
+      }
+    },
+    {
+      "stepPixels": 5,
+      "vertexSpacingM": 25.0,
+      "vertices": 160801,
+      "triangles": 320000,
+      "estimatedGlbBytesPositionsNormalsUint32Indices": 7699224,
+      "elevationErrorVsSourcePixelsM": {
+        "comparedPixels": 4004001,
+        "mean": -0.005665040391492731,
+        "rms": 0.33145280154165285,
+        "p95Abs": 0.6350585937498181,
+        "p99Abs": 1.17529296875,
+        "maxAbs": 18.01708984375
+      },
+      "ridgeSilhouette": {
+        "maxAbsElevationAngleDiffDeg": 0.027736416670864905,
+        "meanElevationAngleDiffDeg": -0.004533443295875505,
+        "targetBearingAngleDiffDeg": 0.0007338276329722504,
+        "targetBearingMeshAngleDeg": 6.634955929102383,
+        "targetBearingMeshHorizonDistanceM": 3753.75
+      }
+    },
+    {
+      "stepPixels": 8,
+      "vertexSpacingM": 40.0,
+      "vertices": 63001,
+      "triangles": 125000,
+      "estimatedGlbBytesPositionsNormalsUint32Indices": 3012024,
+      "elevationErrorVsSourcePixelsM": {
+        "comparedPixels": 4004001,
+        "mean": -0.012302911328617378,
+        "rms": 0.5009021211431172,
+        "p95Abs": 0.9725341796875,
+        "p99Abs": 1.6737060546875,
+        "maxAbs": 27.991943359375
+      },
+      "ridgeSilhouette": {
+        "maxAbsElevationAngleDiffDeg": 0.042650775665798335,
+        "meanElevationAngleDiffDeg": -0.007892619327167016,
+        "targetBearingAngleDiffDeg": -0.006596752745489098,
+        "targetBearingMeshAngleDeg": 6.627625348723922,
+        "targetBearingMeshHorizonDistanceM": 3725.0
+      }
+    },
+    {
+      "stepPixels": 10,
+      "vertexSpacingM": 50.0,
+      "vertices": 40401,
+      "triangles": 80000,
+      "estimatedGlbBytesPositionsNormalsUint32Indices": 1929624,
+      "elevationErrorVsSourcePixelsM": {
+        "comparedPixels": 4004001,
+        "mean": -0.023481760385531618,
+        "rms": 0.604186481682095,
+        "p95Abs": 1.1800292968746362,
+        "p99Abs": 1.9759277343746362,
+        "maxAbs": 29.848828125000182
+      },
+      "ridgeSilhouette": {
+        "maxAbsElevationAngleDiffDeg": 0.03540072731805388,
+        "meanElevationAngleDiffDeg": -0.009314494310856666,
+        "targetBearingAngleDiffDeg": -0.004895040927020311,
+        "targetBearingMeshAngleDeg": 6.629327060542391,
+        "targetBearingMeshHorizonDistanceM": 3776.25
+      }
+    }
+  ],
+  "ridgeSilhouette": {
+    "observerElevationM": 5948.899465547409,
+    "targetGridBearingDeg": 358.1809062030325,
+    "maxDistanceM": 5000.011547701791,
+    "targetBearingSourceAngleDeg": 6.634222101469411,
+    "targetBearingSourceHorizonDistanceM": 3750.0,
+    "targetBearingSourceHorizonHeightM": 6385.059243302547,
+    "method": "Planar grid-space rays from the site at +observerHeight; source bilinear sampled every radialStepM; maximum atan2(dz, grid distance). Compares mesh and source in identical geometry only; not a lunar horizon calculation.",
+    "selectedMesh": {
+      "maxAbsElevationAngleDiffDeg": 0.027736416670864905,
+      "meanElevationAngleDiffDeg": -0.004533443295875505,
+      "targetBearingAngleDiffDeg": 0.0007338276329722504,
+      "targetBearingMeshAngleDeg": 6.634955929102383,
+      "targetBearingMeshHorizonDistanceM": 3753.75
+    }
+  },
+  "blenderReimport": {
+    "blenderVersion": "5.2.2 LTS",
+    "importedObjects": [
+      "Terrain_nobile-rim-1"
+    ],
+    "terrainObject": "Terrain_nobile-rim-1",
+    "matrixWorldIsIdentity": true,
+    "vertices": 160801,
+    "triangles": 320000,
+    "polygons": 320000,
+    "bboxMinBlender": [
+      -4997.5,
+      -4997.5,
+      -2782.354736328125
+    ],
+    "bboxMaxBlender": [
+      5002.5,
+      5002.5,
+      840.2900390625
+    ],
+    "bboxDimensionsM": [
+      10000.0,
+      10000.0,
+      3622.644775390625
+    ],
+    "expectedExtentLocalM": {
+      "xMin": -4997.5,
+      "xMax": 5002.5,
+      "yMin": -4997.5,
+      "yMax": 5002.5
+    },
+    "extentErrorM": {
+      "xMin": 0.0,
+      "xMax": 0.0,
+      "yMin": 0.0,
+      "yMax": 0.0
+    },
+    "expectedElevationRangeLocalM": [
+      -2782.354736328125,
+      840.2900390625
+    ],
+    "meanPolygonNormalZ": 0.9515498322416097,
+    "materials": [
+      "Terrain_neutral_grey"
+    ],
+    "extras": {
+      "siteId": "nobile-rim-1",
+      "crs": "+proj=stere +lat_0=-90 +lat_ts=-90 +lon_0=0 +x_0=0 +y_0=0 +R=1737400 +units=m +no_defs=True",
+      "frame": "MOON_ME reference frame of ephemeris DE421 (stated by the provider README; not encoded in the GeoTIFF CRS)",
+      "originProjectedXM": 84000.0,
+      "originProjectedYM": 110000.0,
+      "originElevationM": 5947.0,
+      "gltfAxes": "x=projX-originX, y=elevation-originZ, z=-(projY-originY)",
+      "source": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_surf.tif"
+    },
+    "rayCastProbes": {
+      "site": {
+        "hit": true,
+        "blenderXYZ": [
+          0.01002578902989626,
+          0.010791721753776073,
+          -0.10333251953125
+        ],
+        "elevationM": 5946.896667480469,
+        "sourceBilinearElevationM": 5946.899465547409,
+        "differenceM": -0.0027980669401586056
+      },
+      "ridge-reference": {
+        "hit": true,
+        "blenderXYZ": [
+          -118.90243530273438,
+          3744.123779296875,
+          437.4740905761719
+        ],
+        "elevationM": 6384.474090576172,
+        "sourceBilinearElevationM": 6384.412975779012,
+        "differenceM": 0.06111479715946189
+      },
+      "southwest-check": {
+        "hit": true,
+        "blenderXYZ": [
+          -2057.0126953125,
+          336.3260192871094,
+          -249.67578125
+        ],
+        "elevationM": 5697.32421875,
+        "sourceBilinearElevationM": 5697.487755343793,
+        "differenceM": -0.16353659379274177
+      }
+    }
+  }
+}
