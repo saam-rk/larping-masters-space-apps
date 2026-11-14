@@ -1,0 +1,43 @@
+{
+  "status": "passed",
+  "runtime": "v26.13.0",
+  "threeRevision": "187",
+  "checks": [
+    "installed Three.js GLTFLoader decodes uncompressed asset without extra decoders",
+    "exactly one terrain mesh, 50000 vertices, 99533 triangles, position and normal only",
+    "saved site, ridge and independent manual coordinate agree with Python GLB barycentric heights",
+    "observer offset changes marker height, not terrain radial elevation",
+    "invalid inputs, negative observer offset and coordinates outside the crop return null",
+    "spherical JS projection matches Rasterio/PROJ at the saved coordinate",
+    "100 arbitrary interior coordinates hit terrain; a coordinate just outside the mesh is rejected",
+    "a valid bounding rectangle with no triangle at the coordinate returns null, never a zero height",
+    "transformed terrain is rejected to prevent silently misregistered markers",
+    "separate astronaut GLB: 13 parts, unit scales, 1.70 m, matching placement and full ground-camera framing"
+  ],
+  "controls": [
+    {
+      "name": "site",
+      "threeHeightM": 5946.894584315327,
+      "residualToPythonM": -7.185008144006133e-11
+    },
+    {
+      "name": "ridge",
+      "threeHeightM": 6384.386111934217,
+      "residualToPythonM": 9.094947017729282e-13
+    },
+    {
+      "name": "third",
+      "threeHeightM": 5830.279720516551,
+      "residualToPythonM": -2.7284841053187847e-12
+    }
+  ],
+  "scaleReference": {
+    "heightM": 1.6999975591897964,
+    "meshParts": 13,
+    "bytes": 57364,
+    "fullyInsideGroundCamera": true,
+    "bodyPartCentersNotOccludedByTerrain": true
+  },
+  "browserRenderTest": "not performed",
+  "mobilePerformance": "pending: Node loader/raycast checks are not browser or mobile FPS measurements"
+}

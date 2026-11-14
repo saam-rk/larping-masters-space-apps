@@ -1,0 +1,410 @@
+{
+  "schemaVersion": 1,
+  "id": "nobile-rim-1",
+  "generatedUtc": "2026-11-14T16:40:38.585388+00:00",
+  "source": {
+    "provider": "NASA GSFC / LRO LOLA / PGDA product 78",
+    "product": "Site06_final_adj_5mpp_surf.tif",
+    "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_surf.tif",
+    "catalogUrl": "https://pgda.gsfc.nasa.gov/products/78",
+    "readmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+    "citation": "Barker et al. (2021), Planetary and Space Science 203, 105119",
+    "doi": "https://doi.org/10.1016/j.pss.2020.105119",
+    "version": "No explicit product version in TIFF; identified by filename and SHA-256",
+    "sha256": "cca17e8067601dd659b583f889204db6bce685bc30c60a9e62427a8bce36b03d",
+    "bytes": 64025603,
+    "dimensions": [
+      4000,
+      4000
+    ],
+    "affine": [
+      5.0,
+      0.0,
+      74000.0,
+      0.0,
+      -5.0,
+      120000.0
+    ],
+    "wkt": "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+    "rasterResolutionM": [
+      5.0,
+      5.0
+    ],
+    "nodata": "NaN",
+    "dtype": "float32",
+    "scale": 1.0,
+    "offset": 0.0,
+    "registration": "pixel centers; affine maps pixel corners",
+    "tags": {
+      "NC_GLOBAL#Conventions": "COARDS, CF-1.5",
+      "NC_GLOBAL#GMT_version": "5.4.5 [64-bit]",
+      "NC_GLOBAL#history": "xyz2grd -bi3 -I5 -R7.40000000000e+04/9.40000000000e+04/1.00000000000e+05/1.20000000000e+05 -Gtest.grd -r",
+      "NC_GLOBAL#node_offset": "1",
+      "x#actual_range": "{74000,94000}",
+      "x#long_name": "x",
+      "y#actual_range": "{100000,120000}",
+      "y#long_name": "y",
+      "z#actual_range": "{859.6159057617188,6800.08642578125}",
+      "z#long_name": "z",
+      "z#_FillValue": "nan",
+      "AREA_OR_POINT": "Area"
+    }
+  },
+  "historicalWindowCheck": {
+    "path": "docs/research/polar-terrain-validation/Site06-surf.tif",
+    "sha256": "766d882b3eaebfa45c9fd044daf858796bfd6aa1e227e23385845859f45306d3",
+    "dimensions": [
+      5,
+      5
+    ],
+    "exactSampleMatch": true
+  },
+  "frame": {
+    "name": "MOON_ME / DE421",
+    "evidence": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+    "note": "Frame realization comes from NASA README, not the generic TIFF datum name. No frame transformation performed.",
+    "latitude": "planetocentric degrees, north positive",
+    "longitude": "degrees, east positive"
+  },
+  "crs": {
+    "proj": "+proj=stere +lat_0=-90 +lon_0=0 +k=1 +x_0=0 +y_0=0 +R=1737400 +units=m +no_defs",
+    "referenceRadiusM": 1737400.0,
+    "projection": "south polar stereographic",
+    "latitudeOriginDeg": -90,
+    "centralMeridianDeg": 0,
+    "scaleAtPole": 1,
+    "falseEastingM": 0,
+    "falseNorthingM": 0
+  },
+  "units": "meters",
+  "vertical": {
+    "scale": 1,
+    "reference": "radial elevation above 1737400 m lunar sphere",
+    "evidence": "docs/LUNAR_SOUTH_POLE_RESEARCH.md and its LOLA elevation-definition references",
+    "model": "Projected height field, not body-fixed Cartesian or true local ENU. Lunar curvature is not embedded."
+  },
+  "origin": {
+    "projectedXM": 84000.0,
+    "projectedYM": 110000.0,
+    "radialElevationM": 5900.0
+  },
+  "axes": {
+    "blender": [
+      "X = projected X - origin X",
+      "Y = projected Y - origin Y",
+      "Z = height - origin height"
+    ],
+    "glb": [
+      "X = projected X - origin X",
+      "Y = height - origin height",
+      "Z = -(projected Y - origin Y)"
+    ],
+    "note": "Projection grid directions are NOT geographic east/north at this longitude. Do not align ephemeris azimuths directly."
+  },
+  "markerTransform": {
+    "projection": "rho = 2*R*tan(pi/4 + latitudeRadians/2); X = rho*sin(longitudeRadians); Y = rho*cos(longitudeRadians)",
+    "position": "[X-originX, meshHeight-originHeight+heightAboveMeshM, -(Y-originY)]",
+    "heightMethod": "Downward ray intersection with exported GLB triangles; barycentric height, not nearest vertex",
+    "validity": "Reject outside mesh center bounds or without a triangle hit. No extrapolation, no site-ID restriction.",
+    "implementation": "tools/lunar-terrain/marker.mjs"
+  },
+  "coverage": {
+    "cropPixelOuterBoundsM": [
+      78940.0,
+      106870.0,
+      88940.0,
+      116870.0
+    ],
+    "meshPixelCenterBoundsM": [
+      78942.5,
+      106872.5,
+      88937.5,
+      116867.5
+    ],
+    "boundsOrder": "minX,minY,maxX,maxY",
+    "sourceWindow": [
+      988,
+      626,
+      2000,
+      2000
+    ],
+    "cropAffine": [
+      5.0,
+      0.0,
+      78940.0,
+      0.0,
+      -5.0,
+      116870.0
+    ],
+    "validPixels": 4000000,
+    "totalPixels": 4000000,
+    "validPixelFraction": 1.0,
+    "sourceNodataPixels": 0,
+    "meshProjectedAreaM2": 99900025.0,
+    "meshCenterRectangleFraction": 1.0,
+    "removedUnsupportedTriangles": 0,
+    "validityRepresentation": "Union of exported triangles is authoritative; crop rectangle alone is not a validity test.",
+    "nodataPolicy": "Reject triangle if its source-pixel bounding box contains any missing value; conservative holes, never zero-fill.",
+    "outerEdgePolicy": "Surface stops at outer pixel centers, 2.5 m inside raster crop edges. Half-pixel border is unsupported."
+  },
+  "generation": {
+    "config": {
+      "id": "nobile-rim-1",
+      "sourceUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_surf.tif",
+      "sourceCatalogUrl": "https://pgda.gsfc.nasa.gov/products/78",
+      "sourceReadmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+      "frame": "MOON_ME / DE421",
+      "referenceRadiusM": 1737400.0,
+      "site": {
+        "latitudeDeg": -85.4381,
+        "longitudeEastDeg": 37.36667
+      },
+      "ridge": {
+        "latitudeDeg": -85.34185,
+        "longitudeEastDeg": 36.40708
+      },
+      "third": {
+        "latitudeDeg": -85.47,
+        "longitudeEastDeg": 38.0
+      },
+      "cropCenterProjectedM": [
+        83940.0,
+        111870.0
+      ],
+      "cropSizeM": [
+        10000.0,
+        10000.0
+      ],
+      "originProjectedM": [
+        84000.0,
+        110000.0,
+        5900.0
+      ],
+      "targetVertices": 50000,
+      "baseStridePixels": 20,
+      "candidateStridePixels": 4,
+      "refinementBatchSize": 4000,
+      "ridgePriorityRadiusM": 1500.0,
+      "ridgePriorityMultiplier": 3.0,
+      "maxGlbBytes": 2097152
+    },
+    "algorithm": "Deterministic Delaunay adaptive residual refinement at source pixel centers; ridge-weighted error; protected site/ridge support samples",
+    "refinementHistory": [
+      {
+        "verticesBefore": 10209,
+        "added": 4000,
+        "candidateMaxErrorM": 18.450488281249818
+      },
+      {
+        "verticesBefore": 14209,
+        "added": 4000,
+        "candidateMaxErrorM": 12.275317382813228
+      },
+      {
+        "verticesBefore": 18209,
+        "added": 4000,
+        "candidateMaxErrorM": 11.833691406249272
+      },
+      {
+        "verticesBefore": 22209,
+        "added": 4000,
+        "candidateMaxErrorM": 7.862500000000182
+      },
+      {
+        "verticesBefore": 26209,
+        "added": 4000,
+        "candidateMaxErrorM": 4.6709570312496
+      },
+      {
+        "verticesBefore": 30209,
+        "added": 4000,
+        "candidateMaxErrorM": 5.0634765625
+      },
+      {
+        "verticesBefore": 34209,
+        "added": 4000,
+        "candidateMaxErrorM": 6.5156250000009095
+      },
+      {
+        "verticesBefore": 38209,
+        "added": 4000,
+        "candidateMaxErrorM": 7.9208984375
+      },
+      {
+        "verticesBefore": 42209,
+        "added": 4000,
+        "candidateMaxErrorM": 3.29361979166697
+      },
+      {
+        "verticesBefore": 46209,
+        "added": 3791,
+        "candidateMaxErrorM": 3.239990234375
+      }
+    ],
+    "vertices": 50000,
+    "triangles": 99533,
+    "compression": "none",
+    "exportAttributes": [
+      "POSITION",
+      "NORMAL"
+    ],
+    "versions": {
+      "python": "3.11.9",
+      "numpy": "2.4.6",
+      "rasterio": "1.4.4",
+      "gdal": "3.10.3",
+      "pyproj": "3.7.2",
+      "proj": "9.5.1",
+      "scipy": "1.17.1",
+      "blender": "5.2.2 LTS"
+    }
+  },
+  "controlPoints": [
+    {
+      "name": "site",
+      "latitudeDeg": -85.4381,
+      "longitudeEastDeg": 37.36667,
+      "projectedM": [
+        84000.01002578877,
+        110000.01079172149
+      ],
+      "rasterBilinearM": 5946.899465547405
+    },
+    {
+      "name": "ridge",
+      "latitudeDeg": -85.34185,
+      "longitudeEastDeg": 36.40708,
+      "projectedM": [
+        83881.09756627696,
+        113744.1237488099
+      ],
+      "rasterBilinearM": 6384.412975779015
+    },
+    {
+      "name": "third",
+      "latitudeDeg": -85.47,
+      "longitudeEastDeg": 38.0,
+      "projectedM": [
+        84614.2832747164,
+        108301.34384148802
+      ],
+      "rasterBilinearM": 5830.303607621837
+    }
+  ],
+  "limitations": [
+    "Visualization asset, not a landing, power, radio-link or terrain-horizon certification.",
+    "5 m sample spacing is not effective resolution; NASA reports extensive interpolation (~90%).",
+    "No count/error layers used for this mesh; valid elevation does not mean direct LOLA observation.",
+    "Planar map view omits lunar curvature; use body-fixed geometry for physical sight-line calculations.",
+    "Manual coordinates must share the documented frame. No ME/PA or IAU_MOON conversion is supplied.",
+    "Illustrative Blender light is not an ephemeris-derived Sun position."
+  ],
+  "performance": {
+    "coldLoadTargetSeconds": 2,
+    "orbitTargetFps": 60,
+    "orbitMinimumFps": 50,
+    "status": "pending",
+    "device": null,
+    "browser": null,
+    "network": null,
+    "reason": "No mobile device/network performance test performed; asset size is not latency/FPS evidence."
+  },
+  "artifacts": {
+    "glb": {
+      "filename": "nobile-rim-1.glb",
+      "bytes": 1798344,
+      "sha256": "a6f4587fa3d6059c5a40578cd10753d8388174169073311253aaadf0a8913c0c"
+    },
+    "blend": {
+      "filename": "nobile-rim-1.blend",
+      "bytes": 2605901,
+      "sha256": "56679bd1ddbfd1e935f5ac751092e539c0904b7dfd0acb63004804a458c734c3",
+      "normalizedStartupFile": true
+    }
+  },
+  "blenderRoundTrip": {
+    "blenderVersion": "5.2.2 LTS",
+    "importedObjects": 1,
+    "vertices": 50000,
+    "triangles": 99533,
+    "blenderWorldBoundsM": [
+      [
+        -5057.5,
+        -3127.5,
+        -2067.615966796875
+      ],
+      [
+        4937.5,
+        6867.5,
+        899.92822265625
+      ]
+    ],
+    "maxNearestVertexResidualM": 0.0,
+    "bijectiveVertexMatch": true,
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "status": "passed",
+    "method": "Blender glTF reimport; world-space bijective nearest-vertex comparison with prepared Blender coordinates"
+  },
+  "scaleReference": {
+    "source": "docs/research/site-terrain/nobile-rim-2/astronaut.blend",
+    "sourceSha256": "26b6998ac3566d8bad668ef71e628274baae9463f40b27a87286ba2dcaf43088",
+    "sourceLicense": "Original team asset per integrator confirmation; no separate asset license selected",
+    "sourceAuthorship": "Integrator confirms creating the astronaut with AI assistance in another session (PR #13 follow-up)",
+    "rootName": "Astronaut_1p70m",
+    "heightM": 1.7,
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "blenderPositionM": [
+      -3.2741570472717285,
+      8.91102409362793,
+      47.110107421875
+    ],
+    "glbPositionM": [
+      -3.2741570472717285,
+      47.110107421875,
+      -8.91102409362793
+    ],
+    "placement": "9 m forward and 3 m left of the ground camera, in projected XY",
+    "soleLiftAboveCenterSurfaceM": 0.06756591796875,
+    "groundCamera": {
+      "name": "Ground | 2 m above mesh toward ridge",
+      "blenderPositionM": [
+        0.01002578902989626,
+        0.010791721753776073,
+        48.89459228515625
+      ],
+      "blenderQuaternionWXYZ": [
+        0.664943516254425,
+        0.7467249631881714,
+        0.011854947544634342,
+        0.010556591674685478
+      ],
+      "glbPositionM": [
+        0.01002578902989626,
+        48.89459228515625,
+        -0.010791721753776073
+      ],
+      "glbLookDirection": [
+        -0.03153148293495178,
+        0.11547741293907166,
+        -0.992809534072876
+      ],
+      "verticalFovDeg": 43.77911418958921,
+      "aspect": 1.4
+    },
+    "webAsset": {
+      "filename": "nobile-rim-1.astronaut.glb",
+      "bytes": 57364,
+      "sha256": "bda3a367cf4248199d2b6135fbab842333e62cd654f42cd759a260eac5d7f636",
+      "coordinates": "Same origin and meters as terrain GLB; placement already baked into root transform"
+    },
+    "limits": "Illustrative rigid boots on simplified sloped terrain; no terrain/astronaut rescaling. App integration pending."
+  }
+}

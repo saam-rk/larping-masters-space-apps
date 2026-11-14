@@ -1,0 +1,27 @@
+{
+  "blenderVersion": "5.2.2 LTS",
+  "importedObjects": 1,
+  "vertices": 50000,
+  "triangles": 99533,
+  "blenderWorldBoundsM": [
+    [
+      -5057.5,
+      -3127.5,
+      -2067.615966796875
+    ],
+    [
+      4937.5,
+      6867.5,
+      899.92822265625
+    ]
+  ],
+  "maxNearestVertexResidualM": 0.0,
+  "bijectiveVertexMatch": true,
+  "scale": [
+    1.0,
+    1.0,
+    1.0
+  ],
+  "status": "passed",
+  "method": "Blender glTF reimport; world-space bijective nearest-vertex comparison with prepared Blender coordinates"
+}
