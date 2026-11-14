@@ -12,14 +12,17 @@
  * pressable to query again).
  */
 
-import { useId, useState, type FormEvent } from 'react';
+import { useEffect, useId, useState, type FormEvent } from 'react';
 import { CUSTOM_SITE_ID, findSite, REFERENCE_SITES, type SiteId } from '../../../shared/sites';
-import { SUPPORTED_UTC_RANGE } from '../../../shared/time';
 import type { EphemerisSelection } from '../../api/ephemerisClient';
 import { formatCoordinates } from '../../format';
 import { useI18n } from '../../i18n/context';
+import { usePreferences } from '../../preferences/context';
+import { prefersReducedMotion } from '../../preferences/preferences';
 import { Box } from '../../ui/Box';
+import { NumberWheel } from '../../ui/NumberWheel';
 import { formatCoordinateQuery, parseCoordinateQuery, type CoordinateQuery } from './coordinateQuery';
+import { changeDatePart, changeTimePart, currentUtcMinute, daysInMonth, MAX_YEAR, MIN_YEAR } from './dateTimeWheel';
 import {
   fieldsToUtc,
   formatUtcMinute,
@@ -41,9 +44,6 @@ interface ConfigPanelProps {
   readonly onUpdate: () => void;
 }
 
-const DATE_MIN = SUPPORTED_UTC_RANGE.startInclusive.slice(0, 10);
-const DATE_MAX = '2099-12-31';
-
 function isUsable(query: CoordinateQuery): boolean {
   return query.kind === 'coordinates' || query.kind === 'site';
 }
@@ -58,6 +58,8 @@ export function ConfigPanel({
   onUpdate,
 }: ConfigPanelProps) {
   const { locale, messages } = useI18n();
+  const { preferences, configured } = usePreferences();
+  const animated = configured && preferences.effects === 'on' && !prefersReducedMotion();
   const { config } = messages;
   const siteTitleId = useId();
   const searchFieldId = useId();
@@ -71,11 +73,31 @@ export function ConfigPanel({
   );
   const [zone, setZone] = useState<TimeZoneMode>('utc');
   const [fields, setFields] = useState<DateTimeFields>(() => utcToFields(selection.utc, 'utc'));
+  const [livePulse, setLivePulse] = useState(0);
+  const [scrambling, setScrambling] = useState(false);
+  const [year, month, day] = fields.date.split('-').map(Number) as [number, number, number];
+  const [hour, minute] = fields.time.split(':').map(Number) as [number, number];
   const query = parseCoordinateQuery(searchInput);
   const parsedTime = fieldsToUtc(fields, zone, selection.utc);
   const custom = selection.siteId === CUSTOM_SITE_ID;
   const valid = parsedTime.ok && isUsable(query);
   const canUpdate = valid && !loading;
+
+  useEffect(() => {
+    if (livePulse === 0) return;
+    const timer = window.setTimeout(() => setScrambling(false), 330);
+    return () => window.clearTimeout(timer);
+  }, [livePulse]);
+
+  function handleLive() {
+    const utc = currentUtcMinute();
+    setFields(utcToFields(utc, zone));
+    onUtcChange(utc);
+    if (animated) {
+      setScrambling(true);
+      setLivePulse((pulse) => pulse + 1);
+    }
+  }
 
   function handlePresetChange(siteId: SiteId) {
     const site = findSite(siteId);
@@ -226,38 +248,63 @@ export function ConfigPanel({
         )}
       </Box>
 
-      <Box title={config.dateTime} titleAs="h3" help={config.dateTimeInfo}>
+      <Box
+        title={config.dateTime}
+        className="datetime-box"
+        titleAs="h3"
+        help={config.dateTimeInfo}
+        actions={<button type="button" className="text-button" onClick={handleLive} title={config.liveHint}>{config.live}</button>}
+      >
         <div className="datetime">
-          <div className="datetime__field">
-            <label className="search-field__label" htmlFor={dateFieldId}>
+          <div className="datetime__field" role="group" aria-labelledby={dateFieldId}>
+            <span className="search-field__label" id={dateFieldId}>
               {config.date}
-            </label>
-            <input
-              id={dateFieldId}
-              type="date"
-              className="text-input"
-              min={DATE_MIN}
-              max={DATE_MAX}
-              value={fields.date}
-              aria-invalid={!parsedTime.ok}
-              aria-describedby={timeHintId}
-              onChange={(event) => handleFieldsChange({ date: event.target.value })}
-            />
+            </span>
+            <div className="datetime__wheels datetime__wheels--date">
+              {([
+                { part: 'day', value: day, min: 1, max: daysInMonth(year, month) },
+                { part: 'month', value: month, min: 1, max: 12 },
+                { part: 'year', value: year, min: MIN_YEAR, max: MAX_YEAR },
+              ] as const).map(({ part, value, min, max }) => (
+                <NumberWheel
+                  key={part}
+                  label={config.wheels[part]}
+                  value={value}
+                  min={min}
+                  max={max}
+                  wrap={part !== 'year'}
+                  animated={animated}
+                  scrambling={scrambling}
+                  invalid={!parsedTime.ok}
+                  describedBy={timeHintId}
+                  onChange={(value) => handleFieldsChange({ date: changeDatePart(fields.date, part, value) })}
+                />
+              ))}
+            </div>
           </div>
-          <div className="datetime__field">
-            <label className="search-field__label" htmlFor={timeFieldId}>
+          <div className="datetime__field" role="group" aria-labelledby={timeFieldId}>
+            <span className="search-field__label" id={timeFieldId}>
               {config.time}
-            </label>
-            <input
-              id={timeFieldId}
-              type="time"
-              className="text-input"
-              step={60}
-              value={fields.time}
-              aria-invalid={!parsedTime.ok}
-              aria-describedby={timeHintId}
-              onChange={(event) => handleFieldsChange({ time: event.target.value })}
-            />
+            </span>
+            <div className="datetime__wheels datetime__wheels--time">
+              {([
+                { part: 'hour', value: hour, index: 0, max: 23 },
+                { part: 'minute', value: minute, index: 1, max: 59 },
+              ] as const).map(({ part, value, index, max }) => (
+                <NumberWheel
+                  key={part}
+                  label={config.wheels[part]}
+                  value={value}
+                  min={0}
+                  max={max}
+                  animated={animated}
+                  scrambling={scrambling}
+                  invalid={!parsedTime.ok}
+                  describedBy={timeHintId}
+                  onChange={(value) => handleFieldsChange({ time: changeTimePart(fields, index, value) })}
+                />
+              ))}
+            </div>
           </div>
         </div>
 

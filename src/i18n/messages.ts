@@ -94,6 +94,9 @@ export interface Messages {
     readonly dateTimeInfo: Paragraphs;
     readonly date: string;
     readonly time: string;
+    readonly live: string;
+    readonly liveHint: string;
+    readonly wheels: { readonly day: string; readonly month: string; readonly year: string; readonly hour: string; readonly minute: string };
     readonly timeZone: string;
     /** Option for UTC, the time standard NASA uses for launches. */
     readonly zoneUtc: string;
@@ -253,11 +256,16 @@ const es: Messages = {
     dateTime: 'Fecha y hora',
     dateTimeInfo: [
       'Fecha y hora entre 2000 y 2099, con la zona horaria que elijas.',
+      'Gira las ruletas con la rueda del ratón, desliza verticalmente o pulsa el número anterior o siguiente. Con el teclado, usa las flechas, RePág/AvPág, Inicio/Fin o escribe un número.',
+      '«EN VIVO» selecciona la fecha y hora actuales de tu dispositivo, al minuto, en la zona elegida. Se toma al pulsar el botón; no avanza automáticamente ni consulta datos hasta que pulses «Actualizar vista».',
       'UTC es el horario que usa la NASA para los lanzamientos y el que usa el cálculo. «Local» es la zona de tu dispositivo: se convierte a UTC (se muestra la hora UTC equivalente) y cambiar de zona conserva el mismo instante.',
       'Tras cambiar el lugar o la fecha, pulsa «Actualizar vista» para consultar JPL Horizons.',
     ],
     date: 'Fecha',
     time: 'Hora',
+    live: 'EN VIVO',
+    liveHint: 'Seleccionar la fecha y hora actuales',
+    wheels: { day: 'Día', month: 'Mes', year: 'Año', hour: 'Hora', minute: 'Min' },
     timeZone: 'Zona horaria',
     zoneUtc: 'UTC · NASA (lanzamientos)',
     zoneLocal: (id) => `Local · ${id}`,
@@ -478,11 +486,16 @@ const en: Messages = {
     dateTime: 'Date and time',
     dateTimeInfo: [
       'Date and time between 2000 and 2099, in the time zone you choose.',
+      'Turn the wheels with your mouse wheel, swipe vertically or press the previous or next number. On a keyboard, use the arrows, Page Up/Down, Home/End or type a number.',
+      '“LIVE” selects your device’s current date and time, to the minute, in the chosen zone. It captures the time when pressed; it does not keep ticking or query data until you press “Update view”.',
       'UTC is the time standard NASA uses for launches and the one the calculation uses. “Local” is your device’s time zone: it is converted to UTC (the equivalent UTC time is shown) and switching zones keeps the same instant.',
       'After changing the place or the date, press “Update view” to query JPL Horizons.',
     ],
     date: 'Date',
     time: 'Time',
+    live: 'LIVE',
+    liveHint: 'Select the current date and time',
+    wheels: { day: 'Day', month: 'Month', year: 'Year', hour: 'Hour', minute: 'Min' },
     timeZone: 'Time zone',
     zoneUtc: 'UTC · NASA (launches)',
     zoneLocal: (id) => `Local · ${id}`,
