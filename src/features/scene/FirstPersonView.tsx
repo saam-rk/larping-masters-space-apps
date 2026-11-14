@@ -1,7 +1,8 @@
 /**
- * First-person local horizon at Nobile Rim 2: LOLA terrain (see
- * `terrain/nobileRim2.ts`), the 1.70 m astronaut scale figure, and the Sun
- * and Earth placed from the same azimuth/elevation as the results panel.
+ * First-person local horizon at a site with a terrain model (Nobile Rim 1 and
+ * 2, see `terrain/models.ts`): LOLA terrain, the 1.70 m astronaut scale
+ * figure, and the Sun and Earth placed from the same azimuth/elevation as the
+ * results panel.
  *
  * Units are meters. Scene frame as in `geometry.ts` (-Z north, +X east,
  * +Y up); the world origin is the site point on the terrain surface.
@@ -10,24 +11,33 @@
  * 2.6 m away), facing it with the Sun just to the right; a soft contact shadow
  * (decorative, not Sun-based) marks where the figure stands; dragging only turns the head and
  * the wheel or the zoom slider narrows the field of view (see `EyeLevelRig`). Sun and Earth are drawn far
- * beyond the 10 km crop with their real apparent angular diameter. Below the
- * geometric horizon a dark floor hides the sky, so the area beyond the crop
- * (no relief data) is not shown as open sky.
+ * beyond the 10 km crop with their real apparent angular diameter. Beyond the
+ * crop there is no relief data: a dark floor hides the sky below an assumed
+ * horizon, a smooth lunar sphere continuing from the crop edge as seen from
+ * eye height (see `horizonFloor.ts`). Where the terrain falls away, that
+ * horizon lies below the green geometric line (elevation 0), so the parts of
+ * the Sun or the Earth between the two are drawn.
+ *
+ * The Sun and the Earth are never cut away: the parts hidden by the relief, the
+ * astronaut or the assumed horizon are drawn again as a faint translucent
+ * "ghost" (see `FarBody`), so the body can always be found while its hidden
+ * part does not read as visible.
  */
 
 import { Html, Line, PerspectiveCamera, useGLTF } from '@react-three/drei';
-import { Suspense, useMemo, useRef, type RefObject } from 'react';
+import { Suspense, useEffect, useMemo, useRef, type RefObject } from 'react';
 import {
-  BackSide,
   BufferAttribute,
   BufferGeometry,
   DoubleSide,
+  GreaterDepth,
   Group,
   Matrix4,
   Mesh,
   MeshBasicMaterial,
   Quaternion,
   Raycaster,
+  SphereGeometry,
   Vector3,
   type Material,
   type Object3D,
@@ -39,21 +49,26 @@ import { radiusForAngularDiameter, upperLimbAboveHorizon, type PlacedBodies, typ
 import { EYE_HEIGHT_M, EyeLevelRig } from './EyeLevelRig';
 import { horizontalToDirection, horizontalToPosition, type Vector3Tuple } from './geometry';
 import { glowTexture } from './glow';
+import { horizonProfile, type HorizonSample } from './horizonFloor';
+import { terrainForSite } from './terrain/models';
 import {
-  ASTRONAUT_GLB_POSITION,
   ASTRONAUT_HEIGHT_M,
-  ASTRONAUT_URL,
-  NOBILE_RIM_2_TERRAIN_URL,
-  TERRAIN_YAW_RAD,
+  SPHERE_RADIUS_M,
   projectSouthPolar,
   projectedToGlb,
-} from './terrain/nobileRim2';
+  terrainYawRad,
+  type SiteTerrain,
+} from './terrain/siteTerrain';
 import { DEFAULT_FOV_DEG } from './zoom';
 
 /** Distance at which the Sun and Earth are drawn (m): beyond every terrain point of the crop. */
 const BODY_DISTANCE_M = 80_000;
 /** Radius of the geometric horizon line and floor (m), between the crop and the bodies. */
 const HORIZON_RADIUS_M = 60_000;
+/** Azimuth sectors of the assumed horizon beyond the crop (2 degrees each, like the horizon line). */
+const FLOOR_SECTORS = 180;
+/** Rows of the floor mesh between its upper edge and the nadir. */
+const FLOOR_ROWS = 12;
 /** Half-size of the square of terrain kept for camera ground queries (m). */
 const PROBE_HALF_SIZE_M = 120;
 /** Horizontal distance from the astronaut to where the viewer stands (m): right beside the figure. */
@@ -67,6 +82,13 @@ const SHADOW_RADIUS_M = 0.6;
 const SHADOW_LIFT_M = 0.03;
 /** Horizontal offset (m) of the terrain samples used to tilt the shadow to the local slope. */
 const SLOPE_SAMPLE_M = 0.5;
+/** Draw order of the hidden parts of the Sun and Earth: after the terrain, before the horizon line and astronaut. */
+const GHOST_RENDER_ORDER = 5;
+/** Opacity of the hidden parts of the Sun and Earth. */
+const GHOST_OPACITY = 0.35;
+/** Segments of the low-poly body spheres (a disc of under 1 degree on screen needs no more). */
+const BODY_WIDTH_SEGMENTS = 32;
+const BODY_HEIGHT_SEGMENTS = 16;
 /** Draw order of the horizon line and ticks: after the terrain, which they are drawn over. */
 const HORIZON_RENDER_ORDER = 10;
 /** Draw order of the astronaut: after the horizon line, so the figure stays in front of it. */
@@ -87,10 +109,16 @@ function firstMesh(root: Object3D): Mesh | null {
  * depth so that it shows over the relief; three.js draws transparent objects
  * after opaque ones, so the figure's materials are marked transparent (still
  * fully opaque and writing depth) to join that pass with a later render order.
- * Materials are cloned so the cached GLB stays untouched.
+ * Materials are cloned so the cached GLB stays untouched. A placement baked
+ * into the figure's root node (Nobile Rim 1) is dropped: the view places the
+ * figure itself.
  */
 function astronautInFront(source: Object3D): Object3D {
   const astronaut = source.clone();
+  for (const root of astronaut.children) {
+    root.position.set(0, 0, 0);
+    root.quaternion.identity();
+  }
   astronaut.traverse((object) => {
     const mesh = object as Mesh;
     if (!mesh.isMesh) return;
@@ -148,10 +176,15 @@ interface TerrainFrame {
   readonly astronaut: Vector3;
 }
 
-function useTerrainFrame(terrain: Mesh | null, latitudeDeg: number, longitudeEastDeg: number): TerrainFrame | null {
+function useTerrainFrame(
+  terrain: Mesh | null,
+  model: SiteTerrain,
+  latitudeDeg: number,
+  longitudeEastDeg: number,
+): TerrainFrame | null {
   return useMemo(() => {
     if (!terrain) return null;
-    const probe = buildProbe(terrain, ASTRONAUT_GLB_POSITION);
+    const probe = buildProbe(terrain, model.astronautGlbPosition);
     const raycaster = new Raycaster();
     const localGround = (x: number, z: number): number | null => {
       raycaster.set(new Vector3(x, 10_000, z), DOWN);
@@ -159,14 +192,14 @@ function useTerrainFrame(terrain: Mesh | null, latitudeDeg: number, longitudeEas
     };
 
     const projected = projectSouthPolar(latitudeDeg, longitudeEastDeg);
-    const [sx, , sz] = projectedToGlb(projected.x, projected.y, 0);
+    const [sx, , sz] = projectedToGlb(model, projected.x, projected.y, 0);
     const sy = localGround(sx, sz);
     if (sy === null) return null;
 
-    const toWorld = new Matrix4().makeRotationY(TERRAIN_YAW_RAD).multiply(new Matrix4().makeTranslation(-sx, -sy, -sz));
+    const toWorld = new Matrix4().makeRotationY(terrainYawRad(model)).multiply(new Matrix4().makeTranslation(-sx, -sy, -sz));
     const toLocal = toWorld.clone().invert();
 
-    const [ax, ayStored, az] = ASTRONAUT_GLB_POSITION;
+    const [ax, ayStored, az] = model.astronautGlbPosition;
     const astronaut = new Vector3(ax, localGround(ax, az) ?? ayStored, az).applyMatrix4(toWorld);
 
     const groundAt = (x: number, z: number): number | null => {
@@ -175,7 +208,58 @@ function useTerrainFrame(terrain: Mesh | null, latitudeDeg: number, longitudeEas
       return y === null ? null : new Vector3(local.x, y, local.z).applyMatrix4(toWorld).y;
     };
     return { toWorld, groundAt, astronaut };
-  }, [terrain, latitudeDeg, longitudeEastDeg]);
+  }, [terrain, model, latitudeDeg, longitudeEastDeg]);
+}
+
+/**
+ * Assumed horizon beyond the crop seen from `eye` (see `horizonFloor.ts`):
+ * every terrain vertex, in the world frame, relative to the eye.
+ */
+function floorProfile(terrain: Mesh, toWorld: Matrix4, eye: Vector3Tuple): number[] {
+  const position = terrain.geometry.getAttribute('position');
+  const toWorldFromMesh = toWorld.clone().multiply(terrain.matrix);
+  const vertex = new Vector3();
+  const [ex, ey, ez] = eye;
+  function* samples(): Generator<HorizonSample> {
+    for (let i = 0; i < position.count; i += 1) {
+      vertex.fromBufferAttribute(position, i).applyMatrix4(toWorldFromMesh);
+      const dx = vertex.x - ex;
+      const dz = vertex.z - ez;
+      // Azimuth clockwise from north (-Z) toward east (+X).
+      yield { azimuthDeg: (Math.atan2(dx, -dz) * 180) / Math.PI, distanceM: Math.hypot(dx, dz), heightM: vertex.y - ey };
+    }
+  }
+  return horizonProfile(samples(), FLOOR_SECTORS, SPHERE_RADIUS_M);
+}
+
+/**
+ * Dark floor below the assumed horizon: on a sphere of `HORIZON_RADIUS_M`
+ * around the eye, from the profile elevation of each sector down to the nadir.
+ */
+function floorGeometry(profileDeg: readonly number[]): BufferGeometry {
+  const sectors = profileDeg.length;
+  const positions: number[] = [];
+  const indices: number[] = [];
+  for (let i = 0; i <= sectors; i += 1) {
+    const top = profileDeg[i % sectors] ?? 0;
+    const azimuth = (i * 360) / sectors;
+    for (let j = 0; j <= FLOOR_ROWS; j += 1) {
+      const elevation = top + ((-90 - top) * j) / FLOOR_ROWS;
+      positions.push(...horizontalToPosition(azimuth, elevation, HORIZON_RADIUS_M));
+    }
+  }
+  const column = FLOOR_ROWS + 1;
+  for (let i = 0; i < sectors; i += 1) {
+    for (let j = 0; j < FLOOR_ROWS; j += 1) {
+      const a = i * column + j;
+      const b = (i + 1) * column + j;
+      indices.push(a, b, a + 1, b, b + 1, a + 1);
+    }
+  }
+  const geometry = new BufferGeometry();
+  geometry.setAttribute('position', new BufferAttribute(new Float32Array(positions), 3));
+  geometry.setIndex(indices);
+  return geometry;
 }
 
 /** Bearing (deg) from the astronaut to the viewer, so the first body is in view just right of the figure. */
@@ -221,18 +305,39 @@ export interface FirstPersonControls {
   readonly showHorizon: boolean;
 }
 
-function Terrain({ data, bodies, controls }: { data: EphemerisResponse; bodies: PlacedBodies; controls: FirstPersonControls }) {
+function Terrain({
+  data,
+  bodies,
+  controls,
+  model,
+}: {
+  data: EphemerisResponse;
+  bodies: PlacedBodies;
+  controls: FirstPersonControls;
+  model: SiteTerrain;
+}) {
   const { messages, locale } = useI18n();
-  const terrainGltf = useGLTF(NOBILE_RIM_2_TERRAIN_URL, false, false);
-  const astronautGltf = useGLTF(ASTRONAUT_URL, false, false);
+  const terrainGltf = useGLTF(model.terrainUrl, false, false);
+  const astronautGltf = useGLTF(model.astronautUrl, false, false);
   const terrainScene = useMemo(() => terrainGltf.scene.clone(), [terrainGltf.scene]);
   const astronautScene = useMemo(() => astronautInFront(astronautGltf.scene), [astronautGltf.scene]);
   const astronautRef = useRef<Group>(null);
   const terrainMesh = useMemo(() => firstMesh(terrainScene), [terrainScene]);
-  const frame = useTerrainFrame(terrainMesh, data.site.latitudeDeg, data.site.longitudeEastDeg);
+  const frame = useTerrainFrame(terrainMesh, model, data.site.latitudeDeg, data.site.longitudeEastDeg);
 
   const bearing = initialBearing(bodies.placed);
-  if (!frame) {
+  // The viewer stands still on the terrain, VIEWER_DISTANCE_M from the figure along `bearing`.
+  const view = useMemo(() => {
+    if (!frame || !terrainMesh) return null;
+    const [dx, , dz] = horizontalToDirection(bearing, 0);
+    const standX = frame.astronaut.x + dx * VIEWER_DISTANCE_M;
+    const standZ = frame.astronaut.z + dz * VIEWER_DISTANCE_M;
+    const eye: Vector3Tuple = [standX, (frame.groundAt(standX, standZ) ?? frame.astronaut.y) + EYE_HEIGHT_M, standZ];
+    return { eye, floor: floorGeometry(floorProfile(terrainMesh, frame.toWorld, eye)) };
+  }, [frame, terrainMesh, bearing]);
+  useEffect(() => () => view?.floor.dispose(), [view]);
+
+  if (!frame || !view) {
     return (
       <Html center className="scene__label">
         {messages.scene.terrainMissing}
@@ -240,11 +345,7 @@ function Terrain({ data, bodies, controls }: { data: EphemerisResponse; bodies: 
     );
   }
 
-  // The viewer stands still on the terrain, VIEWER_DISTANCE_M from the figure along `bearing`.
-  const [dx, , dz] = horizontalToDirection(bearing, 0);
-  const standX = frame.astronaut.x + dx * VIEWER_DISTANCE_M;
-  const standZ = frame.astronaut.z + dz * VIEWER_DISTANCE_M;
-  const eye: Vector3Tuple = [standX, (frame.groundAt(standX, standZ) ?? frame.astronaut.y) + EYE_HEIGHT_M, standZ];
+  const { eye } = view;
   // The figure's visor (+Z) faces the viewer.
   const astronautYaw = ((180 - bearing) * Math.PI) / 180;
   const heightLabel = `${ASTRONAUT_HEIGHT_M.toLocaleString(locale, { minimumFractionDigits: 2 })} m`;
@@ -266,7 +367,7 @@ function Terrain({ data, bodies, controls }: { data: EphemerisResponse; bodies: 
         zoom={controls.zoom}
         onZoomChange={controls.onZoomChange}
       />
-      <Sky eye={eye} bodies={bodies} showHorizon={controls.showHorizon} occluder={astronautRef} />
+      <Sky eye={eye} floor={view.floor} bodies={bodies} showHorizon={controls.showHorizon} occluder={astronautRef} />
     </>
   );
 }
@@ -274,17 +375,19 @@ function Terrain({ data, bodies, controls }: { data: EphemerisResponse; bodies: 
 /**
  * Horizon line, horizon floor, compass labels, Sun, Earth and the sunlight,
  * centered on the eye. `showHorizon` hides the line, ticks and labels; the
- * floor stays, since it marks where there is no relief data. The line passes
- * behind the astronaut (see `astronautInFront`) and the compass labels hide
- * while `occluder` covers them.
+ * floor (see `floorGeometry`) stays, since it marks where there is no relief
+ * data. The line passes behind the astronaut (see `astronautInFront`) and the
+ * compass labels hide while `occluder` covers them.
  */
 function Sky({
   eye,
+  floor,
   bodies,
   showHorizon,
   occluder,
 }: {
   eye: Vector3Tuple;
+  floor: BufferGeometry;
   bodies: PlacedBodies;
   showHorizon: boolean;
   occluder: RefObject<Object3D | null>;
@@ -323,10 +426,9 @@ function Sky({
         />
       )}
     <group position={eye}>
-      {/* Below the geometric horizon: no sky, and no relief data beyond the crop. */}
-      <mesh renderOrder={-5}>
-        <sphereGeometry args={[HORIZON_RADIUS_M, 64, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2]} />
-        <meshBasicMaterial color="#020604" side={BackSide} />
+      {/* Below the assumed horizon beyond the crop: no sky, and no relief data there. */}
+      <mesh geometry={floor} renderOrder={-5}>
+        <meshBasicMaterial color="#020604" side={DoubleSide} />
       </mesh>
       {/* Geometric horizon (elevation 0): drawn over the relief as a reference line, behind the astronaut. */}
       {showHorizon && (
@@ -374,19 +476,41 @@ function Sky({
   );
 }
 
+/**
+ * Sun or Earth at `BODY_DISTANCE_M`, with its real apparent diameter. A
+ * low-poly sphere drawn twice with the same geometry: normally, where it is in
+ * front of everything else, and as a translucent ghost only where something is
+ * in front of it (`GreaterDepth`: relief, astronaut or the assumed-horizon
+ * floor). The ghost writes no depth and only adds one cheap pass.
+ */
 function FarBody({ body, label }: { body: SceneBody; label: string }) {
   const position = horizontalToPosition(body.azimuthDeg, body.elevationDeg, BODY_DISTANCE_M);
   const radius = radiusForAngularDiameter(body.angularDiameterDeg, BODY_DISTANCE_M);
   const isSun = body.body === 'sun';
+  const geometry = useMemo(
+    () => new SphereGeometry(radius, BODY_WIDTH_SEGMENTS, BODY_HEIGHT_SEGMENTS),
+    [radius],
+  );
+  useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <group position={position}>
-      <mesh>
-        <sphereGeometry args={[radius, 48, 24]} />
+      <mesh geometry={geometry}>
         {isSun ? (
           <meshBasicMaterial color="#fff6d8" toneMapped={false} />
         ) : (
           <meshStandardMaterial color="#3d7fd6" emissive="#081a33" emissiveIntensity={0.6} roughness={0.85} />
         )}
+      </mesh>
+      {/* Hidden part: drawn only where the relief, the figure or the floor is in front. */}
+      <mesh geometry={geometry} renderOrder={GHOST_RENDER_ORDER}>
+        <meshBasicMaterial
+          color={isSun ? '#ffd970' : '#5a9cf0'}
+          transparent
+          opacity={GHOST_OPACITY}
+          depthWrite={false}
+          depthFunc={GreaterDepth}
+          toneMapped={false}
+        />
       </mesh>
       {isSun && (
         <sprite scale={[0.09, 0.09, 1]}>
@@ -411,6 +535,7 @@ export function FirstPersonView({
   controls: FirstPersonControls;
 }) {
   const { messages } = useI18n();
+  const model = terrainForSite(data.site.id);
   return (
     <>
       {/* Position and orientation are set by `EyeLevelRig` once the terrain is loaded. */}
@@ -422,7 +547,13 @@ export function FirstPersonView({
           </Html>
         }
       >
-        <Terrain data={data} bodies={bodies} controls={controls} />
+        {model ? (
+          <Terrain key={model.siteId} data={data} bodies={bodies} controls={controls} model={model} />
+        ) : (
+          <Html center className="scene__label">
+            {messages.scene.terrainMissing}
+          </Html>
+        )}
       </Suspense>
     </>
   );

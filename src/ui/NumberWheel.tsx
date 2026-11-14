@@ -12,12 +12,19 @@ interface NumberWheelProps {
   readonly scrambling: boolean;
   readonly invalid: boolean;
   readonly describedBy: string;
+  /**
+   * Text for each value, for a wheel of named options (e.g. the time zone):
+   * values are then indexes, the text is also the accessible value and the
+   * wheel label is only read by assistive technology. Numbers are shown with
+   * two digits otherwise.
+   */
+  readonly format?: (value: number) => string;
   readonly onChange: (value: number) => void;
 }
 
 /** Three visible positions, with mouse-wheel, swipe, click and keyboard control. */
 export function NumberWheel({
-  label, value, min, max, wrap = true, animated, scrambling, invalid, describedBy, onChange,
+  label, value, min, max, wrap = true, animated, scrambling, invalid, describedBy, format, onChange,
 }: NumberWheelProps) {
   const labelId = useId();
   const control = useRef<HTMLDivElement>(null);
@@ -27,7 +34,7 @@ export function NumberWheel({
   const [direction, setDirection] = useState(1);
   const previous = stepWheel(value, -1, min, max, wrap);
   const next = stepWheel(value, 1, min, max, wrap);
-  const display = (number: number) => String(number).padStart(2, '0');
+  const display = (number: number) => (format ? format(number) : String(number).padStart(2, '0'));
 
   function step(amount: number) {
     setDirection(Math.sign(amount));
@@ -79,7 +86,7 @@ export function NumberWheel({
   }
 
   return (
-    <div className="number-wheel">
+    <div className={`number-wheel${format ? ' number-wheel--text' : ''}`}>
       <span className="number-wheel__label" id={labelId}>{label}</span>
       <div
         ref={control}
@@ -88,6 +95,7 @@ export function NumberWheel({
         tabIndex={0}
         aria-labelledby={labelId}
         aria-valuenow={value}
+        aria-valuetext={format ? format(value) : undefined}
         aria-valuemin={min}
         aria-valuemax={max}
         aria-invalid={invalid}

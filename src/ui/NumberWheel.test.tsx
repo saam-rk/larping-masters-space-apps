@@ -245,3 +245,25 @@ describe('NumberWheel component interactions', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 });
+
+describe('NumberWheel with named options', () => {
+  const zones = ['UTC', 'Local · Europe/Madrid'];
+
+  it('shows option names and exposes the chosen one as the accessible value', () => {
+    const { control } = mountWheel({ label: 'Time zone', value: 0, min: 0, max: 1, wrap: false, format: (index) => zones[index] ?? '' });
+    expect(control.getAttribute('aria-valuetext')).toBe('UTC');
+    expect(container.querySelector('.number-wheel__selected')?.textContent).toBe('UTC');
+    expect(container.querySelector('.number-wheel')?.classList.contains('number-wheel--text')).toBe(true);
+    key(control, 'ArrowUp');
+    expect(control.getAttribute('aria-valuetext')).toBe('Local · Europe/Madrid');
+    // No wrap: the last option stays selected.
+    key(control, 'ArrowUp');
+    expect(control.getAttribute('aria-valuenow')).toBe('1');
+  });
+
+  it('keeps two-digit numbers without a format', () => {
+    const { control } = mountWheel({ value: 5 });
+    expect(control.hasAttribute('aria-valuetext')).toBe(false);
+    expect(container.querySelector('.number-wheel__selected')?.textContent).toBe('05');
+  });
+});

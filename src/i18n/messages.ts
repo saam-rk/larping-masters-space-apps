@@ -83,6 +83,15 @@ export interface Messages {
     readonly searchPlaceholder: string;
     /** Confirms how custom coordinates were read. */
     readonly searchReading: (coordinates: string) => string;
+    /** Drop-down of further reference points; its options are placeholders for now. */
+    readonly morePoints: {
+      readonly label: string;
+      /** Shown while no option is chosen. */
+      readonly placeholder: string;
+      readonly options: readonly string[];
+      /** States that the options are placeholders without coordinates. */
+      readonly hint: string;
+    };
     readonly searchErrors: {
       readonly empty: string;
       readonly format: string;
@@ -96,7 +105,15 @@ export interface Messages {
     readonly time: string;
     readonly live: string;
     readonly liveHint: string;
-    readonly wheels: { readonly day: string; readonly month: string; readonly year: string; readonly hour: string; readonly minute: string };
+    readonly wheels: {
+      readonly day: string;
+      readonly month: string;
+      readonly year: string;
+      readonly hour: string;
+      readonly minute: string;
+      /** Accessible name of the time zone wheel. */
+      readonly zone: string;
+    };
     readonly timeZone: string;
     /** Option for UTC, the time standard NASA uses for launches. */
     readonly zoneUtc: string;
@@ -134,6 +151,8 @@ export interface Messages {
       readonly show: string;
       readonly hide: string;
     };
+    /** Full-screen switch in the title rule (accessible name and tooltip). */
+    readonly fullscreen: { readonly enter: string; readonly exit: string };
     /** Zoom slider and buttons over the view. */
     readonly zoom: {
       readonly label: string;
@@ -240,12 +259,19 @@ const es: Messages = {
       'Elige el punto del polo sur lunar desde el que se calcula el cielo.',
       'Son los centros de regiones candidatas publicadas por NASA (Lunar Surface Data Book). No son lugares de aterrizaje aprobados.',
       'También puedes escribir unas coordenadas en grados (latitud, longitud; sur y oeste en negativo o con S/O) o buscar un punto por su nombre. Un punto personalizado se calcula con el mismo método, a altura 0 km y sin relieve, y no tiene fuente publicada.',
+      'La lista «Más puntos de referencia» tiene valores provisionales: aún no tienen coordenadas y elegirlos no cambia el cálculo.',
     ],
     customTag: 'PERSONALIZADO',
     customName: 'Punto personalizado',
     search: 'Coordenadas o nombre',
     searchPlaceholder: '-85.4381, 37.36667 · Shackleton',
     searchReading: (coordinates) => `Punto personalizado: ${coordinates}`,
+    morePoints: {
+      label: 'Más puntos de referencia',
+      placeholder: 'Elegir un punto (provisional)…',
+      options: ['Punto de ejemplo A', 'Punto de ejemplo B', 'Punto de ejemplo C'],
+      hint: 'Valores provisionales: aún no tienen coordenadas y no cambian el cálculo.',
+    },
     searchErrors: {
       empty: 'Escribe unas coordenadas o el nombre de un punto.',
       format: 'Escribe latitud y longitud en grados (p. ej. -85.44, 37.37) o el nombre de un punto.',
@@ -265,7 +291,7 @@ const es: Messages = {
     time: 'Hora',
     live: 'EN VIVO',
     liveHint: 'Seleccionar la fecha y hora actuales',
-    wheels: { day: 'Día', month: 'Mes', year: 'Año', hour: 'Hora', minute: 'Min' },
+    wheels: { day: 'Día', month: 'Mes', year: 'Año', hour: 'Hora', minute: 'Min', zone: 'Zona horaria' },
     timeZone: 'Zona horaria',
     zoneUtc: 'UTC · NASA (lanzamientos)',
     zoneLocal: (id) => `Local · ${id}`,
@@ -284,13 +310,13 @@ const es: Messages = {
     heading: 'Horizonte local',
     info: {
       'first-person': [
-        'Vista a la altura de los ojos, de pie y quieto a unos metros de un astronauta de 1,70 m en Nobile Rim 2. Arrastra para girar la cabeza: en horizontal para mirar alrededor y en vertical para mirar al suelo o al cielo. La rueda, el pellizco o el control de zoom (+, barra y −) acercan o alejan la imagen, como unos prismáticos, sin moverte del sitio. Con la vista seleccionada, también funcionan las flechas y +/−. El botón Brújula, junto a 1ª P y 3ª P, muestra u oculta la línea del horizonte y los puntos cardinales.',
-        'El relieve es un recorte de 10 × 10 km del modelo LOLA de 5 m/píxel (NASA GSFC PGDA, producto 78). Más allá del recorte no hay datos de relieve: la zona oscura bajo la línea verde es el horizonte geométrico, no terreno.',
-        'El Sol y la Tierra se dibujan con su posición y su diámetro aparente de JPL Horizons. La iluminación es ilustrativa: sin sombras proyectadas ni curvatura lunar. No es un análisis de visibilidad, energía, comunicaciones ni idoneidad de aterrizaje.',
+        'Vista a la altura de los ojos, de pie y quieto a unos metros de un astronauta de 1,70 m en Nobile Rim 1 o Nobile Rim 2. Arrastra para girar la cabeza: en horizontal para mirar alrededor y en vertical para mirar al suelo o al cielo. La rueda, el pellizco o el control de zoom (+, barra y −) acercan o alejan la imagen, como unos prismáticos, sin moverte del sitio. Con la vista seleccionada, también funcionan las flechas y +/−. El botón Brújula, junto a 1ª P y 3ª P, muestra u oculta la línea del horizonte y los puntos cardinales; el botón de las esquinas abre la vista a pantalla completa.',
+        'El relieve es un recorte de 10 × 10 km del modelo LOLA de 5 m/píxel (NASA GSFC PGDA, producto 78). La línea verde es el horizonte geométrico (elevación 0). Más allá del recorte no hay datos de relieve: la zona oscura es un horizonte supuesto, el de una Luna lisa de 1737,4 km de radio que sigue a la altura del borde del recorte, visto desde los ojos (1,60 m sobre el suelo). No es terreno real. Donde el terreno baja, ese horizonte queda bajo la línea verde y el Sol o la Tierra pueden verse en parte aunque su centro esté bajo el horizonte geométrico. La parte del Sol o de la Tierra que tapan el relieve o ese horizonte supuesto se dibuja translúcida, para poder localizarla; desde allí no se vería.',
+        'El Sol y la Tierra se dibujan con su posición y su diámetro aparente de JPL Horizons. La iluminación es ilustrativa: sin sombras proyectadas; el recorte de relieve es plano y la curvatura lunar solo se supone más allá de él. No es un análisis de visibilidad, energía, comunicaciones ni idoneidad de aterrizaje.',
         'El astronauta es una figura de escala ilustrativa. Las estrellas son decorativas y no reproducen el cielo real.',
       ],
       'third-person': [
-        'Arrastra para girar la vista; usa la rueda, pellizca o mueve el control de zoom (+, barra y −) para acercar o alejar. Puedes alejarte hasta más allá del Sol. El botón Brújula, junto a 1ª P y 3ª P, muestra u oculta el plano del horizonte, su cuadrícula y las guías.',
+        'Arrastra para girar la vista; usa la rueda, pellizca o mueve el control de zoom (+, barra y −) para acercar o alejar. Puedes alejarte hasta más allá del Sol. El botón Brújula, junto a 1ª P y 3ª P, muestra u oculta el plano del horizonte, su cuadrícula y las guías; el botón de las esquinas abre la vista a pantalla completa.',
         'A escala, en kilómetros: la Luna es una esfera de 1737,4 km de radio y el Sol y la Tierra están a la distancia y con el tamaño que da JPL Horizons. Por eso se ven pequeños: alejarte muestra el sistema Tierra-Luna.',
         'El plano verde es el horizonte local de referencia (elevación 0), tangente en el lugar, con la brújula N/E/S/O; crece al alejarte para seguir sirviendo de referencia. Para el Sol y la Tierra, una línea de color sobre el plano marca su azimut y un arco, su elevación; las líneas discontinuas van del observador a cada uno. La línea gris es el eje de rotación lunar.',
         'No están a escala el marcador del observador, los halos que ayudan a localizar el Sol y la Tierra ni el tamaño del plano. La Luna no tiene relieve y las estrellas son decorativas.',
@@ -300,13 +326,14 @@ const es: Messages = {
       label: 'Vista',
       names: { 'first-person': 'Primera persona', 'third-person': 'Tercera persona' },
       short: { 'first-person': '1ª P', 'third-person': '3ª P' },
-      firstPersonUnavailable: 'Primera persona: solo disponible en Nobile Rim 2, que tiene modelo de relieve.',
+      firstPersonUnavailable: 'Primera persona: solo disponible en Nobile Rim 1 y Nobile Rim 2, que tienen modelo de relieve.',
     },
     compassToggle: {
       label: 'Brújula',
       show: 'Mostrar la brújula: línea y cuadrícula del horizonte',
       hide: 'Ocultar la brújula: línea y cuadrícula del horizonte',
     },
+    fullscreen: { enter: 'Ver el horizonte local a pantalla completa', exit: 'Salir de pantalla completa' },
     zoom: {
       label: 'Zoom',
       slider: 'Nivel de zoom',
@@ -356,7 +383,7 @@ const es: Messages = {
       horizonsApi: 'Calcula azimut, elevación, tamaño angular y distancia del Sol y la Tierra desde el punto lunar elegido.',
       horizonsManual: 'Define las cantidades del observador y los marcadores de presencia que traducimos a los estados del panel.',
       jplApiPolicy: 'Normas de uso y política CORS: por eso la consulta pasa por nuestra ruta de servidor y se guarda en caché.',
-      pgda78: 'Relieve LOLA de 5 m/píxel del que sale la malla 3D de 10 × 10 km de Nobile Rim 2 en primera persona.',
+      pgda78: 'Relieve LOLA de 5 m/píxel del que salen las mallas 3D de 10 × 10 km de Nobile Rim 1 y Nobile Rim 2 en primera persona.',
       pgda78Readme: 'Unidades, marco MOON_ME/DE421 y proyección estereográfica polar con los que situamos el punto sobre la malla.',
       barker2021: 'Cita del producto DM2: método de los mapas LOLA mejorados, sus errores y el cálculo de horizontes.',
       spaceAppsChallenge: 'Enunciado del reto que define el alcance del proyecto.',
@@ -470,12 +497,19 @@ const en: Messages = {
       'Choose the lunar south-pole point the sky is computed from.',
       'They are the centers of candidate regions published by NASA (Lunar Surface Data Book). They are not approved landing sites.',
       'You can also type coordinates in degrees (latitude, longitude; south and west negative or with S/W) or search a point by name. A custom point is computed with the same method, at 0 km height and without terrain, and has no published source.',
+      'The "More reference points" list has placeholder values: they have no coordinates yet and choosing one does not change the calculation.',
     ],
     customTag: 'CUSTOM',
     customName: 'Custom point',
     search: 'Coordinates or name',
     searchPlaceholder: '-85.4381, 37.36667 · Shackleton',
     searchReading: (coordinates) => `Custom point: ${coordinates}`,
+    morePoints: {
+      label: 'More reference points',
+      placeholder: 'Choose a point (placeholder)…',
+      options: ['Sample point A', 'Sample point B', 'Sample point C'],
+      hint: 'Placeholder values: they have no coordinates yet and do not change the calculation.',
+    },
     searchErrors: {
       empty: 'Type coordinates or the name of a point.',
       format: 'Type latitude and longitude in degrees (e.g. -85.44, 37.37) or the name of a point.',
@@ -495,7 +529,7 @@ const en: Messages = {
     time: 'Time',
     live: 'LIVE',
     liveHint: 'Select the current date and time',
-    wheels: { day: 'Day', month: 'Month', year: 'Year', hour: 'Hour', minute: 'Min' },
+    wheels: { day: 'Day', month: 'Month', year: 'Year', hour: 'Hour', minute: 'Min', zone: 'Time zone' },
     timeZone: 'Time zone',
     zoneUtc: 'UTC · NASA (launches)',
     zoneLocal: (id) => `Local · ${id}`,
@@ -514,13 +548,13 @@ const en: Messages = {
     heading: 'Local horizon',
     info: {
       'first-person': [
-        'Eye-level view, standing still a few meters from a 1.70 m astronaut at Nobile Rim 2. Drag to turn your head: sideways to look around, up or down to look at the ground or the sky. The wheel, a pinch or the zoom control (+, bar and −) zooms the image in or out, like binoculars, without moving you. With the view focused, the arrow keys and +/− also work. The Compass button, next to 1ST and 3RD, shows or hides the horizon line and the cardinal points.',
-        'The relief is a 10 × 10 km crop of the 5 m/pixel LOLA model (NASA GSFC PGDA, product 78). There is no relief data beyond the crop: the dark area below the green line is the geometric horizon, not terrain.',
-        'The Sun and the Earth are drawn with their JPL Horizons position and apparent diameter. Lighting is illustrative: no cast shadows and no lunar curvature. This is not a visibility, power, communications or landing-suitability analysis.',
+        'Eye-level view, standing still a few meters from a 1.70 m astronaut at Nobile Rim 1 or Nobile Rim 2. Drag to turn your head: sideways to look around, up or down to look at the ground or the sky. The wheel, a pinch or the zoom control (+, bar and −) zooms the image in or out, like binoculars, without moving you. With the view focused, the arrow keys and +/− also work. The Compass button, next to 1ST and 3RD, shows or hides the horizon line and the cardinal points; the corners button opens the view full screen.',
+        'The relief is a 10 × 10 km crop of the 5 m/pixel LOLA model (NASA GSFC PGDA, product 78). The green line is the geometric horizon (elevation 0). There is no relief data beyond the crop: the dark area is an assumed horizon, that of a smooth Moon of 1,737.4 km radius continuing at the height of the crop edge, seen from the eyes (1.60 m above the ground). It is not real terrain. Where the terrain falls away, that horizon lies below the green line, so the Sun or the Earth may show in part even when its center is below the geometric horizon. The part of the Sun or the Earth hidden by the relief or that assumed horizon is drawn translucent so it can be found; it would not be visible from there.',
+        'The Sun and the Earth are drawn with their JPL Horizons position and apparent diameter. Lighting is illustrative: no cast shadows; the relief crop is flat and lunar curvature is only assumed beyond it. This is not a visibility, power, communications or landing-suitability analysis.',
         'The astronaut is an illustrative scale figure. The stars are decorative and do not reproduce the real sky.',
       ],
       'third-person': [
-        'Drag to rotate the view; use the wheel, a pinch or the zoom control (+, bar and −) to zoom in or out. You can zoom out beyond the Sun. The Compass button, next to 1ST and 3RD, shows or hides the horizon plane, its grid and the guides.',
+        'Drag to rotate the view; use the wheel, a pinch or the zoom control (+, bar and −) to zoom in or out. You can zoom out beyond the Sun. The Compass button, next to 1ST and 3RD, shows or hides the horizon plane, its grid and the guides; the corners button opens the view full screen.',
         'To scale, in kilometers: the Moon is a sphere of 1,737.4 km radius and the Sun and the Earth are at the distance and size given by JPL Horizons. That is why they look small: zoom out to see the Earth–Moon system.',
         'The green plane is the local reference horizon (elevation 0), tangent at the site, with the N/E/S/W compass; it grows as you zoom out so it stays a reference. For the Sun and the Earth, a colored line on the plane marks the azimuth and an arc the elevation; the dashed lines run from the observer to each one. The gray line is the lunar spin axis.',
         'Not to scale: the observer marker, the glows that help find the Sun and the Earth, and the plane size. The Moon has no relief and the stars are decorative.',
@@ -530,13 +564,14 @@ const en: Messages = {
       label: 'View',
       names: { 'first-person': 'First person', 'third-person': 'Third person' },
       short: { 'first-person': '1ST', 'third-person': '3RD' },
-      firstPersonUnavailable: 'First person: only available at Nobile Rim 2, which has a relief model.',
+      firstPersonUnavailable: 'First person: only available at Nobile Rim 1 and Nobile Rim 2, which have a relief model.',
     },
     compassToggle: {
       label: 'Compass',
       show: 'Show the compass: horizon line and grid',
       hide: 'Hide the compass: horizon line and grid',
     },
+    fullscreen: { enter: 'Show the local horizon full screen', exit: 'Exit full screen' },
     zoom: {
       label: 'Zoom',
       slider: 'Zoom level',
@@ -586,7 +621,7 @@ const en: Messages = {
       horizonsApi: 'Computes azimuth, elevation, angular size and range of the Sun and the Earth from the chosen lunar point.',
       horizonsManual: 'Defines the observer quantities and the presence markers we turn into the panel states.',
       jplApiPolicy: 'Usage rules and CORS policy: the reason the query goes through our server route and is cached.',
-      pgda78: 'LOLA 5 m/pixel terrain behind the 10 × 10 km 3D mesh of Nobile Rim 2 in first person.',
+      pgda78: 'LOLA 5 m/pixel terrain behind the 10 × 10 km 3D meshes of Nobile Rim 1 and Nobile Rim 2 in first person.',
       pgda78Readme: 'Units, MOON_ME/DE421 frame and polar stereographic projection used to place the point on the mesh.',
       barker2021: 'Citation for the DM2 product: method of the improved LOLA maps, their errors and horizon computation.',
       spaceAppsChallenge: 'Challenge statement that defines the project scope.',

@@ -1,10 +1,11 @@
 /**
  * Site and time selection: the three reference points (a terminal-style
  * radio list with their coordinates), a search box for custom coordinates or
- * a point name (filled in when a reference point is picked), separate date
- * and time fields with a time zone selector (UTC, the time NASA uses for
- * launches, or the browser's local zone) and the update button. Explanations
- * live in each section's help dialog.
+ * a point name (filled in when a reference point is picked), a drop-down of
+ * further reference points (placeholder options for now; choosing one does
+ * not change the calculation), date and time wheels with a time zone wheel
+ * (UTC, the time NASA uses for launches, or the browser's local zone) and the
+ * update button. Explanations live in each section's help dialog.
  *
  * The update button is available for any valid selection while idle,
  * including the saved sample and retries of the same case. Once a complete live
@@ -21,6 +22,7 @@ import { usePreferences } from '../../preferences/context';
 import { prefersReducedMotion } from '../../preferences/preferences';
 import { Box } from '../../ui/Box';
 import { NumberWheel } from '../../ui/NumberWheel';
+import { WheelSelect } from '../../ui/WheelSelect';
 import { formatCoordinateQuery, parseCoordinateQuery, type CoordinateQuery } from './coordinateQuery';
 import { changeDatePart, changeTimePart, currentUtcMinute, daysInMonth, MAX_YEAR, MIN_YEAR } from './dateTimeWheel';
 import {
@@ -28,6 +30,7 @@ import {
   formatUtcMinute,
   localOffsetLabel,
   localZoneId,
+  TIME_ZONE_MODES,
   utcToFields,
   type DateTimeFields,
   type TimeZoneMode,
@@ -68,6 +71,9 @@ export function ConfigPanel({
   const timeFieldId = useId();
   const zoneFieldId = useId();
   const timeHintId = useId();
+  const morePointsHintId = useId();
+  // Placeholder drop-down: the choice is only shown, it is not part of the selection.
+  const [morePoint, setMorePoint] = useState<number | null>(null);
   const [searchInput, setSearchInput] = useState(() =>
     formatCoordinateQuery(selection.latitudeDeg, selection.longitudeEastDeg),
   );
@@ -246,6 +252,19 @@ export function ConfigPanel({
             {searchHint.text}
           </p>
         )}
+
+        <WheelSelect
+          label={config.morePoints.label}
+          placeholder={config.morePoints.placeholder}
+          options={config.morePoints.options}
+          value={morePoint}
+          describedBy={morePointsHintId}
+          onChange={setMorePoint}
+        />
+        {/* Also in the help dialog; read with the drop-down so its placeholder nature is not missed. */}
+        <p id={morePointsHintId} className="visually-hidden">
+          {config.morePoints.hint}
+        </p>
       </Box>
 
       <Box
@@ -308,18 +327,30 @@ export function ConfigPanel({
           </div>
         </div>
 
-        <label className="search-field__label" htmlFor={zoneFieldId}>
-          {config.timeZone}
-        </label>
-        <select
-          id={zoneFieldId}
-          className="text-input select-input"
-          value={zone}
-          onChange={(event) => handleZoneChange(event.target.value as TimeZoneMode)}
-        >
-          <option value="utc">{config.zoneUtc}</option>
-          <option value="local">{config.zoneLocal(localZoneId() ?? localOffsetLabel(selection.utc))}</option>
-        </select>
+        <div className="datetime__zone" role="group" aria-labelledby={zoneFieldId}>
+          <span className="search-field__label" id={zoneFieldId}>
+            {config.timeZone}
+          </span>
+          <div className="datetime__wheels datetime__wheels--zone">
+            <NumberWheel
+              label={config.wheels.zone}
+              value={TIME_ZONE_MODES.indexOf(zone)}
+              min={0}
+              max={TIME_ZONE_MODES.length - 1}
+              wrap={false}
+              format={(index) =>
+                TIME_ZONE_MODES[index] === 'local'
+                  ? config.zoneLocal(localZoneId() ?? localOffsetLabel(selection.utc))
+                  : config.zoneUtc
+              }
+              animated={animated}
+              scrambling={false}
+              invalid={false}
+              describedBy={timeHintId}
+              onChange={(index) => handleZoneChange(TIME_ZONE_MODES[index] ?? 'utc')}
+            />
+          </div>
+        </div>
         <p id={timeHintId} className={`hint${timeHint.error ? ' hint--error' : ''}`}>
           {timeHint.text}
         </p>

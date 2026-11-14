@@ -35,7 +35,7 @@
   --font-retro: 'VT323', 'IBM Plex Mono', ui-monospace, Consolas, monospace;
   --font-legible: 'Iosevka Legible', 'IBM Plex Mono', ui-monospace, Consolas, monospace;
   --font-ui: var(--font-retro);
-  --font-size: 21px;
+  --font-size: 1.3125rem;
   --line-height: 1.2;
   --title-weight: 400;
   --title-case: uppercase;
@@ -43,7 +43,7 @@
   /* Block-art headings need a font where spaces and blocks share one width. */
   --font-blocks: Consolas, 'DejaVu Sans Mono', Menlo, 'Liberation Mono', 'Noto Sans Mono', monospace;
   --font-hand: 'Caveat', 'Segoe Print', cursive;
-  --border: 2px;
+  --border: 0.125rem;
   --stack-gap: clamp(0.6rem, 1.8vh, 1.25rem);
   --column-gap: clamp(1.25rem, 2.5vw, 2.5rem);
 }
@@ -94,7 +94,30 @@ body,
   height: 100%;
 }
 
+/*
+ * Zoom-independent scale. Every length in this file is in rem/em (or a
+ * viewport unit), and 1rem follows the viewport instead of CSS pixels, so the
+ * page keeps the same size on screen whatever browser zoom is applied: zooming
+ * shrinks the viewport in CSS px and 1rem shrinks with it. Contents depend
+ * only on the viewport aspect ratio. The only px left are screen-level CRT
+ * effects (scanlines, grain, bezel) and viewport-sized values set from JS.
+ *
+ * - Wide (landscape) viewports: the desktop layout as designed for a
+ *   `--design-width` x `--design-height` CSS px viewport (1rem = 16px there),
+ *   scaled to fit the limiting side.
+ * - Narrow (portrait) viewports stack the columns and scale with the width:
+ *   `--design-width-stacked` (tablets) or `--design-width-phone` (phones),
+ *   see the media queries at the end.
+ */
+:root {
+  --design-width: 1600;
+  --design-height: 840;
+  --design-width-stacked: 768;
+  --design-width-phone: 390;
+}
+
 html {
+  font-size: min(100vw / var(--design-width) * 16, 100vh / var(--design-height) * 16);
   background: var(--bg);
 }
 
@@ -126,15 +149,15 @@ a[data-hover] {
 }
 
 :focus-visible {
-  outline: 2px dashed var(--accent);
-  outline-offset: 3px;
+  outline: 0.125rem dashed var(--accent);
+  outline-offset: 0.1875rem;
 }
 
 .visually-hidden {
   position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
+  width: 0.0625rem;
+  height: 0.0625rem;
+  margin: -0.0625rem;
   padding: 0;
   overflow: hidden;
   clip: rect(0 0 0 0);
@@ -217,7 +240,7 @@ button {
 
 .ascii-heading__title {
   /* --cols = characters per line; 0.6 = approximate advance of a monospace glyph. */
-  --art-size: min(16px, calc(100cqw / (var(--cols) * 0.6)));
+  --art-size: min(1rem, calc(100cqw / (var(--cols) * 0.6)));
   display: flex;
   align-items: flex-end;
   margin: 0;
@@ -230,9 +253,9 @@ button {
 /* Accessible text of the heading: hidden while the block art is shown, the heading itself in the legible font. */
 :root:not([data-font='legible']) .ascii-heading__text {
   position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
+  width: 0.0625rem;
+  height: 0.0625rem;
+  margin: -0.0625rem;
   padding: 0;
   overflow: hidden;
   clip: rect(0 0 0 0);
@@ -260,9 +283,9 @@ button {
   line-height: 1;
   white-space: pre;
   color: var(--text);
-  text-shadow: 0 0 10px rgba(200, 255, 215, 0.3);
+  text-shadow: 0 0 0.625rem rgba(200, 255, 215, 0.3);
   /* Horizontal gaps, like the phosphor rows of a CRT. */
-  mask-image: repeating-linear-gradient(to bottom, #000 0 2px, rgba(0, 0, 0, 0.45) 2px 3px);
+  mask-image: repeating-linear-gradient(to bottom, #000 0 0.125rem, rgba(0, 0, 0, 0.45) 0.125rem 0.1875rem);
 }
 
 .ascii-heading__aside {
@@ -284,8 +307,8 @@ button {
   border-top: none;
   background: var(--panel);
   box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.7),
-    0 0 14px rgba(211, 235, 204, 0.08);
+    0 0 0 0.0625rem rgba(0, 0, 0, 0.7),
+    0 0 0.875rem rgba(211, 235, 204, 0.08);
 }
 
 .box__head {
@@ -380,7 +403,7 @@ button {
   line-height: 1.35;
   color: var(--cyan);
   background: var(--panel-solid);
-  border: 1px solid currentColor;
+  border: 0.0625rem solid currentColor;
   letter-spacing: var(--title-spacing);
   text-transform: var(--title-case);
   cursor: pointer;
@@ -470,7 +493,7 @@ button {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
-  border-bottom: 1px dashed var(--line-dim);
+  border-bottom: 0.0625rem dashed var(--line-dim);
   padding-bottom: 0.2rem;
 }
 
@@ -638,8 +661,8 @@ button {
 .site-option input {
   position: absolute;
   opacity: 0;
-  width: 1px;
-  height: 1px;
+  width: 0.0625rem;
+  height: 0.0625rem;
   pointer-events: none;
 }
 
@@ -682,8 +705,8 @@ button {
 }
 
 .site-option:has(input:focus-visible) {
-  outline: 2px dashed var(--accent);
-  outline-offset: 2px;
+  outline: 0.125rem dashed var(--accent);
+  outline-offset: 0.125rem;
 }
 
 .hint {
@@ -735,7 +758,7 @@ button {
   display: grid;
   gap: 0.15rem;
   padding: 0.25rem 0.15rem 0;
-  border: 1px solid var(--line-dim);
+  border: 0.0625rem solid var(--line-dim);
   background: var(--panel-solid);
 }
 
@@ -745,6 +768,40 @@ button {
 
 .datetime__wheels--time {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Time zone: one wheel of named options in the same frame as the date and time wheels. */
+.datetime__wheels--zone {
+  grid-template-columns: minmax(0, 1fr);
+  padding-top: 0;
+}
+
+.datetime__wheels--zone .number-wheel__control {
+  --wheel-row: 1.6rem;
+}
+
+/* A wheel of named options: its label is only for assistive technology (the field label names it). */
+.number-wheel--text .number-wheel__label {
+  position: absolute;
+  width: 0.0625rem;
+  height: 0.0625rem;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Block rows (not flex) so long option names end in an ellipsis. */
+.number-wheel--text .number-wheel__neighbor,
+.number-wheel--text .number-wheel__selected {
+  display: block;
+  overflow: hidden;
+  padding: 0 0.6rem;
+  line-height: var(--wheel-row);
+  text-overflow: ellipsis;
+}
+
+.number-wheel--text .number-wheel__selected {
+  font-size: 1.1em;
 }
 
 .number-wheel {
@@ -776,13 +833,13 @@ button {
   content: '';
   position: absolute;
   inset: var(--wheel-row) 0;
-  border-block: 1px solid var(--line-dim);
+  border-block: 0.0625rem solid var(--line-dim);
   background: rgba(57, 255, 136, 0.07);
   pointer-events: none;
 }
 
 .number-wheel__control:focus-visible {
-  outline-offset: -2px;
+  outline-offset: -0.125rem;
 }
 
 .number-wheel__control[aria-invalid='true']::before {
@@ -874,7 +931,7 @@ button {
 .text-input:focus-visible {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 12px rgba(57, 255, 136, 0.35);
+  box-shadow: 0 0 0.75rem rgba(57, 255, 136, 0.35);
 }
 
 /* The native clear (x) button does not match the terminal look; Escape still clears. */
@@ -907,15 +964,107 @@ input[aria-invalid='true'] {
   color: var(--red);
 }
 
-/* Time zone selector: same frame as the text inputs; the list itself is drawn by the browser. */
-.select-input {
+/*
+ * Drop-down of further reference points, drawn like the date and time wheels:
+ * the closed control is the wheels' lit slot inside their frame, and the open
+ * list is the same framed panel with the active row lit.
+ */
+.wheel-select {
+  position: relative;
+}
+
+.wheel-select__frame {
+  position: relative;
+  padding: 0.25rem 0.15rem;
+  border: 0.0625rem solid var(--line-dim);
+  background: var(--panel-solid);
+}
+
+.wheel-select__trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   width: 100%;
+  height: 2rem;
+  padding: 0 0.6rem;
+  color: var(--accent);
+  background: rgba(57, 255, 136, 0.07);
+  border: none;
+  border-block: 0.0625rem solid var(--line-dim);
+  border-radius: 0;
+  text-align: left;
   cursor: pointer;
 }
 
-.select-input option {
-  color: var(--text);
+.wheel-select__trigger:focus-visible {
+  outline-offset: -0.125rem;
+}
+
+.wheel-select__value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1.1em;
+}
+
+.wheel-select__value--empty {
+  color: #69866e;
+  font-size: 1em;
+}
+
+.wheel-select__caret {
+  flex: none;
+  color: var(--muted);
+  font-size: 0.7em;
+}
+
+:where(:root:not([data-curve='on'])) .wheel-select__trigger:hover .wheel-select__caret,
+.wheel-select__trigger[data-hover] .wheel-select__caret,
+.wheel-select__trigger[aria-expanded='true'] .wheel-select__caret {
+  color: var(--accent);
+}
+
+.wheel-select__list {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% - 0.0625rem);
+  left: -0.0625rem;
+  right: -0.0625rem;
+  margin: 0;
+  padding: 0.25rem 0.15rem;
+  list-style: none;
+  border: 0.0625rem solid var(--line-dim);
   background: var(--panel-solid);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.6);
+}
+
+.wheel-select__list[hidden] {
+  display: none;
+}
+
+.wheel-select__option {
+  display: flex;
+  align-items: center;
+  height: 2rem;
+  padding: 0 0.6rem;
+  color: #69866e;
+  border-block: 0.0625rem solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.wheel-select__option[data-active='true'] {
+  color: var(--text);
+  background: rgba(57, 255, 136, 0.07);
+  border-color: var(--line-dim);
+}
+
+.wheel-select__option[aria-selected='true'] {
+  color: var(--accent);
 }
 
 .button {
@@ -934,8 +1083,8 @@ input[aria-invalid='true'] {
   color: var(--accent);
   border-color: var(--accent);
   box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.7),
-    0 0 16px rgba(57, 255, 136, 0.2);
+    0 0 0 0.0625rem rgba(0, 0, 0, 0.7),
+    0 0 1rem rgba(57, 255, 136, 0.2);
 }
 
 .button--update {
@@ -960,8 +1109,8 @@ input[aria-invalid='true'] {
   background: var(--green-deep);
   border-color: var(--accent);
   box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.7),
-    0 0 18px rgba(57, 255, 136, 0.35);
+    0 0 0 0.0625rem rgba(0, 0, 0, 0.7),
+    0 0 1.125rem rgba(57, 255, 136, 0.35);
   text-shadow: none !important;
 }
 
@@ -1004,7 +1153,7 @@ input[aria-invalid='true'] {
   background: var(--accent);
   border-color: var(--accent);
   color: #000;
-  outline-offset: 4px;
+  outline-offset: 0.25rem;
 }
 
 :where(:root:not([data-curve='on'])) .button--go:hover,
@@ -1102,7 +1251,7 @@ input[aria-invalid='true'] {
   pointer-events: none;
   user-select: none;
   white-space: nowrap;
-  text-shadow: 0 0 8px rgba(57, 255, 136, 0.6);
+  text-shadow: 0 0 0.5rem rgba(57, 255, 136, 0.6);
 }
 
 .scene__label {
@@ -1125,7 +1274,7 @@ input[aria-invalid='true'] {
   line-height: 1.35;
   color: var(--cyan);
   background: var(--panel-solid);
-  border: 1px solid var(--cyan);
+  border: 0.0625rem solid var(--cyan);
   letter-spacing: var(--title-spacing);
   text-transform: var(--title-case);
   cursor: pointer;
@@ -1146,7 +1295,7 @@ input[aria-invalid='true'] {
 .view-toggle {
   flex: none;
   display: inline-flex;
-  border: 1px solid var(--cyan);
+  border: 0.0625rem solid var(--cyan);
 }
 
 .view-toggle__option {
@@ -1161,7 +1310,7 @@ input[aria-invalid='true'] {
 }
 
 .view-toggle__option + .view-toggle__option {
-  border-left: 1px solid var(--cyan);
+  border-left: 0.0625rem solid var(--cyan);
 }
 
 .view-toggle__option[aria-pressed='true'] {
@@ -1182,9 +1331,77 @@ input[aria-invalid='true'] {
   opacity: 0.55;
 }
 
+/* Full-screen switch, right of the view switch: corner brackets in the same cyan frame. */
+.fullscreen-toggle {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 1.6em;
+  height: 1.35em;
+  padding: 0;
+  color: var(--cyan);
+  background: var(--panel-solid);
+  border: 0.0625rem solid var(--cyan);
+  cursor: pointer;
+}
+
+.fullscreen-toggle svg {
+  width: 0.8em;
+  height: 0.8em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: square;
+}
+
+.fullscreen-toggle[aria-pressed='true'] {
+  color: #000;
+  background: var(--cyan);
+}
+
+:where(:root:not([data-curve='on'])) .fullscreen-toggle[aria-pressed='false']:hover,
+.fullscreen-toggle[aria-pressed='false'][data-hover],
+.fullscreen-toggle:focus-visible {
+  color: var(--text);
+  background: rgba(62, 232, 255, 0.18);
+}
+
+/*
+ * Local horizon box shown full screen (Fullscreen API, or the CSS fallback of
+ * `useFullscreen`): the box fills the screen, its title rule stays on top.
+ */
+.scene-box:fullscreen,
+.scene-box[data-fullscreen='fallback'] {
+  margin: 0;
+  padding: 1.1em 1rem 1rem;
+  border: none;
+  box-shadow: none;
+  background: var(--bg);
+}
+
+.scene-box[data-fullscreen='fallback'] {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+/* A filter would make the frame the containing block of the fixed box and distort it. */
+:root:has(.scene-box[data-fullscreen='fallback']) .app__frame {
+  filter: none;
+}
+
+.scene-box:fullscreen > .box__head,
+.scene-box[data-fullscreen='fallback'] > .box__head {
+  margin: -0.75em 0 0.5rem;
+}
+
+.scene-box::backdrop {
+  background: var(--bg);
+}
+
 .scene canvas:focus-visible {
-  outline: 1px dashed var(--accent);
-  outline-offset: -2px;
+  outline: 0.0625rem dashed var(--accent);
+  outline-offset: -0.125rem;
 }
 
 .scene__note {
@@ -1217,7 +1434,7 @@ input[aria-invalid='true'] {
   flex-direction: column;
   align-items: center;
   min-height: 0;
-  border: 1px solid var(--cyan);
+  border: 0.0625rem solid var(--cyan);
   background: var(--panel-solid);
 }
 
@@ -1261,24 +1478,24 @@ input[aria-invalid='true'] {
   margin: 0;
   padding: 0.35rem 0;
   background: transparent;
-  border-top: 1px solid var(--cyan);
-  border-bottom: 1px solid var(--cyan);
+  border-top: 0.0625rem solid var(--cyan);
+  border-bottom: 0.0625rem solid var(--cyan);
   cursor: pointer;
 }
 
 .zoom-control__slider:focus-visible {
-  outline: 1px dashed var(--accent);
-  outline-offset: -3px;
+  outline: 0.0625rem dashed var(--accent);
+  outline-offset: -0.1875rem;
 }
 
 .zoom-control__slider::-webkit-slider-runnable-track {
-  width: 2px;
+  width: 0.125rem;
   background: var(--cyan);
   opacity: 0.8;
 }
 
 .zoom-control__slider::-moz-range-track {
-  width: 2px;
+  width: 0.125rem;
   background: var(--cyan);
   opacity: 0.8;
 }
@@ -1287,10 +1504,10 @@ input[aria-invalid='true'] {
   appearance: none;
   width: 0.9rem;
   height: var(--range-thumb-length);
-  margin-left: calc(1px - 0.45rem);
+  margin-left: calc(0.0625rem - 0.45rem);
   background: var(--cyan);
   border: none;
-  box-shadow: 0 0 6px rgba(62, 232, 255, 0.6);
+  box-shadow: 0 0 0.375rem rgba(62, 232, 255, 0.6);
 }
 
 .zoom-control__slider::-moz-range-thumb {
@@ -1299,7 +1516,7 @@ input[aria-invalid='true'] {
   background: var(--cyan);
   border: none;
   border-radius: 0;
-  box-shadow: 0 0 6px rgba(62, 232, 255, 0.6);
+  box-shadow: 0 0 0.375rem rgba(62, 232, 255, 0.6);
 }
 
 .results {
@@ -1370,7 +1587,7 @@ input[aria-invalid='true'] {
   font-size: 0.85em;
   letter-spacing: 0.06em;
   text-transform: var(--title-case);
-  border-bottom: 1px dashed var(--line-dim);
+  border-bottom: 0.0625rem dashed var(--line-dim);
 }
 
 .readings__value {
@@ -1434,7 +1651,7 @@ input[aria-invalid='true'] {
 .callout {
   margin: 0;
   padding: 0.3rem 0.6rem;
-  border: 1px dashed var(--muted);
+  border: 0.0625rem dashed var(--muted);
 }
 
 .callout::before {
@@ -1504,7 +1721,7 @@ input[aria-invalid='true'] {
 }
 
 .landing-logo__moon {
-  filter: drop-shadow(0 0 10px rgba(255, 194, 51, 0.35));
+  filter: drop-shadow(0 0 0.625rem rgba(255, 194, 51, 0.35));
 }
 
 .landing-logo__night {
@@ -1627,7 +1844,7 @@ input[aria-invalid='true'] {
 
 .setup__mode[aria-pressed='true'] {
   border-color: var(--accent);
-  box-shadow: 0 0 14px rgba(57, 255, 136, 0.15);
+  box-shadow: 0 0 0.875rem rgba(57, 255, 136, 0.15);
 }
 
 .setup__mode[aria-pressed='true']::before {
@@ -1970,21 +2187,18 @@ input[aria-invalid='true'] {
   }
 }
 
-/* ───────────────────────── Short screens ───────────────────────── */
+/* ───────────────────────── Stacked layout (narrow aspect ratios) ───────────────────────── */
 
-@media (max-height: 760px) {
-  .ascii-heading__title {
-    --art-size: min(11px, calc(100cqw / (var(--cols) * 0.6)));
+/*
+ * Portrait and square-ish viewports stack the columns. Breakpoints use the
+ * aspect ratio, not widths in CSS px, so browser zoom never changes the layout
+ * (see "Zoom-independent scale" at the top).
+ */
+@media (max-aspect-ratio: 1/1) {
+  html {
+    font-size: calc(100vw / var(--design-width-stacked) * 16);
   }
 
-  :root[data-font='legible'] .ascii-heading__text {
-    font-size: 1.25em;
-  }
-}
-
-/* ───────────────────────── Stacked layout (tablets, phones) ───────────────────────── */
-
-@media (max-width: 1040px) {
   .workspace {
     grid-template-columns: minmax(0, 1fr);
     /* `max-content`, not `auto`: the controls row must not shrink below its content and overlap the view. */
@@ -2025,9 +2239,13 @@ input[aria-invalid='true'] {
   }
 }
 
-@media (max-width: 700px) {
+@media (max-aspect-ratio: 13/20) {
+  html {
+    font-size: calc(100vw / var(--design-width-phone) * 16);
+  }
+
   :root {
-    --font-size: 19px;
+    --font-size: 1.1875rem;
   }
 
   .app__frame {

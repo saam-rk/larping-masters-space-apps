@@ -28,7 +28,7 @@
 
 import { barrelShift } from './curvature';
 
-const INTERACTIVE = 'a[href], button, input, select, textarea, label, summary, [role="button"]';
+const INTERACTIVE = 'a[href], button, input, select, textarea, label, summary, [role="button"], [role="option"]';
 
 /** Input types that open a picker instead of taking typed text on click. */
 const PICKER_TYPES = new Set(['date', 'time', 'datetime-local', 'month', 'week', 'color']);
@@ -169,12 +169,18 @@ function drawnPoint(clientX: number, clientY: number, frame: HTMLElement): { x: 
   return { x: clientX + shiftX, y: clientY + shiftY };
 }
 
+/** An element is full screen, natively or through the CSS fallback; neither is drawn through the filter. */
+function fullscreenShown(): boolean {
+  return Boolean(document.fullscreenElement) || document.querySelector('[data-fullscreen]') !== null;
+}
+
 /** True when the page is not being drawn through the filter at this event. */
 function skip(target: EventTarget | null): boolean {
   if (document.documentElement.dataset.curve !== 'on') return true;
   if (!(target instanceof Element)) return true;
-  // The frame is inert behind a modal dialog, and dialogs are not distorted.
-  if (document.querySelector('dialog[open]')) return true;
+  // The frame is inert behind a modal dialog, and dialogs are not distorted;
+  // neither is the full-screen local horizon box (see `useFullscreen`).
+  if (document.querySelector('dialog[open]') || fullscreenShown()) return true;
   return !target.closest('.app__frame');
 }
 
@@ -200,7 +206,7 @@ export function installCurvaturePointer(): () => void {
   const updateHover = () => {
     frameId = 0;
     const frame = frameElement();
-    if (!pending || !frame || root.dataset.curve !== 'on' || document.querySelector('dialog[open]')) {
+    if (!pending || !frame || root.dataset.curve !== 'on' || document.querySelector('dialog[open]') || fullscreenShown()) {
       clearHover();
       return;
     }
