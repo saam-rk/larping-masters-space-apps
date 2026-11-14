@@ -658,22 +658,157 @@ button {
 }
 
 /* Date and time side by side, with the time zone selector below. */
+.datetime-box {
+  container-type: inline-size;
+}
+
+@container (max-width: 22rem) {
+  .datetime-box .box__head {
+    gap: 0.25rem;
+  }
+
+  .datetime-box .box__title,
+  .datetime-box .text-button {
+    font-size: 0.85em;
+    letter-spacing: 0.04em;
+  }
+
+  .datetime-box .box__rule {
+    min-width: 0;
+  }
+}
+
 .datetime {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
-  gap: 0 0.75rem;
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  gap: 0 0.65rem;
 }
 
 .datetime__field {
   min-width: 0;
 }
 
-.datetime__field .text-input {
-  width: 100%;
-}
-
 .datetime__field .search-field__label:first-child {
   margin-top: 0;
+}
+
+.datetime__wheels {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.25rem 0.15rem 0;
+  border: 1px solid var(--line-dim);
+  background: var(--panel-solid);
+}
+
+.datetime__wheels--date {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.45fr);
+}
+
+.datetime__wheels--time {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.number-wheel {
+  min-width: 0;
+  text-align: center;
+}
+
+.number-wheel__label {
+  display: block;
+  color: var(--muted);
+  font-size: 0.65em;
+  text-transform: var(--title-case);
+  letter-spacing: 0.04em;
+}
+
+.number-wheel__control {
+  --wheel-row: 2rem;
+  position: relative;
+  height: calc(3 * var(--wheel-row));
+  overflow: hidden;
+  cursor: ns-resize;
+  touch-action: pan-x;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A fixed illuminated slot keeps the selected row distinct as the reel turns. */
+.number-wheel__control::before {
+  content: '';
+  position: absolute;
+  inset: var(--wheel-row) 0;
+  border-block: 1px solid var(--line-dim);
+  background: rgba(57, 255, 136, 0.07);
+  pointer-events: none;
+}
+
+.number-wheel__control:focus-visible {
+  outline-offset: -2px;
+}
+
+.number-wheel__control[aria-invalid='true']::before {
+  border-color: var(--red);
+}
+
+.number-wheel__reel {
+  position: relative;
+}
+
+.number-wheel__neighbor,
+.number-wheel__selected {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: var(--wheel-row);
+  padding: 0;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.number-wheel__neighbor {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #69866e;
+  font-size: 0.85em;
+  text-shadow: none;
+  cursor: pointer;
+}
+
+.number-wheel__neighbor:disabled {
+  cursor: default;
+}
+
+:where(:root:not([data-curve='on'])) .number-wheel__neighbor:not(:disabled):hover,
+.number-wheel__neighbor:not(:disabled)[data-hover] {
+  color: var(--text);
+  background: rgba(57, 255, 136, 0.05);
+}
+
+.number-wheel__selected {
+  color: var(--accent);
+  font-size: 1.3em;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-fx='on'] .number-wheel__reel[data-animated='true'] {
+    animation: wheel-step-up 140ms ease-out;
+  }
+
+  :root[data-fx='on'] .number-wheel__reel[data-animated='true'][data-direction='-1'] {
+    animation-name: wheel-step-down;
+  }
+}
+
+@keyframes wheel-step-up {
+  from { transform: translateY(0.7rem); }
+  to { transform: translateY(0); }
+}
+
+@keyframes wheel-step-down {
+  from { transform: translateY(-0.7rem); }
+  to { transform: translateY(0); }
 }
 
 .search-field__prompt {
@@ -731,12 +866,6 @@ button {
 input[aria-invalid='true'] {
   border-color: var(--red);
   color: var(--red);
-}
-
-input[type='date']::-webkit-calendar-picker-indicator,
-input[type='time']::-webkit-calendar-picker-indicator {
-  filter: invert(72%) sepia(90%) saturate(500%) hue-rotate(80deg);
-  cursor: pointer;
 }
 
 /* Time zone selector: same frame as the text inputs; the list itself is drawn by the browser. */
