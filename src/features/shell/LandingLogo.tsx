@@ -9,6 +9,7 @@
 
 import { useId, type ComponentProps } from 'react';
 import { createRng, roughEllipse, roughLine, type Rng } from '../backdrop/roughPath';
+// The PNG preserves the original alpha; its RGB colors are discarded by the tint filter.
 import astronautImage from './salamanca-astronaut.png';
 
 const WIDTH = 300;
