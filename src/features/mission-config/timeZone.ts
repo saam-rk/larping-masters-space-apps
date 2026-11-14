@@ -44,9 +44,11 @@ export function utcToFields(utc: string, mode: TimeZoneMode): DateTimeFields {
  * The UTC instant for fields typed in the given zone, with the same validation
  * as `parseUtcInstant` (calendar dates, 2000-2099) plus the local-only case of
  * a time that does not exist. A local time that happens twice (clocks going
- * back) resolves to the first occurrence, as `Date` does.
+ * back) resolves to the first occurrence, as `Date` does, unless `existingUtc`
+ * already represents the unchanged fields. Preserving that instant keeps zone
+ * switches reversible even during the second occurrence of a repeated hour.
  */
-export function fieldsToUtc(fields: DateTimeFields, mode: TimeZoneMode): ZonedParseResult {
+export function fieldsToUtc(fields: DateTimeFields, mode: TimeZoneMode, existingUtc?: string): ZonedParseResult {
   if (mode === 'utc') return parseUtcInstant(`${fields.date}T${fields.time}:00Z`);
 
   const date = DATE_PATTERN.exec(fields.date);
@@ -62,6 +64,14 @@ export function fieldsToUtc(fields: DateTimeFields, mode: TimeZoneMode): ZonedPa
     return { ok: false, reason: 'invalid-date' };
   }
   if (hour > 23 || minute > 59) return { ok: false, reason: 'invalid-date' };
+
+  if (existingUtc !== undefined) {
+    const existing = parseUtcInstant(existingUtc);
+    if (existing.ok) {
+      const previous = utcToFields(existing.iso, mode);
+      if (previous.date === fields.date && previous.time === fields.time) return existing;
+    }
+  }
 
   // setFullYear (unlike the Date constructor) does not map years 0-99 to 1900-1999.
   const local = new Date(2000, 0, 1, 0, 0, 0, 0);

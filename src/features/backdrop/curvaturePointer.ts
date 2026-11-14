@@ -139,7 +139,9 @@ export function installCurvaturePointer(): () => void {
 
   /** Control drawn under the pointer and control under it for the browser; null when no remapping is needed. */
   const resolve = (event: MouseEvent): { real: Element | null; drawn: Element | null } | null => {
-    if (busy || !event.isTrusted || skip(event.target)) return null;
+    // Keyboard and assistive-technology clicks activate the focused control;
+    // their zero coordinates are not a pointer position to remap.
+    if (busy || !event.isTrusted || event.detail === 0 || skip(event.target)) return null;
     const frame = frameElement();
     if (!frame) return null;
     const real = controlOf(event.target as Element);

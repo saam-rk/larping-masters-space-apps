@@ -83,7 +83,6 @@ export function App() {
             <ConfigPanel
               selection={ephemeris.selection}
               loading={busy}
-              stale={ephemeris.stale}
               onSiteChange={ephemeris.setSiteId}
               onCoordinatesChange={ephemeris.setCoordinates}
               onUtcChange={ephemeris.setUtc}

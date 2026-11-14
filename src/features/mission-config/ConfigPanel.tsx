@@ -6,8 +6,8 @@
  * launches, or the browser's local zone) and the update button. Explanations
  * live in each section's help dialog.
  *
- * The update button is green (and pulses gently) only when pressing it would
- * change the view; otherwise it is grey and says the view is up to date.
+ * The update button is available for any valid selection while idle, including
+ * the saved sample and retries of the same case after an incomplete result.
  */
 
 import { useId, useState, type FormEvent } from 'react';
@@ -31,8 +31,6 @@ import {
 interface ConfigPanelProps {
   readonly selection: EphemerisSelection;
   readonly loading: boolean;
-  /** The selection differs from the data on screen. */
-  readonly stale: boolean;
   readonly onSiteChange: (siteId: SiteId) => void;
   readonly onCoordinatesChange: (latitudeDeg: number, longitudeEastDeg: number) => void;
   readonly onUtcChange: (utc: string) => void;
@@ -49,7 +47,6 @@ function isUsable(query: CoordinateQuery): boolean {
 export function ConfigPanel({
   selection,
   loading,
-  stale,
   onSiteChange,
   onCoordinatesChange,
   onUtcChange,
@@ -70,10 +67,10 @@ export function ConfigPanel({
   const [zone, setZone] = useState<TimeZoneMode>('utc');
   const [fields, setFields] = useState<DateTimeFields>(() => utcToFields(selection.utc, 'utc'));
   const query = parseCoordinateQuery(searchInput);
-  const parsedTime = fieldsToUtc(fields, zone);
+  const parsedTime = fieldsToUtc(fields, zone, selection.utc);
   const custom = selection.siteId === CUSTOM_SITE_ID;
   const valid = parsedTime.ok && isUsable(query);
-  const canUpdate = valid && stale && !loading;
+  const canUpdate = valid && !loading;
 
   function handlePresetChange(siteId: SiteId) {
     const site = findSite(siteId);
@@ -98,7 +95,7 @@ export function ConfigPanel({
   function handleFieldsChange(change: Partial<DateTimeFields>) {
     const next = { ...fields, ...change };
     setFields(next);
-    const parsed = fieldsToUtc(next, zone);
+    const parsed = fieldsToUtc(next, zone, selection.utc);
     if (parsed.ok) onUtcChange(parsed.iso);
   }
 
@@ -151,14 +148,6 @@ export function ConfigPanel({
     );
   } else if (canUpdate) {
     buttonClass += ' button--go';
-  } else if (valid) {
-    buttonClass += ' button--idle';
-    buttonLabel = (
-      <>
-        <span aria-hidden="true">✓ </span>
-        {config.upToDate}
-      </>
-    );
   } else {
     buttonClass += ' button--idle';
   }

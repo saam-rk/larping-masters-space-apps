@@ -93,8 +93,6 @@ export interface Messages {
     readonly zoneLocalHint: (offset: string, utc: string) => string;
     readonly update: string;
     readonly updating: string;
-    /** Shown on the disabled button while the view matches the selection. */
-    readonly upToDate: string;
     readonly invalidTime: string;
     /** The local time falls in a daylight-saving gap. */
     readonly nonexistentTime: string;
@@ -208,7 +206,6 @@ const es: Messages = {
     zoneLocalHint: (offset, utc) => `Hora local (${offset}) = ${utc} UTC.`,
     update: 'Actualizar vista',
     updating: 'Consultando…',
-    upToDate: 'Vista actualizada',
     invalidTime: 'Introduce una fecha y hora válidas entre 2000 y 2099.',
     nonexistentTime: 'Esa hora local no existe por el cambio de horario. Elige otra hora.',
   },
@@ -348,7 +345,6 @@ const en: Messages = {
     zoneLocalHint: (offset, utc) => `Local time (${offset}) = ${utc} UTC.`,
     update: 'Update view',
     updating: 'Querying…',
-    upToDate: 'View up to date',
     invalidTime: 'Enter a valid date and time between 2000 and 2099.',
     nonexistentTime: 'That local time does not exist because of a daylight-saving change. Pick another time.',
   },

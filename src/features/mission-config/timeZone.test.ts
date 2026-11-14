@@ -71,6 +71,19 @@ describe('local mode (Europe/Madrid)', () => {
     expect(parsed.ok && parsed.iso).toBe('2026-10-25T00:30:00Z');
   });
 
+  it('preserves the second occurrence when switching an existing instant to local time', () => {
+    const utc = '2026-10-25T01:30:00Z';
+    const fields = utcToFields(utc, 'local');
+    expect(fields).toEqual({ date: '2026-10-25', time: '02:30' });
+    const parsed = fieldsToUtc(fields, 'local', utc);
+    expect(parsed.ok && parsed.iso).toBe(utc);
+  });
+
+  it('does not reuse an existing instant after the local fields change', () => {
+    const parsed = fieldsToUtc({ date: '2026-10-25', time: '03:30' }, 'local', '2026-10-25T01:30:00Z');
+    expect(parsed.ok && parsed.iso).toBe('2026-10-25T02:30:00Z');
+  });
+
   it('applies the same range and calendar checks', () => {
     expect(fieldsToUtc({ date: '2026-02-30', time: '12:00' }, 'local')).toEqual({ ok: false, reason: 'invalid-date' });
     expect(fieldsToUtc({ date: '1999-12-31', time: '12:00' }, 'local')).toEqual({ ok: false, reason: 'out-of-range' });
