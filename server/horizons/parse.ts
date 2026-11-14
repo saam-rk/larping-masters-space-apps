@@ -1,6 +1,7 @@
 /**
- * Parses a Horizons API JSON payload containing a single-row CSV observer table
- * (see `query.ts`). Anything unexpected is reported as an error instead of
+ * Parses Horizons API JSON payloads with CSV observer tables: a single row
+ * (`parseObserverPayload`) or an Az/El series (`parseObserverSeries`); see
+ * `query.ts`. Anything unexpected is reported as an error instead of
  * being guessed; "n.a." values become `null`, never zero.
  */
 
@@ -38,7 +39,15 @@ const MONTHS: Readonly<Record<string, string>> = {
 const NUMBER_PATTERN = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/;
 const ROW_TIME_PATTERN = /^(\d{4})-([A-Z][a-z]{2})-(\d{2}) (\d{2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?$/;
 
-export function parseObserverPayload(payload: unknown, body: BodyId): ParseResult {
+interface RawTable {
+  readonly result: string;
+  readonly apiVersion: string | null;
+  readonly header: readonly string[];
+  readonly rows: readonly string[];
+}
+
+/** Reads the CSV table between `$$SOE` and `$$EOE` and its header line. */
+function readRawTable(payload: unknown): { readonly ok: true; readonly table: RawTable } | { readonly ok: false; readonly error: ApiError } {
   if (typeof payload !== 'object' || payload === null) {
     return formatError('payload is not a JSON object');
   }
@@ -65,8 +74,25 @@ export function parseObserverPayload(payload: unknown, body: BodyId): ParseResul
     return formatError('CSV header line not found');
   }
   const header = headerLine.split(',').map((cell) => cell.trim());
-
   const rows = lines.slice(startIndex + 1, endIndex).filter((line) => line.trim() !== '');
+  return { ok: true, table: { result, apiVersion, header, rows } };
+}
+
+/** Header metadata shared by single-row and multi-row tables. */
+function readHeaderMetadata(result: string) {
+  const targetHeader = /^Target body name:\s*(.+?)\s*\{source:\s*([^}]+?)\s*\}/m.exec(result);
+  return {
+    targetName: targetHeader?.[1] ?? '',
+    planetaryEphemeris: targetHeader?.[2] ?? null,
+    observerFrame: /^Center pole\/equ\s*:\s*(.+?)\s*\{/m.exec(result)?.[1] ?? null,
+    interferingBody: /^Vis\. interferer\s*:\s*([A-Za-z]+)/m.exec(result)?.[1] ?? null,
+  };
+}
+
+export function parseObserverPayload(payload: unknown, body: BodyId): ParseResult {
+  const raw = readRawTable(payload);
+  if (!raw.ok) return raw;
+  const { result, apiVersion, header, rows } = raw.table;
   if (rows.length !== 1) {
     return formatError(`expected exactly 1 table row, found ${rows.length}`);
   }
@@ -104,20 +130,18 @@ export function parseObserverPayload(payload: unknown, body: BodyId): ParseResul
     if (isApiError(value)) return { ok: false, error: value };
   }
 
-  const targetHeader = /^Target body name:\s*(.+?)\s*\{source:\s*([^}]+?)\s*\}/m.exec(result);
-  const observerFrame = /^Center pole\/equ\s*:\s*(.+?)\s*\{/m.exec(result)?.[1] ?? null;
-  const interferingBody = /^Vis\. interferer\s*:\s*([A-Za-z]+)/m.exec(result)?.[1] ?? null;
+  const { targetName, planetaryEphemeris, observerFrame, interferingBody } = readHeaderMetadata(result);
 
   return {
     ok: true,
     table: {
       ephemerisUtc,
       apiVersion,
-      planetaryEphemeris: targetHeader?.[2] ?? null,
+      planetaryEphemeris,
       observerFrame,
       observation: {
         body,
-        targetName: targetHeader?.[1] ?? '',
+        targetName,
         azimuthDeg: azimuthDeg as number | null,
         elevationDeg: elevationDeg as number | null,
         angularDiameterArcsec: angularDiameterArcsec as number | null,
@@ -131,6 +155,66 @@ export function parseObserverPayload(payload: unknown, body: BodyId): ParseResul
       },
     },
   };
+}
+
+/** Az/El sampled at several instants (a START/STOP/STEP request, see `buildObserverRangeParameters`). */
+export interface ParsedObserverSeries {
+  readonly body: BodyId;
+  /** Row instants, milliseconds since the Unix epoch (UTC), strictly increasing. */
+  readonly times: readonly number[];
+  readonly azimuthDeg: readonly (number | null)[];
+  readonly elevationDeg: readonly (number | null)[];
+  readonly apiVersion: string | null;
+  readonly planetaryEphemeris: string | null;
+  readonly observerFrame: string | null;
+}
+
+export type SeriesParseResult =
+  | { readonly ok: true; readonly series: ParsedObserverSeries }
+  | { readonly ok: false; readonly error: ApiError };
+
+/**
+ * Parses a multi-row Az/El table. As for single rows, "n.a." becomes `null`
+ * and anything unreadable is an error rather than a guess.
+ */
+export function parseObserverSeries(payload: unknown, body: BodyId): SeriesParseResult {
+  const raw = readRawTable(payload);
+  if (!raw.ok) return raw;
+  const { result, apiVersion, header, rows } = raw.table;
+  if (rows.length === 0) return formatError('table has no rows');
+
+  const azimuthIndex = header.indexOf(COLUMN.azimuth);
+  const elevationIndex = header.indexOf(COLUMN.elevation);
+  if (azimuthIndex === -1 || elevationIndex === -1) {
+    return formatError(`required columns "${COLUMN.azimuth}" and "${COLUMN.elevation}" missing`);
+  }
+
+  const times: number[] = [];
+  const azimuthDeg: (number | null)[] = [];
+  const elevationDeg: (number | null)[] = [];
+  for (const row of rows) {
+    const cells = row.split(',');
+    const timeCell = cells[0]?.trim() ?? '';
+    const iso = parseRowTime(timeCell);
+    const time = iso === null ? Number.NaN : Date.parse(iso);
+    if (!Number.isFinite(time)) return formatError(`unreadable row time "${timeCell}"`);
+    if (times.length > 0 && time <= (times[times.length - 1] as number)) {
+      return formatError('row times are not strictly increasing');
+    }
+    const values: (number | null)[] = [];
+    for (const index of [azimuthIndex, elevationIndex]) {
+      const cell = cells[index]?.trim() ?? '';
+      if (cell === 'n.a.') values.push(null);
+      else if (NUMBER_PATTERN.test(cell)) values.push(Number(cell));
+      else return formatError(`column "${header[index] ?? ''}" has non-numeric value "${cell}"`);
+    }
+    times.push(time);
+    azimuthDeg.push(values[0] ?? null);
+    elevationDeg.push(values[1] ?? null);
+  }
+
+  const { planetaryEphemeris, observerFrame } = readHeaderMetadata(result);
+  return { ok: true, series: { body, times, azimuthDeg, elevationDeg, apiVersion, planetaryEphemeris, observerFrame } };
 }
 
 /** `2026-Nov-14 12:00:00.000` -> `2026-11-14T12:00:00Z`. B.C. dates are rejected. */
@@ -151,7 +235,7 @@ function readSignatureVersion(signature: unknown): string | null {
   return typeof version === 'string' ? version : null;
 }
 
-function formatError(detail: string): ParseResult {
+function formatError(detail: string): { readonly ok: false; readonly error: ApiError } {
   return { ok: false, error: { code: 'UPSTREAM_FORMAT', detail } };
 }
 

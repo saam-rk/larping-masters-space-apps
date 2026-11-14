@@ -1773,6 +1773,335 @@ input[aria-invalid='true'] {
   color: var(--red);
 }
 
+.callout--warning {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+
+.callout--warning::before {
+  content: '! ';
+  color: var(--amber);
+}
+
+/* ───────────────────────── Inverse search ───────────────────────── */
+
+/* Box in the control column: one intro line and one summary line. */
+.sky-search__intro {
+  margin: 0;
+}
+
+.sky-search__summary {
+  margin-top: 0.35rem;
+}
+
+/*
+ * Search window: form (left) and examples + guide (right), each scrolling on
+ * its own on wide screens; one scrolling column on narrow ones.
+ */
+.dialog--wide {
+  width: min(66rem, calc(100vw - 2rem));
+}
+
+.sky-search-dialog .dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: min(88vh, 50rem);
+  overflow: hidden;
+}
+
+.sky-search-dialog .dialog__body .hint {
+  margin: 0.4rem 0 0;
+}
+
+.sky-search-dialog .dialog__body .callout {
+  margin: 0.5rem 0 0;
+}
+
+.sky-search__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 0 1.5rem;
+  min-height: 0;
+  flex: 1;
+}
+
+.sky-search__main,
+.sky-search__guide {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) rgba(10, 30, 18, 0.9);
+  padding-right: 0.5rem;
+}
+
+.sky-search__guide {
+  padding-left: 1.5rem;
+  margin-left: -1.5rem;
+  border-left: 1px dashed var(--line-dim);
+}
+
+.sky-search__step + .sky-search__step,
+.sky-search__form + .sky-search__step,
+.sky-search__actions {
+  margin-top: 1.1rem;
+}
+
+.sky-search__step-title {
+  margin: 0 0 0.35rem;
+  color: var(--accent);
+  font-size: 0.9em;
+  font-weight: var(--title-weight);
+  letter-spacing: 0.08em;
+  text-transform: var(--title-case);
+}
+
+.sky-search__form {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Label column, two number columns and the possible values; each row is laid out by the grid itself. */
+.sky-search__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 7rem) minmax(0, 7rem) minmax(0, 9rem);
+  gap: 0.45rem 0.6rem;
+  align-items: center;
+  margin-top: 0.6rem;
+}
+
+.sky-search__row {
+  display: contents;
+}
+
+.sky-search__head {
+  color: var(--muted);
+  font-size: 0.85em;
+  letter-spacing: 0.06em;
+  text-transform: var(--title-case);
+}
+
+.sky-search__label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.5em;
+  min-width: 0;
+  color: var(--muted);
+}
+
+.sky-search__row[data-active='true'] .sky-search__label {
+  color: var(--text);
+}
+
+.sky-search__body {
+  font-weight: var(--title-weight);
+  letter-spacing: 0.08em;
+  text-transform: var(--title-case);
+}
+
+.sky-search__body::before {
+  content: '● ';
+}
+
+.sky-search__body--sun {
+  color: var(--amber);
+}
+
+.sky-search__body--earth {
+  color: var(--cyan);
+}
+
+.sky-search__angle-hint {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: 0.8em;
+}
+
+.sky-search__input {
+  width: 100%;
+  font-size: 1.05em;
+  text-align: right;
+}
+
+.sky-search__possible {
+  color: var(--muted);
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The column head names it on wide screens; the inline label only shows when stacked. */
+.sky-search__possible-label {
+  display: none;
+}
+
+.sky-search__clear {
+  align-self: flex-start;
+  margin-top: 0.6rem;
+}
+
+.segmented.sky-search__directions {
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 0.4rem;
+}
+
+.sky-search__reference {
+  color: var(--text);
+}
+
+.sky-search__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.sky-search__actions .button {
+  flex: 1;
+}
+
+.sky-search__cancel {
+  align-self: stretch;
+}
+
+.sky-search__match {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sky-search-dialog .dialog__body .sky-search__match .hint,
+.sky-search-dialog .dialog__body .sky-search__match-head {
+  margin: 0;
+}
+
+.sky-search__match-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 0.75rem;
+}
+
+.sky-search__match-title {
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: var(--title-case);
+}
+
+.sky-search__match-time {
+  color: var(--accent);
+  font-size: 1.15em;
+  font-variant-numeric: tabular-nums;
+}
+
+.sky-search__values th[scope='row'] {
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.sky-search__show {
+  align-self: flex-start;
+}
+
+.sky-search__guide-section + .sky-search__guide-section {
+  margin-top: 1.1rem;
+}
+
+.sky-search__guide p {
+  margin: 0 0 0.55rem;
+  line-height: 1.45;
+}
+
+.sky-search__examples {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sky-search__example {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--line-dim);
+}
+
+.sky-search__example-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.sky-search__example-title {
+  color: var(--text);
+}
+
+.sky-search__example-detail {
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
+.sky-search__footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.6rem;
+  border-top: 1px dashed var(--line-dim);
+}
+
+@media (max-width: 860px), (max-height: 560px) {
+  .sky-search-dialog .dialog__body {
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
+  .sky-search__layout {
+    display: block;
+  }
+
+  .sky-search__main,
+  .sky-search__guide {
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .sky-search__guide {
+    margin: 1.25rem 0 0;
+    padding: 1rem 0 0;
+    border-left: none;
+    border-top: 1px dashed var(--line-dim);
+  }
+}
+
+/* Narrow windows: the possible values go under each row's fields. */
+@media (max-width: 560px) {
+  .sky-search__grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .sky-search__grid > span[aria-hidden='true']:first-child,
+  .sky-search__head--possible {
+    display: none;
+  }
+
+  .sky-search__label,
+  .sky-search__possible {
+    grid-column: 1 / -1;
+  }
+
+  .sky-search__label {
+    margin-top: 0.4rem;
+  }
+
+  .sky-search__possible-label {
+    display: inline;
+  }
+}
+
 /* ───────────────────────── Landing window ───────────────────────── */
 
 /*

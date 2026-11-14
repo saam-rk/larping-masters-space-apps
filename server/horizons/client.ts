@@ -4,8 +4,8 @@
  */
 
 import type { ApiError } from '../../shared/ephemeris.js';
-import { parseObserverPayload, type ParsedObserverTable } from './parse.js';
-import { buildObserverUrl, HORIZONS_API_URL, type ObserverQuery } from './query.js';
+import { parseObserverPayload, parseObserverSeries, type ParsedObserverSeries, type ParsedObserverTable } from './parse.js';
+import { buildObserverRangeUrl, buildObserverUrl, HORIZONS_API_URL, type ObserverQuery, type ObserverRangeQuery } from './query.js';
 
 export type FetchLike = (url: string, init?: RequestInit) => Promise<Response>;
 
@@ -28,9 +28,40 @@ export async function fetchObserverTable(
   options: HorizonsClientOptions = {},
   signal?: AbortSignal,
 ): Promise<ObserverTableResult> {
+  const url = buildObserverUrl(query, options.baseUrl ?? HORIZONS_API_URL);
+  const fetched = await fetchPayload(url, options, signal);
+  if (!fetched.ok) return fetched;
+  const parsed = parseObserverPayload(fetched.payload, query.body);
+  if (!parsed.ok) return parsed;
+  return { ok: true, table: parsed.table, retrievedAt: fetched.retrievedAt, url };
+}
+
+export type ObserverSeriesResult =
+  | { readonly ok: true; readonly series: ParsedObserverSeries; readonly retrievedAt: Date; readonly url: string }
+  | { readonly ok: false; readonly error: ApiError };
+
+/** Az/El sampled over a time range (see `buildObserverRangeParameters`). */
+export async function fetchObserverSeries(
+  query: ObserverRangeQuery,
+  options: HorizonsClientOptions = {},
+  signal?: AbortSignal,
+): Promise<ObserverSeriesResult> {
+  const url = buildObserverRangeUrl(query, options.baseUrl ?? HORIZONS_API_URL);
+  const fetched = await fetchPayload(url, options, signal);
+  if (!fetched.ok) return fetched;
+  const parsed = parseObserverSeries(fetched.payload, query.body);
+  if (!parsed.ok) return parsed;
+  return { ok: true, series: parsed.series, retrievedAt: fetched.retrievedAt, url };
+}
+
+type PayloadResult =
+  | { readonly ok: true; readonly payload: unknown; readonly retrievedAt: Date }
+  | { readonly ok: false; readonly error: ApiError };
+
+/** One GET to Horizons with timeout and failure classification; returns the decoded JSON. */
+async function fetchPayload(url: string, options: HorizonsClientOptions, signal?: AbortSignal): Promise<PayloadResult> {
   const fetchImpl = options.fetch ?? fetch;
   const now = options.now ?? (() => new Date());
-  const url = buildObserverUrl(query, options.baseUrl ?? HORIZONS_API_URL);
   const timeout = AbortSignal.timeout(options.timeoutMs ?? DEFAULT_HORIZONS_TIMEOUT_MS);
   const combinedSignal = signal ? AbortSignal.any([signal, timeout]) : timeout;
 
@@ -55,19 +86,14 @@ export async function fetchObserverTable(
     return unavailable(`Horizons HTTP ${response.status}`);
   }
 
-  let payload: unknown;
   try {
-    payload = JSON.parse(bodyText);
+    return { ok: true, payload: JSON.parse(bodyText), retrievedAt: now() };
   } catch {
     return { ok: false, error: { code: 'UPSTREAM_FORMAT', detail: 'Horizons response is not valid JSON' } };
   }
-
-  const parsed = parseObserverPayload(payload, query.body);
-  if (!parsed.ok) return parsed;
-  return { ok: true, table: parsed.table, retrievedAt: now(), url };
 }
 
-function unavailable(detail: string): ObserverTableResult {
+function unavailable(detail: string): { readonly ok: false; readonly error: ApiError } {
   return { ok: false, error: { code: 'UPSTREAM_UNAVAILABLE', detail } };
 }
 

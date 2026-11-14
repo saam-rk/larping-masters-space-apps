@@ -10,6 +10,8 @@
 
 import type { ApiErrorCode } from '../../shared/ephemeris.js';
 import type { PresenceState } from '../../shared/presence.js';
+import type { SkySearchDirection } from '../../shared/skySearch.js';
+import type { SkySearchExample } from '../features/sky-search/examples';
 import type { SourceId } from '../features/results/sourceCatalog';
 import type { ViewMode } from '../features/scene/viewMode';
 import type { EffectMode } from '../preferences/preferences';
@@ -203,6 +205,89 @@ export interface Messages {
     readonly sourcesResearch: string;
     /** Why each project source is listed (one short sentence). */
     readonly sourceReasons: Readonly<Record<SourceId, string>>;
+  };
+  /** Inverse search: Sun/Earth azimuth and elevation ranges -> closest matching date. */
+  readonly skySearch: {
+    readonly heading: string;
+    /** Short help of the box's "i" button; the full guide is in the search window. */
+    readonly info: Paragraphs;
+    /** One line in the box, above the button that opens the window. */
+    readonly intro: string;
+    /** Button that opens the search window. */
+    readonly open: string;
+    /** Title of the search window. */
+    readonly dialogTitle: string;
+    /** Box summary: number of quantities with a condition. */
+    readonly summary: (count: number) => string;
+    readonly lastMatch: string;
+    readonly lastNone: string;
+    /** Footer button that closes the window. */
+    readonly close: string;
+    /** Numbered steps of the form. */
+    readonly steps: { readonly conditions: string; readonly direction: string; readonly result: string };
+    readonly conditionsHint: string;
+    readonly min: string;
+    readonly max: string;
+    readonly angles: { readonly azimuth: string; readonly elevation: string };
+    /** Unit and convention under each angle name. */
+    readonly angleHints: { readonly azimuth: string; readonly elevation: string };
+    /** Accessible name of one field, e.g. "Sun, azimuth, minimum". */
+    readonly fieldLabel: (body: string, angle: string, bound: string) => string;
+    readonly minimum: string;
+    readonly maximum: string;
+    /** Column with the values a quantity can take at the site. */
+    readonly possibleHeading: string;
+    /** Every azimuth is possible. */
+    readonly anyAzimuth: string;
+    /** Range shown in the possible column, e.g. "-6.5° to 6.5°". */
+    readonly span: (min: string, max: string) => string;
+    readonly clear: string;
+    readonly direction: string;
+    readonly directions: Readonly<Record<SkySearchDirection, string>>;
+    readonly directionHints: Readonly<Record<SkySearchDirection, string>>;
+    /** The site and instant the search starts from (the control panel's selection). */
+    readonly reference: (site: string, utc: string) => string;
+    readonly search: string;
+    readonly searching: string;
+    readonly cancel: string;
+    /** A search keeps running while the window is closed. */
+    readonly background: string;
+    readonly needOne: string;
+    readonly rowErrors: {
+      readonly format: string;
+      readonly azimuthBounds: string;
+      readonly elevationBounds: string;
+      readonly order: string;
+    };
+    /** Azimuth row whose min is above its max. */
+    readonly wrapsNorth: (body: string) => string;
+    /** Well-formed rows of a body that it never meets at the site. */
+    readonly impossible: (body: string) => string;
+    /** Placeholder of the result step before the first search. */
+    readonly noResult: string;
+    readonly examplesHeading: string;
+    readonly examplesIntro: string;
+    readonly examples: Readonly<Record<SkySearchExample, { readonly title: string; readonly detail: string }>>;
+    /** Button that fills the form with an example. */
+    readonly tryExample: string;
+    /** Accessible name of that button. */
+    readonly tryExampleLabel: (example: string) => string;
+    readonly guideHeading: string;
+    /** Extended explanation shown beside the form. */
+    readonly guide: readonly { readonly heading: string; readonly paragraphs: Paragraphs }[];
+    readonly matchHeading: string;
+    readonly offset: string;
+    readonly condition: string;
+    readonly value: string;
+    readonly shown: string;
+    /** Closes the window and shows the match on the horizon view. */
+    readonly show: string;
+    readonly incomplete: string;
+    readonly notFound: (start: string, end: string) => string;
+    readonly budget: (start: string, end: string) => string;
+    /** The control panel's site changed after the search. */
+    readonly otherSite: (site: string) => string;
+    readonly precision: string;
   };
   readonly presence: {
     readonly sun: Readonly<Record<PresenceState, string>>;
@@ -424,6 +509,133 @@ const es: Messages = {
       projStere: 'Referencia de la proyección estereográfica polar usada para situar coordenadas.',
       gdal: 'Inspección de dimensiones, sistema de referencia y datos ausentes de los ráster.',
     },
+  },
+  skySearch: {
+    heading: 'Búsqueda inversa',
+    info: [
+      'Busca la fecha y hora en que el Sol y la Tierra están donde indiques, vistos desde el punto de referencia elegido en «Control».',
+      'Abre la ventana de búsqueda para escribir las condiciones. Allí tienes ejemplos y una guía completa sobre unidades, valores posibles, precisión y límites.',
+      'Son posiciones geométricas: el relieve no está modelado. Una coincidencia no garantiza luz, comunicaciones ni idoneidad de aterrizaje.',
+    ],
+    intro: 'Indica dónde quieres ver el Sol y la Tierra; se busca la fecha.',
+    open: 'Abrir',
+    dialogTitle: 'Búsqueda inversa · Sol y Tierra → fecha',
+    summary: (count) => (count === 0 ? 'Sin condiciones' : count === 1 ? '1 condición' : `${count} condiciones`),
+    lastMatch: 'Última coincidencia',
+    lastNone: 'La última búsqueda no encontró coincidencia.',
+    close: 'Cerrar',
+    steps: { conditions: '1 · Condiciones', direction: '2 · Fecha buscada', result: '3 · Resultado' },
+    conditionsHint:
+      'Rellena de una a cuatro filas. Mínimo y máximo forman un rango; si rellenas solo uno, se busca ese valor exacto. Las filas vacías no imponen condición.',
+    min: 'Mín',
+    max: 'Máx',
+    angles: { azimuth: 'Azimut', elevation: 'Elevación' },
+    angleHints: { azimuth: '0° a 360°, desde el norte, horario', elevation: '-90° a 90°, sobre el plano de referencia' },
+    fieldLabel: (body, angle, bound) => `${body}, ${angle}, ${bound}`,
+    minimum: 'mínimo',
+    maximum: 'máximo',
+    possibleHeading: 'Posible aquí',
+    anyAzimuth: 'cualquiera',
+    span: (min, max) => `${min} a ${max}`,
+    clear: 'Vaciar campos',
+    direction: 'Fecha buscada',
+    directions: { nearest: 'Más próxima', after: 'Siguiente', before: 'Anterior' },
+    directionHints: {
+      nearest: 'La coincidencia más cercana a la referencia, antes o después.',
+      after: 'La coincidencia más cercana posterior a la referencia.',
+      before: 'La coincidencia más cercana anterior a la referencia.',
+    },
+    reference: (site, utc) => `Referencia: ${site} · ${utc}`,
+    search: 'Buscar fecha',
+    searching: 'Buscando',
+    cancel: 'Cancelar',
+    background: 'Puedes cerrar esta ventana: la búsqueda sigue y el resultado aparecerá aquí.',
+    needOne: 'Rellena al menos un campo.',
+    rowErrors: {
+      format: 'Escribe grados con hasta 4 decimales.',
+      azimuthBounds: 'El azimut va de 0° a 360°.',
+      elevationBounds: 'La elevación va de -90° a 90°.',
+      order: 'En la elevación, el mínimo no puede superar al máximo.',
+    },
+    wrapsNorth: (body) => `${body}: el rango de azimut cruza el norte.`,
+    impossible: (body) => `${body}: desde este punto nunca alcanza esos valores.`,
+    noResult: 'Aún no has buscado. El resultado aparecerá aquí y, si hay coincidencia, también en el horizonte local.',
+    examplesHeading: 'Ejemplos',
+    examplesIntro: 'Rellenan el formulario para que veas cómo se escribe cada caso; puedes ajustarlos antes de buscar.',
+    examples: {
+      sunLow: { title: 'Sol bajo', detail: 'Elevación del Sol entre 0° y 2°: un rango con mínimo y máximo.' },
+      earthUp: { title: 'Tierra sobre el plano', detail: 'Elevación de la Tierra de 0° a 90°: «al menos 0°» se escribe con 90° como máximo.' },
+      sunNorth: { title: 'Sol hacia el norte', detail: 'Azimut del Sol de 350° a 10°: el mínimo es mayor que el máximo, así que el rango cruza el norte.' },
+      both: { title: 'Sol y Tierra a la vez', detail: 'Ambas elevaciones de 0° a 90°: todas las filas rellenas deben cumplirse en el mismo instante.' },
+    },
+    tryExample: 'Probar',
+    tryExampleLabel: (example) => `Probar el ejemplo: ${example}`,
+    guideHeading: 'Guía',
+    guide: [
+      {
+        heading: 'Qué hace',
+        paragraphs: [
+          '«Control» responde a «en esta fecha, ¿dónde están el Sol y la Tierra?». La búsqueda inversa responde a la pregunta contraria: indicas dónde quieres verlos y obtienes la fecha y hora UTC en que ocurre, vista desde el punto de referencia elegido en «Control».',
+          'Rellena entre uno y cuatro campos: azimut y elevación del Sol y de la Tierra. Todas las filas rellenas deben cumplirse a la vez; las vacías no imponen nada.',
+        ],
+      },
+      {
+        heading: 'Azimut y elevación',
+        paragraphs: [
+          'Azimut: dirección a lo largo del horizonte, de 0° a 360°, medida desde el norte en sentido horario (90° es el este, 180° el sur y 270° el oeste).',
+          'Elevación: ángulo sobre el plano de referencia, de -90° a 90°. Un valor negativo indica que el objeto está por debajo de ese plano.',
+        ],
+      },
+      {
+        heading: 'Rangos, valores exactos y campos vacíos',
+        paragraphs: [
+          'Con mínimo y máximo, la fila es un rango que incluye los dos extremos. Si rellenas solo uno de los dos, la fila pide ese valor exacto, comparado con 4 decimales.',
+          'Para pedir «al menos» o «como mucho», escribe también el otro extremo con el límite del ángulo: por ejemplo, elevación mínima 0 y máxima 90 para «sobre el plano de referencia».',
+          'Los valores van en grados con hasta 4 decimales; se acepta punto o coma decimal.',
+          'En el azimut, si el mínimo es mayor que el máximo, el rango cruza el norte: de 350 a 10 abarca de 350° a 360° y de 0° a 10°. En la elevación, el mínimo no puede superar al máximo.',
+        ],
+      },
+      {
+        heading: 'Qué valores son posibles en este punto',
+        paragraphs: [
+          'Visto desde la Luna, el Sol nunca se aparta más de 1,6° del ecuador lunar y la Tierra nunca más de unos 10,7° de su posición media. Por eso, desde un punto cercano al polo, cada objeto solo recorre una franja estrecha del cielo.',
+          'La columna «Posible aquí» indica qué elevación y azimut puede tener cada objeto en el punto elegido. Los límites salen de JPL Horizons (DE441, 2000–2100) con 0,25° de margen. Si una fila pide valores fuera de esa franja, el formulario la marca y no deja buscar.',
+          'Una condición aceptada puede, aun así, no cumplirse dentro de la ventana buscada, sobre todo si combinas varias filas que deben coincidir en el mismo instante.',
+        ],
+      },
+      {
+        heading: 'Fecha buscada y ventana',
+        paragraphs: [
+          'La búsqueda parte de la fecha y hora seleccionadas en «Control». «Más próxima» acepta coincidencias antes o después; «Siguiente», solo posteriores; «Anterior», solo anteriores.',
+          'Explora hasta 366 días y entre 2000 y 2099, con resolución de 1 segundo. Si cambias el punto o la fecha en «Control», la siguiente búsqueda parte de los nuevos valores.',
+        ],
+      },
+      {
+        heading: 'Precisión y tiempo de respuesta',
+        paragraphs: [
+          'Cada coincidencia se comprueba con los valores que da JPL Horizons para ese segundo, redondeados a 4 decimales, y se muestra en el horizonte local. Un rango más estrecho que lo que el objeto recorre en un segundo puede no tener coincidencia.',
+          'La búsqueda consulta JPL Horizons varias veces y puede tardar. Hay un límite de consultas: si se alcanza, el resultado lo indica; prueba con rangos más amplios o con otra fecha de referencia.',
+        ],
+      },
+      {
+        heading: 'Límites',
+        paragraphs: [
+          'Son posiciones geométricas: el relieve no está modelado. Una coincidencia no garantiza luz, comunicaciones ni idoneidad de aterrizaje.',
+        ],
+      },
+    ],
+    matchHeading: 'Coincidencia',
+    offset: 'Respecto a la referencia',
+    condition: 'Condición',
+    value: 'Valor',
+    shown: 'Ya se muestra en el horizonte local.',
+    show: 'Ver en el horizonte',
+    incomplete: 'Se agotó el límite de consultas: la coincidencia es real, pero podría haber otra más próxima.',
+    notFound: (start, end) => `Ninguna fecha entre ${start} y ${end} cumple las condiciones.`,
+    budget: (start, end) =>
+      `Se agotó el límite de consultas (revisado de ${start} a ${end}) sin encontrar coincidencia. Prueba con rangos más amplios o con otra fecha de referencia.`,
+    otherSite: (site) => `Resultado para ${site}; el punto de «Control» ha cambiado. Vuelve a buscar.`,
+    precision: 'JPL Horizons · resolución 1 s · 4 decimales · sin relieve',
   },
   presence: {
     sun: {
@@ -665,6 +877,131 @@ const en: Messages = {
       projStere: 'Reference for the polar stereographic projection used to place coordinates.',
       gdal: 'Inspection of raster dimensions, reference system and missing data.',
     },
+  },
+  skySearch: {
+    heading: 'Inverse search',
+    info: [
+      'Finds the date and time at which the Sun and the Earth are where you say, seen from the reference point chosen under "Control".',
+      'Open the search window to enter the conditions. It has examples and a full guide to units, possible values, precision and limits.',
+      'These are geometric positions: terrain is not modeled. A match does not guarantee light, communications or landing suitability.',
+    ],
+    intro: 'Say where you want the Sun and the Earth; the date is found.',
+    open: 'Open',
+    dialogTitle: 'Inverse search · Sun and Earth → date',
+    summary: (count) => (count === 0 ? 'No conditions' : count === 1 ? '1 condition' : `${count} conditions`),
+    lastMatch: 'Last match',
+    lastNone: 'The last search found no match.',
+    close: 'Close',
+    steps: { conditions: '1 · Conditions', direction: '2 · Date to find', result: '3 · Result' },
+    conditionsHint:
+      'Fill in one to four rows. Minimum and maximum make a range; fill in only one and that exact value is searched. Empty rows set no condition.',
+    min: 'Min',
+    max: 'Max',
+    angles: { azimuth: 'Azimuth', elevation: 'Elevation' },
+    angleHints: { azimuth: '0° to 360°, clockwise from north', elevation: '-90° to 90°, above the reference plane' },
+    fieldLabel: (body, angle, bound) => `${body}, ${angle}, ${bound}`,
+    minimum: 'minimum',
+    maximum: 'maximum',
+    possibleHeading: 'Possible here',
+    anyAzimuth: 'any',
+    span: (min, max) => `${min} to ${max}`,
+    clear: 'Clear fields',
+    direction: 'Date to find',
+    directions: { nearest: 'Closest', after: 'Next', before: 'Previous' },
+    directionHints: {
+      nearest: 'The match closest to the reference, earlier or later.',
+      after: 'The closest match after the reference.',
+      before: 'The closest match before the reference.',
+    },
+    reference: (site, utc) => `Reference: ${site} · ${utc}`,
+    search: 'Find date',
+    searching: 'Searching',
+    cancel: 'Cancel',
+    background: 'You can close this window: the search keeps going and the result will show up here.',
+    needOne: 'Fill in at least one field.',
+    rowErrors: {
+      format: 'Enter degrees with up to 4 decimals.',
+      azimuthBounds: 'Azimuth goes from 0° to 360°.',
+      elevationBounds: 'Elevation goes from -90° to 90°.',
+      order: 'For elevation, the minimum cannot exceed the maximum.',
+    },
+    wrapsNorth: (body) => `${body}: the azimuth range wraps through north.`,
+    impossible: (body) => `${body}: never reaches these values from this point.`,
+    noResult: 'No search yet. The result will show up here and, if there is a match, on the local horizon too.',
+    examplesHeading: 'Examples',
+    examplesIntro: 'They fill in the form so you can see how each case is typed; adjust them before searching if you like.',
+    examples: {
+      sunLow: { title: 'Low Sun', detail: 'Sun elevation between 0° and 2°: a range with a minimum and a maximum.' },
+      earthUp: { title: 'Earth above the plane', detail: 'Earth elevation from 0° to 90°: "at least 0°" is typed with 90° as the maximum.' },
+      sunNorth: { title: 'Sun towards north', detail: 'Sun azimuth from 350° to 10°: the minimum is above the maximum, so the range wraps through north.' },
+      both: { title: 'Sun and Earth together', detail: 'Both elevations from 0° to 90°: every filled row must hold at the same instant.' },
+    },
+    tryExample: 'Try',
+    tryExampleLabel: (example) => `Try the example: ${example}`,
+    guideHeading: 'Guide',
+    guide: [
+      {
+        heading: 'What it does',
+        paragraphs: [
+          '"Control" answers "on this date, where are the Sun and the Earth?". The inverse search answers the opposite question: you say where you want to see them and get the UTC date and time at which that happens, seen from the reference point chosen under "Control".',
+          'Fill in one to four fields: azimuth and elevation of the Sun and of the Earth. Every filled row must hold at once; empty rows set nothing.',
+        ],
+      },
+      {
+        heading: 'Azimuth and elevation',
+        paragraphs: [
+          'Azimuth: direction along the horizon, 0° to 360°, measured clockwise from north (90° is east, 180° south and 270° west).',
+          'Elevation: angle above the reference plane, -90° to 90°. A negative value means the body is below that plane.',
+        ],
+      },
+      {
+        heading: 'Ranges, exact values and empty fields',
+        paragraphs: [
+          'With a minimum and a maximum, the row is a range that includes both ends. Fill in only one of the two and the row asks for that exact value, compared at 4 decimals.',
+          'To ask for "at least" or "at most", also type the other end as the angle limit: for example, elevation minimum 0 and maximum 90 for "above the reference plane".',
+          'Values are degrees with up to 4 decimals; a decimal point or comma is accepted.',
+          'For azimuth, if the minimum is above the maximum, the range wraps through north: 350 to 10 covers 350° to 360° and 0° to 10°. For elevation, the minimum cannot exceed the maximum.',
+        ],
+      },
+      {
+        heading: 'Which values are possible at this point',
+        paragraphs: [
+          'Seen from the Moon, the Sun never strays more than 1.6° from the lunar equator and the Earth never more than about 10.7° from its mean position. So, from a point near the pole, each body only covers a narrow band of the sky.',
+          'The "Possible here" column shows which elevation and azimuth each body can have at the chosen point. The bounds come from JPL Horizons (DE441, 2000–2100) with a 0.25° margin. If a row asks for values outside that band, the form flags it and does not allow the search.',
+          'An accepted condition may still not be met within the searched window, especially when you combine several rows that must hold at the same instant.',
+        ],
+      },
+      {
+        heading: 'Date to find and window',
+        paragraphs: [
+          'The search starts from the date and time selected under "Control". "Closest" accepts matches earlier or later; "Next", only later ones; "Previous", only earlier ones.',
+          'It covers up to 366 days, between 2000 and 2099, to the second. If you change the point or the date under "Control", the next search starts from the new values.',
+        ],
+      },
+      {
+        heading: 'Precision and response time',
+        paragraphs: [
+          'Every match is checked against the values JPL Horizons gives for that second, rounded to 4 decimals, and is shown on the local horizon. A range narrower than what the body moves in one second may have no match.',
+          'The search queries JPL Horizons several times and can take a while. There is a request limit: if it is reached, the result says so; try wider ranges or another reference date.',
+        ],
+      },
+      {
+        heading: 'Limits',
+        paragraphs: ['These are geometric positions: terrain is not modeled. A match does not guarantee light, communications or landing suitability.'],
+      },
+    ],
+    matchHeading: 'Match',
+    offset: 'From the reference',
+    condition: 'Condition',
+    value: 'Value',
+    shown: 'Already shown on the local horizon.',
+    show: 'Show on horizon',
+    incomplete: 'The request limit was reached: the match is real, but a closer one may exist.',
+    notFound: (start, end) => `No date between ${start} and ${end} meets the conditions.`,
+    budget: (start, end) =>
+      `The request limit was reached (searched ${start} to ${end}) without a match. Try wider ranges or another reference date.`,
+    otherSite: (site) => `Result for ${site}; the point under "Control" has changed. Search again.`,
+    precision: 'JPL Horizons · 1 s resolution · 4 decimals · no terrain',
   },
   presence: {
     sun: {

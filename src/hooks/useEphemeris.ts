@@ -24,6 +24,8 @@ export interface EphemerisState {
   readonly setCoordinates: (latitudeDeg: number, longitudeEastDeg: number) => void;
   readonly setUtc: (utc: string) => void;
   readonly update: () => void;
+  /** Selects another instant for the current site and queries it right away (e.g. an inverse search match). */
+  readonly showUtc: (utc: string) => void;
 }
 
 const DEFAULT_SITE = findSite(DEFAULT_SITE_ID);
@@ -42,14 +44,14 @@ export function useEphemeris(): EphemerisState {
 
   useEffect(() => () => inFlight.current?.abort(), []);
 
-  const update = useCallback(() => {
+  const run = useCallback((target: EphemerisSelection) => {
     inFlight.current?.abort();
     const controller = new AbortController();
     inFlight.current = controller;
     setLoading(true);
     setError(null);
 
-    void fetchEphemeris(selection, controller.signal).then((result) => {
+    void fetchEphemeris(target, controller.signal).then((result) => {
       if (controller.signal.aborted) return;
       if (result.ok) {
         setData(result.data);
@@ -59,7 +61,18 @@ export function useEphemeris(): EphemerisState {
       }
       setLoading(false);
     });
-  }, [selection]);
+  }, []);
+
+  const update = useCallback(() => run(selection), [run, selection]);
+
+  const showUtc = useCallback(
+    (utc: string) => {
+      const next = { ...selection, utc };
+      setSelection(next);
+      run(next);
+    },
+    [run, selection],
+  );
 
   const setSiteId = useCallback((siteId: SiteId) => {
     const site = findSite(siteId);
@@ -84,5 +97,5 @@ export function useEphemeris(): EphemerisState {
     selection.longitudeEastDeg !== data.site.longitudeEastDeg ||
     selection.utc !== data.requestedUtc;
 
-  return { selection, data, loading, error, stale, setSiteId, setCoordinates, setUtc, update };
+  return { selection, data, loading, error, stale, setSiteId, setCoordinates, setUtc, update, showUtc };
 }
