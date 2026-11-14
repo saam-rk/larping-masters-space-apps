@@ -27,10 +27,10 @@ export type EphemerisQueryResult =
 /** Plain decimal degrees, e.g. `-85.4381` or `37`; no exponents, units or hemisphere letters. */
 const DECIMAL_DEGREES = /^[+-]?\d{1,3}(?:\.\d+)?$/;
 
-type SiteQueryResult = { readonly ok: true; readonly site: ObserverSite } | { readonly ok: false; readonly detail: string };
+export type SiteQueryResult = { readonly ok: true; readonly site: ObserverSite } | { readonly ok: false; readonly detail: string };
 
-/** `site=<SiteId>`, or `lat` and `lon` in degrees (east longitude) for a custom point. */
-function parseSiteQuery(params: URLSearchParams): SiteQueryResult {
+/** `site=<SiteId>`, or `lat` and `lon` in degrees (east longitude) for a custom point. Shared with `/api/sky-search`. */
+export function parseSiteQuery(params: URLSearchParams): SiteQueryResult {
   const siteParam = params.get('site');
   const latParam = params.get('lat');
   const lonParam = params.get('lon');

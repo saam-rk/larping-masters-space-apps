@@ -125,6 +125,18 @@ export function ConfigPanel({
   const [fields, setFields] = useState<DateTimeFields>(() => utcToFields(selection.utc, 'utc'));
   /** Date part whose exact picker is open; the time is only set with its wheels. */
   const [pickerPart, setPickerPart] = useState<DatePart | null>(null);
+  // Follow instants chosen outside this panel (an inverse search match): when
+  // the selected instant changes and the fields do not already show it, the
+  // fields are rewritten (to the minute) and the wheels roll to it.
+  const [followedUtc, setFollowedUtc] = useState(selection.utc);
+  if (selection.utc !== followedUtc) {
+    setFollowedUtc(selection.utc);
+    const shown = fieldsToUtc(fields, zone, followedUtc);
+    if (!shown.ok || shown.iso !== selection.utc) {
+      setFields(utcToFields(selection.utc, zone));
+      setPickerPart(null);
+    }
+  }
   const wheels = wheelSpecs(fieldParts(fields));
   const pickerWheel = wheels.date.find((wheel) => wheel.part === pickerPart);
   const query = parseCoordinateQuery(searchInput);

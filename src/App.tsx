@@ -1,6 +1,6 @@
 /**
  * Single-screen dashboard (no page scroll): settings rail, control column
- * (site and time), and the view column (3D horizon above, data below). The
+ * (site and time, then the inverse search), and the view column (3D horizon above, data below). The
  * scene and results both read the same `useEphemeris` state.
  *
  * Decorative layers (stars, schematics, CRT overlay, screen curvature) live
@@ -17,6 +17,7 @@ import { CompassToggle } from './features/scene/CompassToggle';
 import { useViewMode } from './features/scene/viewMode';
 import { ViewToggle } from './features/scene/ViewToggle';
 import { SetupScreen } from './features/shell/SetupScreen';
+import { SkySearchPanel } from './features/sky-search/SkySearchPanel';
 import { Sidebar } from './features/shell/Sidebar';
 import { Hyperspace } from './features/transition/Hyperspace';
 import { useUpdateTransition } from './features/transition/useUpdateTransition';
@@ -83,6 +84,13 @@ export function App() {
     ephemeris.update();
   }
 
+  /** An inverse search match: select its instant and show it on the horizon view. */
+  function handleShowMatch(utc: string) {
+    viewSwitch.resetWarp();
+    transition.start();
+    ephemeris.showUtc(utc);
+  }
+
   return (
     <div className="app">
       <Backdrop mode={fullEffects ? 'full' : 'lite'} />
@@ -105,6 +113,7 @@ export function App() {
               onUtcChange={ephemeris.setUtc}
               onUpdate={handleUpdate}
             />
+            <SkySearchPanel selection={ephemeris.selection} onShow={handleShowMatch} />
           </div>
 
           <div className="column column--view">

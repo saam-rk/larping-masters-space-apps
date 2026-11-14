@@ -27,3 +27,20 @@ export function formatCoordinates(
 export function formatUtc(iso: string): string {
   return `${iso.slice(0, 19).replace('T', ' ')} UTC`;
 }
+
+/**
+ * Signed duration in days, hours, minutes and seconds, e.g. `+5 d 15 h 14 min 15 s`
+ * or `-2 h 0 min 3 s`; leading zero units are left out.
+ */
+export function formatOffset(totalSeconds: number): string {
+  if (totalSeconds === 0) return '0 s';
+  const sign = totalSeconds < 0 ? '−' : '+';
+  let rest = Math.abs(Math.round(totalSeconds));
+  const parts: string[] = [];
+  for (const [unit, size] of [['d', 86_400], ['h', 3600], ['min', 60], ['s', 1]] as const) {
+    const amount = Math.floor(rest / size);
+    rest -= amount * size;
+    if (amount > 0 || parts.length > 0) parts.push(`${amount} ${unit}`);
+  }
+  return `${sign}${parts.join(' ')}`;
+}

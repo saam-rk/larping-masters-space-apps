@@ -108,3 +108,25 @@ describe('ConfigPanel exact date and time pickers', () => {
     expect(picker()).toBeNull();
   });
 });
+
+describe('ConfigPanel and instants chosen elsewhere', () => {
+  it('rolls the wheels to an instant selected outside the panel (inverse search match)', () => {
+    const render = (utc: string) =>
+      act(() => root.render(
+        <ConfigPanel
+          selection={{ siteId: site.id, latitudeDeg: site.latitudeDeg, longitudeEastDeg: site.longitudeEastDeg, utc }}
+          loading={false}
+          upToDate={false}
+          onSiteChange={vi.fn()}
+          onCoordinatesChange={vi.fn()}
+          onUtcChange={vi.fn()}
+          onUpdate={vi.fn()}
+        />,
+      ));
+    const values = () => [...container.querySelectorAll('[role="spinbutton"]')].map((wheel) => wheel.getAttribute('aria-valuenow'));
+    render('2026-01-12T14:30:00Z');
+    expect(values()).toEqual(['12', '1', '2026', '14', '30']);
+    render('2026-11-16T02:19:35Z');
+    expect(values()).toEqual(['16', '11', '2026', '2', '19']);
+  });
+});
