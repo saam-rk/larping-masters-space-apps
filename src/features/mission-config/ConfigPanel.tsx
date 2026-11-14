@@ -22,7 +22,7 @@ import { prefersReducedMotion } from '../../preferences/preferences';
 import { Box } from '../../ui/Box';
 import { NumberWheel } from '../../ui/NumberWheel';
 import { formatCoordinateQuery, parseCoordinateQuery, type CoordinateQuery } from './coordinateQuery';
-import { DateTimeEntry } from './DateTimeEntry';
+import { DateTimePartPicker } from './DateTimePartPicker';
 import {
   changeDatePart,
   changeTimePart,
@@ -31,7 +31,9 @@ import {
   fieldParts,
   MAX_YEAR,
   MIN_YEAR,
+  type DatePart,
   type DateTimePart,
+  type TimePart,
 } from './dateTimeWheel';
 import {
   fieldsToUtc,
@@ -58,6 +60,41 @@ function isUsable(query: CoordinateQuery): boolean {
   return query.kind === 'coordinates' || query.kind === 'site';
 }
 
+/** Range of each wheel and the layout of its exact picker. */
+interface WheelSpec<Part extends DateTimePart = DateTimePart> {
+  readonly part: Part;
+  readonly value: number;
+  readonly min: number;
+  readonly max: number;
+  readonly wrap: boolean;
+  /** Values per row in the exact picker, or null when the part is only set with its wheel (hour, minute). */
+  readonly columns: number | null;
+}
+
+function wheelSpecs(parts: Record<DateTimePart, number>): {
+  readonly date: readonly WheelSpec<DatePart>[];
+  readonly time: readonly WheelSpec<TimePart>[];
+} {
+  const { day, month, year, hour, minute } = parts;
+  return {
+    date: [
+      { part: 'day', value: day, min: 1, max: daysInMonth(year, month), wrap: true, columns: 7 },
+      { part: 'month', value: month, min: 1, max: 12, wrap: true, columns: 4 },
+      { part: 'year', value: year, min: MIN_YEAR, max: MAX_YEAR, wrap: false, columns: 5 },
+    ],
+    time: [
+      { part: 'hour', value: hour, min: 0, max: 23, wrap: true, columns: null },
+      { part: 'minute', value: minute, min: 0, max: 59, wrap: true, columns: null },
+    ],
+  };
+}
+
+function isDatePart(part: DateTimePart): part is DatePart {
+  return part === 'day' || part === 'month' || part === 'year';
+}
+
+const TIME_INDEX: Record<TimePart, 0 | 1> = { hour: 0, minute: 1 };
+
 export function ConfigPanel({
   selection,
   loading,
@@ -80,17 +117,16 @@ export function ConfigPanel({
   const timeHintId = useId();
   const wheelHintId = useId();
   const wheelIdBase = useId();
-  const entryId = useId();
+  const pickerId = useId();
   const [searchInput, setSearchInput] = useState(() =>
     formatCoordinateQuery(selection.latitudeDeg, selection.longitudeEastDeg),
   );
   const [zone, setZone] = useState<TimeZoneMode>('utc');
   const [fields, setFields] = useState<DateTimeFields>(() => utcToFields(selection.utc, 'utc'));
-  /** LIVE and the exact entry roll every wheel from `from` to the new fields. */
-  const [roll, setRoll] = useState<{ id: number; from: DateTimeFields }>(() => ({ id: 0, from: fields }));
-  const [entryPart, setEntryPart] = useState<DateTimePart | null>(null);
-  const { day, month, year, hour, minute } = fieldParts(fields);
-  const rollFrom = fieldParts(roll.from);
+  /** Date part whose exact picker is open; the time is only set with its wheels. */
+  const [pickerPart, setPickerPart] = useState<DatePart | null>(null);
+  const wheels = wheelSpecs(fieldParts(fields));
+  const pickerWheel = wheels.date.find((wheel) => wheel.part === pickerPart);
   const query = parseCoordinateQuery(searchInput);
   const parsedTime = fieldsToUtc(fields, zone, selection.utc);
   const custom = selection.siteId === CUSTOM_SITE_ID;
@@ -99,35 +135,45 @@ export function ConfigPanel({
 
   const wheelId = (part: DateTimePart) => `${wheelIdBase}-${part}`;
 
-  /** Sets every wheel at once; with effects on, each one rolls to its new value. */
-  function rollTo(next: DateTimeFields) {
-    if (animated) setRoll((current) => ({ id: current.id + 1, from: fields }));
-    setFields(next);
-  }
-
+  /** Sets every wheel at once; with effects on, each wheel rolls to its new value by itself. */
   function handleLive() {
     const utc = currentUtcMinute();
-    setEntryPart(null);
-    rollTo(utcToFields(utc, zone));
+    setPickerPart(null);
+    setFields(utcToFields(utc, zone));
     onUtcChange(utc);
   }
 
-  function handleEntryApply(next: DateTimeFields): string | null {
-    const parsed = fieldsToUtc(next, zone, selection.utc);
-    if (!parsed.ok) return parsed.reason === 'nonexistent-local-time' ? config.nonexistentTime : config.invalidTime;
-    const part = entryPart;
-    setEntryPart(null);
-    rollTo(next);
-    onUtcChange(parsed.iso);
-    if (part) document.getElementById(wheelId(part))?.focus({ preventScroll: true });
-    return null;
+  function handlePartChange(part: DateTimePart, value: number) {
+    if (isDatePart(part)) handleFieldsChange({ date: changeDatePart(fields.date, part, value) });
+    else handleFieldsChange({ time: changeTimePart(fields, TIME_INDEX[part], value) });
   }
 
-  function handleEntryClose(restoreFocus: boolean) {
-    const part = entryPart;
-    setEntryPart(null);
+  /** The label above a date wheel toggles that part's picker. */
+  function togglePicker(part: DatePart) {
+    setPickerPart((current) => (current === part ? null : part));
+  }
+
+  function closePicker(restoreFocus: boolean) {
+    const part = pickerPart;
+    setPickerPart(null);
     if (restoreFocus && part) document.getElementById(wheelId(part))?.focus({ preventScroll: true });
   }
+
+  function handlePickerSelect(value: number) {
+    if (!pickerPart) return;
+    handlePartChange(pickerPart, value);
+    closePicker(true);
+  }
+
+  const monthName = (style: 'short' | 'long') => (month: number) =>
+    new Intl.DateTimeFormat(locale, { month: style, timeZone: 'UTC' }).format(new Date(Date.UTC(2000, month - 1, 1)));
+  /** Month options show the number and the short name, e.g. "02 feb". */
+  const formatMonth = (month: number) => (
+    <>
+      <span className="datetime-picker__month-number">{String(month).padStart(2, '0')}</span>
+      <span className="datetime-picker__month-name">{monthName('short')(month).replace('.', '')}</span>
+    </>
+  );
 
   function handlePresetChange(siteId: SiteId) {
     const site = findSite(siteId);
@@ -158,7 +204,7 @@ export function ConfigPanel({
 
   /** Switching zones keeps the same instant: the fields are rewritten in the new zone. */
   function handleZoneChange(next: TimeZoneMode) {
-    setEntryPart(null);
+    setPickerPart(null);
     if (parsedTime.ok) setFields(utcToFields(parsedTime.iso, next));
     setZone(next);
   }
@@ -287,75 +333,58 @@ export function ConfigPanel({
         actions={<button type="button" className="text-button" onClick={handleLive} title={config.liveHint}>{config.live}</button>}
       >
         <div className="datetime">
-          <div className="datetime__field" role="group" aria-labelledby={dateFieldId}>
-            <span className="search-field__label" id={dateFieldId}>
-              {config.date}
-            </span>
-            <div className="datetime__wheels datetime__wheels--date">
-              {([
-                { part: 'day', value: day, min: 1, max: daysInMonth(year, month) },
-                { part: 'month', value: month, min: 1, max: 12 },
-                { part: 'year', value: year, min: MIN_YEAR, max: MAX_YEAR },
-              ] as const).map(({ part, value, min, max }) => (
-                <NumberWheel
-                  key={part}
-                  id={wheelId(part)}
-                  label={config.wheels[part]}
-                  value={value}
-                  min={min}
-                  max={max}
-                  wrap={part !== 'year'}
-                  animated={animated}
-                  invalid={!parsedTime.ok}
-                  describedBy={`${timeHintId} ${wheelHintId}`}
-                  rollId={roll.id}
-                  rollFrom={rollFrom[part]}
-                  controls={entryPart ? entryId : undefined}
-                  onOpen={() => setEntryPart(part)}
-                  onChange={(value) => handleFieldsChange({ date: changeDatePart(fields.date, part, value) })}
-                />
-              ))}
+          {(['date', 'time'] as const).map((group) => (
+            <div
+              key={group}
+              className="datetime__field"
+              role="group"
+              aria-labelledby={group === 'date' ? dateFieldId : timeFieldId}
+            >
+              <span className="search-field__label" id={group === 'date' ? dateFieldId : timeFieldId}>
+                {group === 'date' ? config.date : config.time}
+              </span>
+              <div className={`datetime__wheels datetime__wheels--${group}`}>
+                {wheels[group].map(({ part, value, min, max, wrap, columns }) => {
+                  // Hour and minute have no exact picker: they are only set with their wheels.
+                  const pickable = isDatePart(part) && columns !== null;
+                  return (
+                    <NumberWheel
+                      key={part}
+                      id={wheelId(part)}
+                      label={config.wheels[part]}
+                      value={value}
+                      min={min}
+                      max={max}
+                      wrap={wrap}
+                      animated={animated}
+                      invalid={!parsedTime.ok}
+                      describedBy={pickable ? `${timeHintId} ${wheelHintId}` : timeHintId}
+                      open={pickable && pickerPart === part}
+                      popupId={pickable ? pickerId : undefined}
+                      onOpen={pickable ? () => togglePicker(part) : undefined}
+                      onChange={(next) => handlePartChange(part, next)}
+                    />
+                  );
+                })}
+              </div>
             </div>
-          </div>
-          <div className="datetime__field" role="group" aria-labelledby={timeFieldId}>
-            <span className="search-field__label" id={timeFieldId}>
-              {config.time}
-            </span>
-            <div className="datetime__wheels datetime__wheels--time">
-              {([
-                { part: 'hour', value: hour, index: 0, max: 23 },
-                { part: 'minute', value: minute, index: 1, max: 59 },
-              ] as const).map(({ part, value, index, max }) => (
-                <NumberWheel
-                  key={part}
-                  id={wheelId(part)}
-                  label={config.wheels[part]}
-                  value={value}
-                  min={0}
-                  max={max}
-                  animated={animated}
-                  invalid={!parsedTime.ok}
-                  describedBy={`${timeHintId} ${wheelHintId}`}
-                  rollId={roll.id}
-                  rollFrom={rollFrom[part]}
-                  controls={entryPart ? entryId : undefined}
-                  onOpen={() => setEntryPart(part)}
-                  onChange={(value) => handleFieldsChange({ time: changeTimePart(fields, index, value) })}
-                />
-              ))}
-            </div>
-          </div>
+          ))}
           <span id={wheelHintId} className="visually-hidden">
-            {config.wheelEntryHint}
+            {config.wheelPickerHint}
           </span>
-          {entryPart && (
-            <DateTimeEntry
-              id={entryId}
-              fields={fields}
-              focusPart={entryPart}
-              zoneName={zone === 'utc' ? 'UTC' : (localZoneId() ?? localOffsetLabel(selection.utc))}
-              onApply={handleEntryApply}
-              onClose={handleEntryClose}
+          {pickerWheel && pickerWheel.columns !== null && (
+            <DateTimePartPicker
+              key={pickerWheel.part}
+              id={pickerId}
+              title={config.picker[pickerWheel.part]}
+              value={pickerWheel.value}
+              min={pickerWheel.min}
+              max={pickerWheel.max}
+              columns={pickerWheel.columns}
+              format={pickerWheel.part === 'month' ? formatMonth : undefined}
+              describe={pickerWheel.part === 'month' ? monthName('long') : undefined}
+              onSelect={handlePickerSelect}
+              onClose={closePicker}
             />
           )}
         </div>
