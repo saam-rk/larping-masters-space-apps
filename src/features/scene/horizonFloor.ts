@@ -6,7 +6,9 @@
  * The view used to hide everything below the eye's horizontal plane
  * (elevation 0) with a dark "floor". Where the terrain falls away from the
  * viewer (a rim), that hid the parts of the Sun or the Earth that sit between
- * the green line and the actual relief.
+ * the green line and the actual relief. The floor is now depth-only: it hides
+ * the Sun and the Earth below this assumed horizon, but the star background
+ * shows through it.
  *
  * Assumption (illustrative, not terrain data): beyond the crop, the ground
  * continues as a smooth sphere of the reference radius passing through the

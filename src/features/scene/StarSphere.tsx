@@ -4,7 +4,8 @@
  * The sphere is centered on the camera every frame, so the stars behave as if
  * infinitely far: rotating or orbiting the camera moves them across the view,
  * but they never come closer. They are drawn first without depth, so every
- * other object (terrain, the Moon, the horizon floor) covers them.
+ * other object (terrain, the Moon) covers them. The first-person horizon floor
+ * writes depth only, so the stars stay visible below the assumed horizon.
  */
 
 import { useFrame, useThree } from '@react-three/fiber';
