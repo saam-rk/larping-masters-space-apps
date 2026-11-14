@@ -530,11 +530,12 @@ button {
 }
 
 .sidebar__logo {
-  font-size: 2em;
-  line-height: 1;
-  color: var(--amber);
-  text-shadow: 0 0 12px rgba(255, 194, 51, 0.5);
+  width: 100%;
   margin-bottom: 0.5rem;
+}
+
+.sidebar__logo .landing-logo {
+  width: 100%;
 }
 
 .sidebar__button,
@@ -1926,6 +1927,7 @@ input[type='time']::-webkit-calendar-picker-indicator {
   }
 
   .sidebar__logo {
+    width: 3.6rem;
     margin: 0 0.25rem 0 0;
   }
 

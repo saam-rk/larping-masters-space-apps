@@ -1,0 +1,124 @@
+{
+  "status": "passed",
+  "blenderVersion": "5.2.2 LTS",
+  "savedFileOpenedInFreshProcess": true,
+  "scenes": 1,
+  "objects": [
+    {
+      "name": "Terrain",
+      "type": "MESH"
+    },
+    {
+      "name": "nobile-rim-1 | surface marker",
+      "type": "EMPTY"
+    },
+    {
+      "name": "Ridge reference",
+      "type": "EMPTY"
+    },
+    {
+      "name": "Overview",
+      "type": "CAMERA"
+    },
+    {
+      "name": "Ground | 2 m above mesh toward ridge",
+      "type": "CAMERA"
+    },
+    {
+      "name": "Raking light | NOT ephemeris Sun.003",
+      "type": "LIGHT"
+    },
+    {
+      "name": "Astronaut_1p70m",
+      "type": "EMPTY"
+    },
+    {
+      "name": "Astronaut_leg_L",
+      "type": "MESH"
+    },
+    {
+      "name": "Astronaut_boot_L",
+      "type": "MESH"
+    },
+    {
+      "name": "Astronaut_arm_L",
+      "type": "MESH"
+    },
+    {
+      "name": "Astronaut_glove_L",
+      "type": "MESH"
+    },
+    {
+      "name": "Astronaut_leg_R",
+      "type": "MESH"
+    },
+    {
+      "name": "Astronaut_boot_R",
+      "type": "MESH"
+    },
+    {
+      "name": "Astronaut_arm_R",
+      "type": "MESH"
+    },
+    {
+      "name": "Astronaut_glove_R",
+      "type": "MESH"
+    },
+    {
+      "name": "Astronaut_torso",
+      "type": "MESH"
+    },
+    {
+      "name": "Astronaut_backpack",
+      "type": "MESH"
+    },
+    {
+      "name": "Astronaut_neck",
+      "type": "MESH"
+    },
+    {
+      "name": "Astronaut_helmet",
+      "type": "MESH"
+    },
+    {
+      "name": "Astronaut_visor",
+      "type": "MESH"
+    }
+  ],
+  "activeCamera": "Overview",
+  "groundCameraAboveMarkerM": 2.0,
+  "groundCameraRidgeDirectionDot": 0.9999999413266778,
+  "scaleLengthM": 1.0,
+  "vertices": 50000,
+  "triangles": 99533,
+  "scaleReference": {
+    "heightM": 1.7000007629394531,
+    "meshParts": 13,
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "positionBlenderM": [
+      -3.2741570472717285,
+      8.91102409362793,
+      47.110107421875
+    ],
+    "fullyInsideGroundCamera": true,
+    "frameBoundsXY": [
+      [
+        0.14488421380519867,
+        0.2497570514678955
+      ],
+      [
+        0.09073638170957565,
+        0.3437914252281189
+      ]
+    ],
+    "soleCornerTerrainGapRangeM": [
+      -0.000244140625,
+      0.1357421875
+    ],
+    "limits": "Rigid flat soles on a sloped simplified triangle; no boot deformation"
+  }
+}

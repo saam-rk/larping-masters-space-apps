@@ -1,0 +1,21 @@
+{
+  "id": "nobile-rim-1",
+  "sourceUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_surf.tif",
+  "sourceCatalogUrl": "https://pgda.gsfc.nasa.gov/products/78",
+  "sourceReadmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+  "frame": "MOON_ME / DE421",
+  "referenceRadiusM": 1737400.0,
+  "site": { "latitudeDeg": -85.4381, "longitudeEastDeg": 37.36667 },
+  "ridge": { "latitudeDeg": -85.34185, "longitudeEastDeg": 36.40708 },
+  "third": { "latitudeDeg": -85.47, "longitudeEastDeg": 38.0 },
+  "cropCenterProjectedM": [83940.0, 111870.0],
+  "cropSizeM": [10000.0, 10000.0],
+  "originProjectedM": [84000.0, 110000.0, 5900.0],
+  "targetVertices": 50000,
+  "baseStridePixels": 20,
+  "candidateStridePixels": 4,
+  "refinementBatchSize": 4000,
+  "ridgePriorityRadiusM": 1500.0,
+  "ridgePriorityMultiplier": 3.0,
+  "maxGlbBytes": 2097152
+}
