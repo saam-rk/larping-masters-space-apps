@@ -120,6 +120,15 @@ Neutral gray material, a 5° grazing light and a faint fill make relief readable
 The lights are illustrative, with no date or solar-ephemeris claim.
 Only the terrain mesh is exported to the GLB.
 
+The editable scene also contains `Astronaut_1p70m`, a simple 1.70 m human scale
+reference placed 25 m grid-east of the site marker. Its soles rest on the mesh
+at local `(25.451965, 0.253401, 0.166)` m. The figure consists of 13 low-polygon
+mesh parts and flat off-white, gray and muted-gold materials without image
+textures. It is illustrative, not a surveyed object or a detailed spacesuit.
+It is excluded from the terrain-only web GLB. Run `add_scale_astronaut.py` in
+Blender with this `.blend` open to recreate or reposition the figure; the script
+uses a terrain ray cast and verifies the saved 1.70 m world-space height.
+
 `nobile-rim-2.overview.png` and `nobile-rim-2.ground.png` are Blender renders.
 The build creates a separate live scene and preserves pre-existing Blender
 objects; the saved artifact contains only the terrain scene and dependencies.
@@ -138,6 +147,7 @@ curl.exe -L --fail -o $raster https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/DM2/DM2_
 & $researchPython prepare_adaptive.py --config sites/nobile-rim-2.json --raster $raster --out-dir nobile-rim-2
 & $blenderExe --background --factory-startup --python blender_build_adaptive.py -- --prep nobile-rim-2/nobile-rim-2.prep.json --grid nobile-rim-2/nobile-rim-2.adaptive.npz --out-blend nobile-rim-2/nobile-rim-2.blend --out-glb nobile-rim-2/nobile-rim-2.glb
 & $blenderExe --background nobile-rim-2/nobile-rim-2.blend --python normalize_blend_file.py
+& $blenderExe --background nobile-rim-2/nobile-rim-2.blend --python nobile-rim-2/add_scale_astronaut.py
 & $blenderExe --background nobile-rim-2/nobile-rim-2.blend --python check_blend_scene.py -- --out nobile-rim-2/nobile-rim-2.blend-check.json
 & $blenderExe --background --factory-startup --python blender_reimport_check.py -- --prep nobile-rim-2/nobile-rim-2.prep.json --glb nobile-rim-2/nobile-rim-2.glb --out nobile-rim-2/nobile-rim-2.reimport.json
 & $researchPython verify_adaptive.py --directory nobile-rim-2 --raster $raster
