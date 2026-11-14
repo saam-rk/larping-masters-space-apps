@@ -47,7 +47,7 @@ function expectMode(firstPerson: boolean) {
 }
 
 describe('view selection and terrain availability', () => {
-  it.each<ObserverSiteId>(['nobile-rim-1', 'nobile-rim-2'])('starts in first person at %s', (siteId) => {
+  it.each<ObserverSiteId>(['nobile-rim-1', 'nobile-rim-2', 'shackleton-rim'])('starts in first person at %s', (siteId) => {
     render(siteId);
     expectMode(true);
     expect(option(0).getAttribute('aria-disabled')).toBe('false');
@@ -65,31 +65,26 @@ describe('view selection and terrain availability', () => {
     expectMode(true);
   });
 
-  it.each<ObserverSiteId>(['shackleton-rim', 'custom'])(
-    'keeps first person unavailable at %s and explains why',
-    (siteId) => {
-      render(siteId);
-      expectMode(false);
-      const firstPerson = option(0);
-      expect(firstPerson.getAttribute('aria-disabled')).toBe('true');
-      const explanation = document.getElementById(firstPerson.getAttribute('aria-describedby')!);
-      expect(explanation?.textContent).toBe(MESSAGES.en.scene.views.firstPersonUnavailable);
-      act(() => firstPerson.click());
-      expectMode(false);
-    },
-  );
+  it('keeps first person unavailable at custom points and explains why', () => {
+    render('custom');
+    expectMode(false);
+    const firstPerson = option(0);
+    expect(firstPerson.getAttribute('aria-disabled')).toBe('true');
+    const explanation = document.getElementById(firstPerson.getAttribute('aria-describedby')!);
+    expect(explanation?.textContent).toBe(MESSAGES.en.scene.views.firstPersonUnavailable);
+    act(() => firstPerson.click());
+    expectMode(false);
+  });
 
   it('falls back for sites without terrain and resets to first person when returning to Nobile Rim 2', () => {
     render('nobile-rim-2');
     act(() => option(1).click());
-    render('shackleton-rim');
-    expectMode(false);
     render('custom');
     expectMode(false);
     render('nobile-rim-2');
     expectMode(true);
     act(() => option(1).click());
-    render('nobile-rim-1'); // Another site with terrain also starts in first person.
+    render('shackleton-rim'); // Another site with terrain also starts in first person.
     expectMode(true);
   });
 });

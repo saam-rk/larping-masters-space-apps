@@ -1,6 +1,6 @@
 /**
- * First-person local horizon at a site with a terrain model (Nobile Rim 1 and
- * 2, see `terrain/models.ts`): LOLA terrain, the 1.70 m astronaut scale
+ * First-person local horizon at a site with a terrain model (Nobile Rim 1,
+ * Nobile Rim 2 and Shackleton Rim, see `terrain/models.ts`): LOLA terrain, the 1.70 m astronaut scale
  * figure, and the Sun and Earth placed from the same azimuth/elevation as the
  * results panel.
  *
@@ -12,11 +12,15 @@
  * (decorative, not Sun-based) marks where the figure stands; dragging only turns the head and
  * the wheel or the zoom slider narrows the field of view (see `EyeLevelRig`). Sun and Earth are drawn far
  * beyond the 10 km crop with their real apparent angular diameter. Beyond the
- * crop there is no relief data: a dark floor hides the sky below an assumed
- * horizon, a smooth lunar sphere continuing from the crop edge as seen from
- * eye height (see `horizonFloor.ts`). Where the terrain falls away, that
- * horizon lies below the green geometric line (elevation 0), so the parts of
- * the Sun or the Earth between the two are drawn.
+ * crop there is no relief data: an invisible floor marks an assumed horizon, a
+ * smooth lunar sphere continuing from the crop edge as seen from eye height
+ * (see `horizonFloor.ts`). It only writes depth, so it hides the Sun and the
+ * Earth below that horizon while the star background shows through it: the
+ * stars cover the whole sphere, and on a steep rim (Shackleton Rim) the view
+ * can look far below the horizon past the end of the relief data. Where the
+ * terrain falls away, the assumed horizon lies below the green geometric line
+ * (elevation 0), so the parts of the Sun or the Earth between the two are
+ * drawn.
  *
  * The Sun and the Earth are never cut away: the parts hidden by the relief, the
  * astronaut or the assumed horizon are drawn again as a faint translucent
@@ -137,7 +141,8 @@ function astronautInFront(source: Object3D): Object3D {
 
 /**
  * Small copy of the terrain triangles around `center` (GLB frame), used for
- * cheap downward ray casts instead of testing all ~99k triangles.
+ * cheap downward ray casts instead of testing every triangle of the crop
+ * (tens of thousands; Shackleton Rim packs most of them near the viewer).
  */
 function buildProbe(terrain: Mesh, center: Vector3Tuple): Mesh {
   const source = terrain.geometry;
@@ -234,7 +239,7 @@ function floorProfile(terrain: Mesh, toWorld: Matrix4, eye: Vector3Tuple): numbe
 }
 
 /**
- * Dark floor below the assumed horizon: on a sphere of `HORIZON_RADIUS_M`
+ * Invisible floor below the assumed horizon: on a sphere of `HORIZON_RADIUS_M`
  * around the eye, from the profile elevation of each sector down to the nadir.
  */
 function floorGeometry(profileDeg: readonly number[]): BufferGeometry {
@@ -376,8 +381,9 @@ function Terrain({
 /**
  * Horizon line, horizon floor, compass labels, Sun, Earth and the sunlight,
  * centered on the eye. `showHorizon` hides the line, ticks and labels; the
- * floor (see `floorGeometry`) stays, since it marks where there is no relief
- * data. The line passes behind the astronaut (see `astronautInFront`) and the
+ * floor (see `floorGeometry`) stays: it is depth-only, so the stars show
+ * through it while it still hides the Sun and the Earth below the assumed
+ * horizon (drawn there as ghosts, see `FarBody`). The line passes behind the astronaut (see `astronautInFront`) and the
  * compass labels hide while `occluder` covers them.
  */
 function Sky({
@@ -427,9 +433,13 @@ function Sky({
         />
       )}
     <group position={eye}>
-      {/* Below the assumed horizon beyond the crop: no sky, and no relief data there. */}
+      {/*
+        Below the assumed horizon beyond the crop (no relief data there). Depth
+        only: the stars, drawn first without depth, stay visible, and no dark
+        band covers the sky where a steep rim lets the view reach past the crop.
+      */}
       <mesh geometry={floor} renderOrder={-5}>
-        <meshBasicMaterial color="#020604" side={DoubleSide} />
+        <meshBasicMaterial colorWrite={false} side={DoubleSide} />
       </mesh>
       {/* Geometric horizon (elevation 0): drawn over the relief as a reference line, behind the astronaut. */}
       {showHorizon && (

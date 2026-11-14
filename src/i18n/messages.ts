@@ -402,8 +402,8 @@ const es: Messages = {
     heading: 'Horizonte local',
     info: {
       'first-person': [
-        'Vista a la altura de los ojos, de pie y quieto a unos metros de un astronauta de 1,70 m en Nobile Rim 1 o Nobile Rim 2. Arrastra para girar la cabeza: en horizontal para mirar alrededor y en vertical para mirar al suelo o al cielo. La rueda, el pellizco o el control de zoom (+, barra y −) acercan o alejan la imagen, como unos prismáticos, sin moverte del sitio. Con la vista seleccionada, también funcionan las flechas y +/−. El botón Brújula, junto a 1ª P y 3ª P, muestra u oculta la línea del horizonte y los puntos cardinales; el botón de las esquinas abre la vista a pantalla completa.',
-        'El relieve es un recorte de 10 × 10 km del modelo LOLA de 5 m/píxel (NASA GSFC PGDA, producto 78). La línea verde es el horizonte geométrico (elevación 0). Más allá del recorte no hay datos de relieve: la zona oscura es un horizonte supuesto, el de una Luna lisa de 1737,4 km de radio que sigue a la altura del borde del recorte, visto desde los ojos (1,60 m sobre el suelo). No es terreno real. Donde el terreno baja, ese horizonte queda bajo la línea verde y el Sol o la Tierra pueden verse en parte aunque su centro esté bajo el horizonte geométrico. La parte del Sol o de la Tierra que tapan el relieve o ese horizonte supuesto se dibuja translúcida, para poder localizarla; desde allí no se vería.',
+        'Vista a la altura de los ojos, de pie y quieto a unos metros de un astronauta de 1,70 m en Nobile Rim 1, Nobile Rim 2 o Shackleton Rim. Arrastra para girar la cabeza: en horizontal para mirar alrededor y en vertical para mirar al suelo o al cielo. La rueda, el pellizco o el control de zoom (+, barra y −) acercan o alejan la imagen, como unos prismáticos, sin moverte del sitio. Con la vista seleccionada, también funcionan las flechas y +/−. El botón Brújula, junto a 1ª P y 3ª P, muestra u oculta la línea del horizonte y los puntos cardinales; el botón de las esquinas abre la vista a pantalla completa.',
+        'El relieve es un recorte de 10 × 10 km del modelo LOLA de 5 m/píxel (NASA GSFC PGDA, producto 78). La línea verde es el horizonte geométrico (elevación 0). Más allá del recorte no hay datos de relieve: hay un horizonte supuesto (invisible; bajo él solo se ven las estrellas), el de una Luna lisa de 1737,4 km de radio que sigue a la altura del borde del recorte, visto desde los ojos (1,60 m sobre el suelo). No es terreno real. Donde el terreno baja, ese horizonte queda bajo la línea verde y el Sol o la Tierra pueden verse en parte aunque su centro esté bajo el horizonte geométrico. La parte del Sol o de la Tierra que tapan el relieve o ese horizonte supuesto se dibuja translúcida, para poder localizarla; desde allí no se vería.',
         'El Sol y la Tierra se dibujan con su posición y su diámetro aparente de JPL Horizons. La iluminación es ilustrativa: sin sombras proyectadas; el recorte de relieve es plano y la curvatura lunar solo se supone más allá de él. No es un análisis de visibilidad, energía, comunicaciones ni idoneidad de aterrizaje.',
         'El astronauta es una figura de escala ilustrativa. Las estrellas son decorativas y no reproducen el cielo real.',
       ],
@@ -418,7 +418,7 @@ const es: Messages = {
       label: 'Vista',
       names: { 'first-person': 'Primera persona', 'third-person': 'Tercera persona' },
       short: { 'first-person': '1ª P', 'third-person': '3ª P' },
-      firstPersonUnavailable: 'Primera persona: solo disponible en Nobile Rim 1 y Nobile Rim 2, que tienen modelo de relieve.',
+      firstPersonUnavailable: 'Primera persona: solo disponible en Nobile Rim 1, Nobile Rim 2 y Shackleton Rim, que tienen modelo de relieve.',
     },
     compassToggle: {
       label: 'Brújula',
@@ -475,7 +475,7 @@ const es: Messages = {
       horizonsApi: 'Calcula azimut, elevación, tamaño angular y distancia del Sol y la Tierra desde el punto lunar elegido.',
       horizonsManual: 'Define las cantidades del observador y los marcadores de presencia que traducimos a los estados del panel.',
       jplApiPolicy: 'Normas de uso y política CORS: por eso la consulta pasa por nuestra ruta de servidor y se guarda en caché.',
-      pgda78: 'Relieve LOLA de 5 m/píxel del que salen las mallas 3D de 10 × 10 km de Nobile Rim 1 y Nobile Rim 2 en primera persona.',
+      pgda78: 'Relieve LOLA de 5 m/píxel del que salen las mallas 3D de 10 × 10 km de Nobile Rim 1, Nobile Rim 2 y Shackleton Rim en primera persona.',
       pgda78Readme: 'Unidades, marco MOON_ME/DE421 y proyección estereográfica polar con los que situamos el punto sobre la malla.',
       barker2021: 'Cita del producto DM2: método de los mapas LOLA mejorados, sus errores y el cálculo de horizontes.',
       spaceAppsChallenge: 'Enunciado del reto que define el alcance del proyecto.',
@@ -770,8 +770,8 @@ const en: Messages = {
     heading: 'Local horizon',
     info: {
       'first-person': [
-        'Eye-level view, standing still a few meters from a 1.70 m astronaut at Nobile Rim 1 or Nobile Rim 2. Drag to turn your head: sideways to look around, up or down to look at the ground or the sky. The wheel, a pinch or the zoom control (+, bar and −) zooms the image in or out, like binoculars, without moving you. With the view focused, the arrow keys and +/− also work. The Compass button, next to 1ST and 3RD, shows or hides the horizon line and the cardinal points; the corners button opens the view full screen.',
-        'The relief is a 10 × 10 km crop of the 5 m/pixel LOLA model (NASA GSFC PGDA, product 78). The green line is the geometric horizon (elevation 0). There is no relief data beyond the crop: the dark area is an assumed horizon, that of a smooth Moon of 1,737.4 km radius continuing at the height of the crop edge, seen from the eyes (1.60 m above the ground). It is not real terrain. Where the terrain falls away, that horizon lies below the green line, so the Sun or the Earth may show in part even when its center is below the geometric horizon. The part of the Sun or the Earth hidden by the relief or that assumed horizon is drawn translucent so it can be found; it would not be visible from there.',
+        'Eye-level view, standing still a few meters from a 1.70 m astronaut at Nobile Rim 1, Nobile Rim 2 or Shackleton Rim. Drag to turn your head: sideways to look around, up or down to look at the ground or the sky. The wheel, a pinch or the zoom control (+, bar and −) zooms the image in or out, like binoculars, without moving you. With the view focused, the arrow keys and +/− also work. The Compass button, next to 1ST and 3RD, shows or hides the horizon line and the cardinal points; the corners button opens the view full screen.',
+        'The relief is a 10 × 10 km crop of the 5 m/pixel LOLA model (NASA GSFC PGDA, product 78). The green line is the geometric horizon (elevation 0). There is no relief data beyond the crop: there is an assumed horizon (invisible; only stars show below it), that of a smooth Moon of 1,737.4 km radius continuing at the height of the crop edge, seen from the eyes (1.60 m above the ground). It is not real terrain. Where the terrain falls away, that horizon lies below the green line, so the Sun or the Earth may show in part even when its center is below the geometric horizon. The part of the Sun or the Earth hidden by the relief or that assumed horizon is drawn translucent so it can be found; it would not be visible from there.',
         'The Sun and the Earth are drawn with their JPL Horizons position and apparent diameter. Lighting is illustrative: no cast shadows; the relief crop is flat and lunar curvature is only assumed beyond it. This is not a visibility, power, communications or landing-suitability analysis.',
         'The astronaut is an illustrative scale figure. The stars are decorative and do not reproduce the real sky.',
       ],
@@ -786,7 +786,7 @@ const en: Messages = {
       label: 'View',
       names: { 'first-person': 'First person', 'third-person': 'Third person' },
       short: { 'first-person': '1ST', 'third-person': '3RD' },
-      firstPersonUnavailable: 'First person: only available at Nobile Rim 1 and Nobile Rim 2, which have a relief model.',
+      firstPersonUnavailable: 'First person: only available at Nobile Rim 1, Nobile Rim 2 and Shackleton Rim, which have a relief model.',
     },
     compassToggle: {
       label: 'Compass',
@@ -843,7 +843,7 @@ const en: Messages = {
       horizonsApi: 'Computes azimuth, elevation, angular size and range of the Sun and the Earth from the chosen lunar point.',
       horizonsManual: 'Defines the observer quantities and the presence markers we turn into the panel states.',
       jplApiPolicy: 'Usage rules and CORS policy: the reason the query goes through our server route and is cached.',
-      pgda78: 'LOLA 5 m/pixel terrain behind the 10 × 10 km 3D meshes of Nobile Rim 1 and Nobile Rim 2 in first person.',
+      pgda78: 'LOLA 5 m/pixel terrain behind the 10 × 10 km 3D meshes of Nobile Rim 1, Nobile Rim 2 and Shackleton Rim in first person.',
       pgda78Readme: 'Units, MOON_ME/DE421 frame and polar stereographic projection used to place the point on the mesh.',
       barker2021: 'Citation for the DM2 product: method of the improved LOLA maps, their errors and horizon computation.',
       spaceAppsChallenge: 'Challenge statement that defines the project scope.',

@@ -9,9 +9,8 @@ function normalize([x, y, z]: readonly number[]): number[] {
 }
 
 describe('terrain models', () => {
-  it('has first-person terrain for Nobile Rim 1 and 2 only', () => {
-    expect(SITE_TERRAINS.map((model) => model.siteId).sort()).toEqual(['nobile-rim-1', 'nobile-rim-2']);
-    expect(terrainForSite('shackleton-rim')).toBeNull();
+  it('has first-person terrain for every reference site and none for custom points', () => {
+    expect(SITE_TERRAINS.map((model) => model.siteId).sort()).toEqual(['nobile-rim-1', 'nobile-rim-2', 'shackleton-rim']);
     expect(terrainForSite('custom')).toBeNull();
   });
 
@@ -20,6 +19,8 @@ describe('terrain models', () => {
     ['nobile-rim-2', 157000.451965, 95000.253401],
     // assets/terrain/nobile-rim-1/README.md: X=84,000.0100258 m, Y=110,000.0107917 m.
     ['nobile-rim-1', 84000.0100258, 110000.0107917],
+    // assets/terrain/shackleton-rim/README.md: X=-1000.036606 m, Y=-7000.345565 m.
+    ['shackleton-rim', -1000.036606, -7000.345565],
   ])('projects %s as in its terrain metadata', (siteId, expectedX, expectedY) => {
     const site = findSite(siteId);
     const { x, y } = projectSouthPolar(site.latitudeDeg, site.longitudeEastDeg);
@@ -27,7 +28,7 @@ describe('terrain models', () => {
     expect(y).toBeCloseTo(expectedY, 4);
   });
 
-  it.each<SiteId>(['nobile-rim-1', 'nobile-rim-2'])('places the %s site near the GLB origin', (siteId) => {
+  it.each<SiteId>(['nobile-rim-1', 'nobile-rim-2', 'shackleton-rim'])('places the %s site near the GLB origin', (siteId) => {
     const site = findSite(siteId);
     const terrain = terrainForSite(siteId)!;
     const { x, y } = projectSouthPolar(site.latitudeDeg, site.longitudeEastDeg);
@@ -41,6 +42,9 @@ describe('terrain models', () => {
     ['nobile-rim-1', 'east', 0, 0.05, [1, 0, 0]],
     ['nobile-rim-2', 'north', 0.01, 0, [0, 0, -1]],
     ['nobile-rim-2', 'east', 0, 0.05, [1, 0, 0]],
+    // The chord of a longitude step turns by half the step; keep it small.
+    ['shackleton-rim', 'north', 0.01, 0, [0, 0, -1]],
+    ['shackleton-rim', 'east', 0, 0.02, [1, 0, 0]],
   ] as const)('turns geographic %s %s into the scene axis', (siteId, _label, dLat, dLon, expected) => {
     const site = findSite(siteId);
     const terrain = terrainForSite(siteId)!;

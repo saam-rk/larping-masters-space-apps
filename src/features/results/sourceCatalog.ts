@@ -2,7 +2,8 @@
  * Project-wide source list for the Sources dialog, taken from the research and
  * design documents in `docs/` (GUIA_PRIMERA_DEMO, LUNAR_DATA_RESEARCH,
  * LUNAR_SOUTH_POLE_RESEARCH, LUNAR_RELIABILITY_AUDIT,
- * POLAR_TERRAIN_SOURCE_REVIEW and the Nobile Rim 1 and 2 terrain READMEs).
+ * POLAR_TERRAIN_SOURCE_REVIEW and the Nobile Rim 1, Nobile Rim 2 and
+ * Shackleton Rim terrain READMEs).
  *
  * - `app`: sources whose data or definitions the application uses directly.
  * - `research`: sources the team consulted to choose data, frames and
