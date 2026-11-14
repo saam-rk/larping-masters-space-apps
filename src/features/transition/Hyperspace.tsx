@@ -1,7 +1,10 @@
 /**
  * Hyperspace streaks drawn inside the local horizon box while new
- * coordinates load: stars rush toward the viewer, fade in from the distance
- * and fade out toward the vanishing point so the center stays calm.
+ * coordinates load or the view switches: stars rush toward the viewer, fade
+ * in from the distance and fade out toward the vanishing point so the center
+ * stays calm. In reverse (pulling back, first to third person) the same
+ * stream runs backward: stars come in from the edges and recede into the
+ * distance. `tempo` scales how fast the jump builds up and settles.
  *
  * The canvas has its own animation loop that runs only while the jump is
  * active or slowing down; at rest it is cleared and costs no frames.
@@ -24,6 +27,8 @@ const SPEED = 1.7; // Depth units per second at full speed.
 const ACCEL = 1.6; // 1/s
 const DECEL = 1.3; // 1/s
 const RESPAWN_Z = [0.9, 1.25] as const;
+/** Closest depth before a star is recycled (forward) or where it reappears (reverse). */
+const NEAR_Z = 0.04;
 const FADE_IN_DEPTH = 0.6;
 /** Opacity steps used to batch streaks into a few strokes. */
 const BANDS = 5;
@@ -36,9 +41,18 @@ function random(min: number, max: number) {
   return min + Math.random() * (max - min);
 }
 
-export function Hyperspace({ active }: { active: boolean }) {
+interface HyperspaceProps {
+  readonly active: boolean;
+  /** Stars recede toward the vanishing point instead of rushing past. */
+  readonly reverse?: boolean;
+  /** Multiplies acceleration and deceleration (1 = coordinate update). */
+  readonly tempo?: number;
+}
+
+export function Hyperspace({ active, reverse = false, tempo = 1 }: HyperspaceProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const targetRef = useRef(0);
+  const styleRef = useRef({ reverse, tempo });
   const wakeRef = useRef<() => void>(() => {});
 
   useEffect(() => {
@@ -89,9 +103,19 @@ export function Hyperspace({ active }: { active: boolean }) {
       const cx = width / 2;
       const cy = height / 2;
 
+      const { reverse } = styleRef.current;
       stars.forEach((star, index) => {
-        star.z -= velocity * dt;
-        if (star.z < 0.04) scatter(star, random(...RESPAWN_Z));
+        if (reverse) {
+          star.z += velocity * dt;
+          // Mirror of the forward recycle: reappear close by (mostly off-screen) and flow inward.
+          if (star.z > RESPAWN_Z[1]) {
+            scatter(star, random(...RESPAWN_Z));
+            star.z = NEAR_Z;
+          }
+        } else {
+          star.z -= velocity * dt;
+          if (star.z < NEAR_Z) scatter(star, random(...RESPAWN_Z));
+        }
         const fadeIn = Math.min(1, Math.max(0, (RESPAWN_Z[1] - star.z) / FADE_IN_DEPTH));
         bands[index] = Math.round(fadeIn * BANDS);
       });
@@ -104,7 +128,8 @@ export function Hyperspace({ active }: { active: boolean }) {
           context.beginPath();
           stars.forEach((star, index) => {
             if (star.near !== near || bands[index] !== band) return;
-            const tail = star.z + streak * star.z;
+            // The tail points back where the star came from: farther (forward) or closer (reverse).
+            const tail = reverse ? star.z * (1 - streak) : star.z * (1 + streak);
             context.moveTo(cx + (star.x / tail) * focal, cy + (star.y / tail) * focal);
             context.lineTo(cx + (star.x / star.z) * focal, cy + (star.y / star.z) * focal);
           });
@@ -130,8 +155,9 @@ export function Hyperspace({ active }: { active: boolean }) {
       const dt = Math.min(0.05, lastTime ? (time - lastTime) / 1000 : 1 / 60);
       lastTime = time;
       const target = targetRef.current;
-      if (speed < target) speed = Math.min(target, speed + ACCEL * dt);
-      else if (speed > target) speed = Math.max(target, speed - DECEL * dt);
+      const { tempo } = styleRef.current;
+      if (speed < target) speed = Math.min(target, speed + ACCEL * tempo * dt);
+      else if (speed > target) speed = Math.max(target, speed - DECEL * tempo * dt);
       draw(dt);
       if (speed === 0 && target === 0) {
         frameId = null;
@@ -156,6 +182,10 @@ export function Hyperspace({ active }: { active: boolean }) {
       wakeRef.current = () => {};
     };
   }, []);
+
+  useEffect(() => {
+    styleRef.current = { reverse, tempo };
+  }, [reverse, tempo]);
 
   useEffect(() => {
     targetRef.current = active ? 1 : 0;

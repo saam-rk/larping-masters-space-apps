@@ -10,6 +10,8 @@
 
 import type { ApiErrorCode } from '../../shared/ephemeris.js';
 import type { PresenceState } from '../../shared/presence.js';
+import type { SourceId } from '../features/results/sourceCatalog';
+import type { ViewMode } from '../features/scene/viewMode';
 import type { EffectMode } from '../preferences/preferences';
 
 export const LOCALES = ['es', 'en'] as const;
@@ -116,10 +118,42 @@ export interface Messages {
   readonly bodies: { readonly sun: string; readonly earth: string };
   readonly scene: {
     readonly heading: string;
-    readonly info: Paragraphs;
-    readonly notToScale: string;
+    /** Help paragraphs per view. */
+    readonly info: Readonly<Record<ViewMode, Paragraphs>>;
+    readonly views: {
+      readonly label: string;
+      readonly names: Readonly<Record<ViewMode, string>>;
+      /** Fits in the title rule. */
+      readonly short: Readonly<Record<ViewMode, string>>;
+      readonly firstPersonUnavailable: string;
+    };
+    /** "Compass" show/hide switch for the horizon line (first person) and grid (third person). */
+    readonly compassToggle: {
+      /** Visible text and accessible name of the switch (pressed = shown); fits in the title rule. */
+      readonly label: string;
+      readonly show: string;
+      readonly hide: string;
+    };
+    /** Zoom slider and buttons over the view. */
+    readonly zoom: {
+      readonly label: string;
+      readonly slider: string;
+      readonly in: string;
+      readonly out: string;
+      /** Slider value in first person: vertical field of view in degrees. */
+      readonly fieldOfView: (degrees: string) => string;
+      /** Slider value in third person: camera distance to the site in km. */
+      readonly distance: (km: string) => string;
+    };
+    readonly firstPersonNote: string;
+    readonly thirdPersonNote: string;
+    readonly moon: string;
     readonly loading: string;
+    readonly terrainLoading: string;
+    readonly terrainMissing: string;
     readonly missing: (body: string) => string;
+    /** Horizons gave no angular diameter or range; a nominal value is drawn. */
+    readonly nominal: (body: string) => string;
   };
   readonly results: {
     readonly heading: string;
@@ -140,6 +174,12 @@ export interface Messages {
     readonly positionSource: string;
     readonly partial: string;
     readonly versionUnverified: string;
+    /** Sources dialog group headings (see `features/results/sourceCatalog.ts`). */
+    readonly sourcesCurrent: string;
+    readonly sourcesApp: string;
+    readonly sourcesResearch: string;
+    /** Why each project source is listed (one short sentence). */
+    readonly sourceReasons: Readonly<Record<SourceId, string>>;
   };
   readonly presence: {
     readonly sun: Readonly<Record<PresenceState, string>>;
@@ -242,13 +282,47 @@ const es: Messages = {
   bodies: { sun: 'Sol', earth: 'Tierra' },
   scene: {
     heading: 'Horizonte local',
-    info: [
-      'Arrastra para girar la vista; usa la rueda o pellizca para acercar o alejar.',
-      'Las líneas discontinuas van del observador al Sol y a la Tierra. Los tamaños no están a escala y el relieve no está incluido.',
-    ],
-    notToScale: 'No a escala',
+    info: {
+      'first-person': [
+        'Vista a la altura de los ojos, de pie y quieto a unos metros de un astronauta de 1,70 m en Nobile Rim 2. Arrastra para girar la cabeza: en horizontal para mirar alrededor y en vertical para mirar al suelo o al cielo. La rueda, el pellizco o el control de zoom (+, barra y −) acercan o alejan la imagen, como unos prismáticos, sin moverte del sitio. Con la vista seleccionada, también funcionan las flechas y +/−. El botón Brújula, junto a 1ª P y 3ª P, muestra u oculta la línea del horizonte y los puntos cardinales.',
+        'El relieve es un recorte de 10 × 10 km del modelo LOLA de 5 m/píxel (NASA GSFC PGDA, producto 78). Más allá del recorte no hay datos de relieve: la zona oscura bajo la línea verde es el horizonte geométrico, no terreno.',
+        'El Sol y la Tierra se dibujan con su posición y su diámetro aparente de JPL Horizons. La iluminación es ilustrativa: sin sombras proyectadas ni curvatura lunar. No es un análisis de visibilidad, energía, comunicaciones ni idoneidad de aterrizaje.',
+        'El astronauta es una figura de escala ilustrativa. Las estrellas son decorativas y no reproducen el cielo real.',
+      ],
+      'third-person': [
+        'Arrastra para girar la vista; usa la rueda, pellizca o mueve el control de zoom (+, barra y −) para acercar o alejar. Puedes alejarte hasta más allá del Sol. El botón Brújula, junto a 1ª P y 3ª P, muestra u oculta el plano del horizonte, su cuadrícula y las guías.',
+        'A escala, en kilómetros: la Luna es una esfera de 1737,4 km de radio y el Sol y la Tierra están a la distancia y con el tamaño que da JPL Horizons. Por eso se ven pequeños: alejarte muestra el sistema Tierra-Luna.',
+        'El plano verde es el horizonte local de referencia (elevación 0), tangente en el lugar, con la brújula N/E/S/O; crece al alejarte para seguir sirviendo de referencia. Para el Sol y la Tierra, una línea de color sobre el plano marca su azimut y un arco, su elevación; las líneas discontinuas van del observador a cada uno. La línea gris es el eje de rotación lunar.',
+        'No están a escala el marcador del observador, los halos que ayudan a localizar el Sol y la Tierra ni el tamaño del plano. La Luna no tiene relieve y las estrellas son decorativas.',
+      ],
+    },
+    views: {
+      label: 'Vista',
+      names: { 'first-person': 'Primera persona', 'third-person': 'Tercera persona' },
+      short: { 'first-person': '1ª P', 'third-person': '3ª P' },
+      firstPersonUnavailable: 'Primera persona: solo disponible en Nobile Rim 2, que tiene modelo de relieve.',
+    },
+    compassToggle: {
+      label: 'Brújula',
+      show: 'Mostrar la brújula: línea y cuadrícula del horizonte',
+      hide: 'Ocultar la brújula: línea y cuadrícula del horizonte',
+    },
+    zoom: {
+      label: 'Zoom',
+      slider: 'Nivel de zoom',
+      in: 'Acercar',
+      out: 'Alejar',
+      fieldOfView: (degrees) => `Campo de visión vertical: ${degrees}°`,
+      distance: (km) => `Distancia de la cámara al lugar: ${km} km`,
+    },
+    firstPersonNote: 'Relieve LOLA 10 × 10 km · luz ilustrativa · figura 1,70 m',
+    thirdPersonNote: 'A escala · marcador y halos no a escala',
+    moon: 'Luna',
     loading: 'Cargando vista 3D…',
+    terrainLoading: 'Cargando relieve…',
+    terrainMissing: 'No se pudo situar el lugar en el modelo de relieve.',
     missing: (body) => `${body}: sin dato para dibujar.`,
+    nominal: (body) => `${body}: tamaño o distancia nominal; Horizons no lo indicó.`,
   },
   results: {
     heading: 'Datos',
@@ -273,6 +347,49 @@ const es: Messages = {
     positionSource: 'Posiciones',
     partial: 'Resultado incompleto: uno de los objetos no se pudo calcular.',
     versionUnverified: 'Horizons devolvió una versión de API no comprobada; revisa los valores.',
+    sourcesCurrent: 'Esta consulta',
+    sourcesApp: 'Datos y métodos usados en la aplicación',
+    sourcesResearch: 'Consultadas en la investigación (no integradas ni validadas en la app)',
+    sourceReasons: {
+      lunarSurfaceDataBook:
+        'Nombres y coordenadas de los tres puntos de referencia; son centros de regiones candidatas, no lugares de aterrizaje aprobados.',
+      horizonsApi: 'Calcula azimut, elevación, tamaño angular y distancia del Sol y la Tierra desde el punto lunar elegido.',
+      horizonsManual: 'Define las cantidades del observador y los marcadores de presencia que traducimos a los estados del panel.',
+      jplApiPolicy: 'Normas de uso y política CORS: por eso la consulta pasa por nuestra ruta de servidor y se guarda en caché.',
+      pgda78: 'Relieve LOLA de 5 m/píxel del que sale la malla 3D de 10 × 10 km de Nobile Rim 2 en primera persona.',
+      pgda78Readme: 'Unidades, marco MOON_ME/DE421 y proyección estereográfica polar con los que situamos el punto sobre la malla.',
+      barker2021: 'Cita del producto DM2: método de los mapas LOLA mejorados, sus errores y el cálculo de horizontes.',
+      spaceAppsChallenge: 'Enunciado del reto que define el alcance del proyecto.',
+      pgda90: 'Relieve regional ajustado del polo sur: contexto de los tres puntos y perfiles de horizonte exploratorios.',
+      barker2023: 'Describe los productos LOLA regionales y sus capas de error y densidad de observaciones.',
+      pgda81: 'Mosaico polar evaluado: cubre Shackleton Rim, pero no los dos puntos Nobile.',
+      pgda69: 'Iluminación, sombra permanente y visibilidad de la Tierra promediadas a largo plazo; no valen para una hora concreta.',
+      mazarico2011: 'Método de referencia para modelar la iluminación polar teniendo en cuenta el relieve.',
+      pdsLola: 'Archivo oficial de LOLA; consultamos sus etiquetas para decodificar alturas y unidades.',
+      sldem2015: 'Descartado: solo cubre latitudes entre ±60°, lejos de los puntos polares.',
+      lrocNac: 'Relieve estéreo de alto detalle; los modelos revisados (NOBILE01, SHACKRDGE02) no cubren los puntos elegidos.',
+      lrocGld100: 'Contexto global; en los polos no es relieve estéreo propio, sino relleno con LOLA.',
+      kaguyaDtm: 'Evaluado: su cobertura llega a ±70°, fuera de los puntos polares.',
+      pgda104: 'Alternativa de 5 m con más detalle en zonas iluminadas; evaluada, no integrada.',
+      pgda95: 'Diferencia entre los marcos MOON_ME y MOON_PA (unos 875 m): no se deben mezclar.',
+      naifFrameKernel: 'Correspondencia oficial de los marcos lunares para un futuro cálculo con SPICE.',
+      naifSpice: 'Rutinas de referencia para un cálculo controlado de dirección, iluminación y ocultación.',
+      bryantIpn: 'Enfoque establecido: máscara de horizonte desde el relieve comparada con el Sol y la Tierra.',
+      minow2023: 'Tamaño finito del disco solar, relevante cerca del horizonte polar.',
+      dsn810: 'Referencia de enlaces de radio: la geometría por sí sola no garantiza comunicación.',
+      glennPropagation: 'Por qué el relieve afecta a la propagación de radio en la superficie lunar.',
+      hlsThermal: 'Contexto de ingeniería para el análisis térmico lunar.',
+      diviner: 'Temperaturas superficiales de LRO como contexto térmico.',
+      lcross: 'Evidencia de hielo de agua en Cabeus; contexto, no dato de los puntos elegidos.',
+      moonWater: 'Contexto general sobre agua y hielo en la Luna.',
+      shadowCam: 'Imágenes del interior en sombra de Shackleton; no aportan alturas.',
+      zuberShackleton: 'Dimensiones del cráter Shackleton como contexto.',
+      landingHazard: 'La seguridad del aterrizaje exige analizar pendientes, rocas y cráteres aparte.',
+      moonTrek: 'Inspección visual de perfiles y del relieve alrededor de los puntos.',
+      gazetteer: 'Nombres oficiales de accidentes lunares y su ubicación aproximada.',
+      projStere: 'Referencia de la proyección estereográfica polar usada para situar coordenadas.',
+      gdal: 'Inspección de dimensiones, sistema de referencia y datos ausentes de los ráster.',
+    },
   },
   presence: {
     sun: {
@@ -395,13 +512,47 @@ const en: Messages = {
   bodies: { sun: 'Sun', earth: 'Earth' },
   scene: {
     heading: 'Local horizon',
-    info: [
-      'Drag to rotate the view; use the wheel or pinch to zoom in or out.',
-      'The dashed lines run from the observer to the Sun and the Earth. Sizes are not to scale and terrain is not included.',
-    ],
-    notToScale: 'Not to scale',
+    info: {
+      'first-person': [
+        'Eye-level view, standing still a few meters from a 1.70 m astronaut at Nobile Rim 2. Drag to turn your head: sideways to look around, up or down to look at the ground or the sky. The wheel, a pinch or the zoom control (+, bar and −) zooms the image in or out, like binoculars, without moving you. With the view focused, the arrow keys and +/− also work. The Compass button, next to 1ST and 3RD, shows or hides the horizon line and the cardinal points.',
+        'The relief is a 10 × 10 km crop of the 5 m/pixel LOLA model (NASA GSFC PGDA, product 78). There is no relief data beyond the crop: the dark area below the green line is the geometric horizon, not terrain.',
+        'The Sun and the Earth are drawn with their JPL Horizons position and apparent diameter. Lighting is illustrative: no cast shadows and no lunar curvature. This is not a visibility, power, communications or landing-suitability analysis.',
+        'The astronaut is an illustrative scale figure. The stars are decorative and do not reproduce the real sky.',
+      ],
+      'third-person': [
+        'Drag to rotate the view; use the wheel, a pinch or the zoom control (+, bar and −) to zoom in or out. You can zoom out beyond the Sun. The Compass button, next to 1ST and 3RD, shows or hides the horizon plane, its grid and the guides.',
+        'To scale, in kilometers: the Moon is a sphere of 1,737.4 km radius and the Sun and the Earth are at the distance and size given by JPL Horizons. That is why they look small: zoom out to see the Earth–Moon system.',
+        'The green plane is the local reference horizon (elevation 0), tangent at the site, with the N/E/S/W compass; it grows as you zoom out so it stays a reference. For the Sun and the Earth, a colored line on the plane marks the azimuth and an arc the elevation; the dashed lines run from the observer to each one. The gray line is the lunar spin axis.',
+        'Not to scale: the observer marker, the glows that help find the Sun and the Earth, and the plane size. The Moon has no relief and the stars are decorative.',
+      ],
+    },
+    views: {
+      label: 'View',
+      names: { 'first-person': 'First person', 'third-person': 'Third person' },
+      short: { 'first-person': '1ST', 'third-person': '3RD' },
+      firstPersonUnavailable: 'First person: only available at Nobile Rim 2, which has a relief model.',
+    },
+    compassToggle: {
+      label: 'Compass',
+      show: 'Show the compass: horizon line and grid',
+      hide: 'Hide the compass: horizon line and grid',
+    },
+    zoom: {
+      label: 'Zoom',
+      slider: 'Zoom level',
+      in: 'Zoom in',
+      out: 'Zoom out',
+      fieldOfView: (degrees) => `Vertical field of view: ${degrees}°`,
+      distance: (km) => `Camera distance to the site: ${km} km`,
+    },
+    firstPersonNote: 'LOLA relief 10 × 10 km · illustrative light · 1.70 m figure',
+    thirdPersonNote: 'To scale · marker and glows not to scale',
+    moon: 'Moon',
     loading: 'Loading 3D view…',
+    terrainLoading: 'Loading relief…',
+    terrainMissing: 'The site could not be placed on the relief model.',
     missing: (body) => `${body}: no data to draw.`,
+    nominal: (body) => `${body}: nominal size or distance; Horizons did not provide it.`,
   },
   results: {
     heading: 'Data',
@@ -426,6 +577,49 @@ const en: Messages = {
     positionSource: 'Positions',
     partial: 'Incomplete result: one of the objects could not be computed.',
     versionUnverified: 'Horizons returned an unverified API version; check the values.',
+    sourcesCurrent: 'This query',
+    sourcesApp: 'Data and methods used in the app',
+    sourcesResearch: 'Consulted during research (not integrated or validated in the app)',
+    sourceReasons: {
+      lunarSurfaceDataBook:
+        'Names and coordinates of the three reference points; they are centers of candidate regions, not approved landing sites.',
+      horizonsApi: 'Computes azimuth, elevation, angular size and range of the Sun and the Earth from the chosen lunar point.',
+      horizonsManual: 'Defines the observer quantities and the presence markers we turn into the panel states.',
+      jplApiPolicy: 'Usage rules and CORS policy: the reason the query goes through our server route and is cached.',
+      pgda78: 'LOLA 5 m/pixel terrain behind the 10 × 10 km 3D mesh of Nobile Rim 2 in first person.',
+      pgda78Readme: 'Units, MOON_ME/DE421 frame and polar stereographic projection used to place the point on the mesh.',
+      barker2021: 'Citation for the DM2 product: method of the improved LOLA maps, their errors and horizon computation.',
+      spaceAppsChallenge: 'Challenge statement that defines the project scope.',
+      pgda90: 'Adjusted regional south-pole terrain: context for the three points and exploratory horizon profiles.',
+      barker2023: 'Describes the regional LOLA products and their error and observation-density layers.',
+      pgda81: 'Polar mosaic evaluated: it covers Shackleton Rim, but not the two Nobile points.',
+      pgda69: 'Long-term averaged illumination, permanent shadow and Earth visibility; not valid for a specific hour.',
+      mazarico2011: 'Reference method for modeling polar illumination with terrain.',
+      pdsLola: 'Official LOLA archive; we read its labels to decode heights and units.',
+      sldem2015: 'Ruled out: it only covers latitudes within ±60°, far from the polar points.',
+      lrocNac: 'High-detail stereo terrain; the models we checked (NOBILE01, SHACKRDGE02) do not cover the chosen points.',
+      lrocGld100: 'Global context; at the poles it is not native stereo terrain but filled with LOLA.',
+      kaguyaDtm: 'Evaluated: its coverage reaches ±70°, outside the polar points.',
+      pgda104: 'A 5 m alternative with more detail in sunlit areas; evaluated, not integrated.',
+      pgda95: 'Difference between the MOON_ME and MOON_PA frames (about 875 m): they must not be mixed.',
+      naifFrameKernel: 'Official mapping of the lunar frames for a future SPICE calculation.',
+      naifSpice: 'Reference routines for a controlled direction, illumination and occultation calculation.',
+      bryantIpn: 'Established approach: a terrain horizon mask compared with the Sun and the Earth.',
+      minow2023: 'Finite size of the solar disk, relevant near the polar horizon.',
+      dsn810: 'Radio link reference: geometry alone does not guarantee communication.',
+      glennPropagation: 'Why terrain affects radio propagation on the lunar surface.',
+      hlsThermal: 'Engineering context for lunar thermal analysis.',
+      diviner: 'LRO surface temperatures as thermal context.',
+      lcross: 'Evidence of water ice at Cabeus; context, not data for the chosen points.',
+      moonWater: 'General context on water and ice on the Moon.',
+      shadowCam: 'Images of the shadowed interior of Shackleton; they do not provide heights.',
+      zuberShackleton: 'Dimensions of Shackleton crater as context.',
+      landingHazard: 'Landing safety requires a separate analysis of slopes, rocks and craters.',
+      moonTrek: 'Visual inspection of profiles and terrain around the points.',
+      gazetteer: 'Official names of lunar features and their approximate location.',
+      projStere: 'Reference for the polar stereographic projection used to place coordinates.',
+      gdal: 'Inspection of raster dimensions, reference system and missing data.',
+    },
   },
   presence: {
     sun: {

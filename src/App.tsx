@@ -8,15 +8,19 @@
  * effects or low performance (the same look, static).
  */
 
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Backdrop } from './features/backdrop/Backdrop';
 import { CrtCurvature } from './features/backdrop/CrtCurvature';
 import { ConfigPanel } from './features/mission-config/ConfigPanel';
 import { ResultsPanel } from './features/results/ResultsPanel';
+import { CompassToggle } from './features/scene/CompassToggle';
+import { useViewMode } from './features/scene/viewMode';
+import { ViewToggle } from './features/scene/ViewToggle';
 import { SetupScreen } from './features/shell/SetupScreen';
 import { Sidebar } from './features/shell/Sidebar';
 import { Hyperspace } from './features/transition/Hyperspace';
 import { useUpdateTransition } from './features/transition/useUpdateTransition';
+import { useViewTransition } from './features/transition/useViewTransition';
 import { useEphemeris, type EphemerisState } from './hooks/useEphemeris';
 import { useI18n } from './i18n/context';
 import { prefersReducedMotion } from './preferences/preferences';
@@ -67,8 +71,14 @@ export function App() {
     !ephemeris.error &&
     ephemeris.data.provenance === 'live' &&
     !ephemeris.data.warnings.includes('PARTIAL_RESULT');
+  const view = useViewMode(ephemeris.data.site.id);
+  const viewSwitch = useViewTransition({ mode: view.mode, setMode: view.setMode, streaks, busy });
+  const warp = viewSwitch.warp;
+  // "Compass" switch: horizon line (first person) and grid (third person), one for both views.
+  const [showCompass, setShowCompass] = useState(true);
 
   function handleUpdate() {
+    viewSwitch.resetWarp();
     transition.start();
     ephemeris.update();
   }
@@ -99,12 +109,23 @@ export function App() {
 
           <div className="column column--view">
             <AsciiHeading text={messages.banner.horizon} />
-            <Box title={messages.scene.heading} titleAs="h3" className="scene-box" help={messages.scene.info}>
-              <div className="scene-stage" data-jumping={busy}>
+            <Box
+              title={messages.scene.heading}
+              titleAs="h3"
+              className="scene-box"
+              help={messages.scene.info[view.mode]}
+              actions={
+                <>
+                  <CompassToggle shown={showCompass} onChange={setShowCompass} />
+                  <ViewToggle mode={viewSwitch.selected} firstPersonAvailable={view.firstPersonAvailable} onChange={viewSwitch.request} />
+                </>
+              }
+            >
+              <div className="scene-stage" data-jumping={busy || viewSwitch.active} data-warp={warp.kind}>
                 <Suspense fallback={<p className="scene__note">{messages.scene.loading}</p>}>
-                  <SkyScene data={ephemeris.data} />
+                  <SkyScene data={ephemeris.data} mode={view.mode} showHorizon={showCompass} />
                 </Suspense>
-                {streaks && <Hyperspace active={busy} />}
+                {streaks && <Hyperspace active={busy || viewSwitch.active} reverse={warp.reverse} tempo={warp.tempo} />}
               </div>
             </Box>
             <ResultsPanel
