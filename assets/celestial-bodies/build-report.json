@@ -1,0 +1,56 @@
+{
+  "blenderVersion": "5.3.0",
+  "assets": [
+    {
+      "file": "public/models/celestial/sun.glb",
+      "bytes": 103796,
+      "triangles": 2208,
+      "meshCount": 1,
+      "materialCount": 1,
+      "textureSizes": [
+        [
+          512,
+          256
+        ]
+      ],
+      "sha256": "f10ccf91069e344b1a2f4b7cb406803d344149be77bce7f44c4a8dbd4266ed9f"
+    },
+    {
+      "file": "public/models/celestial/earth.glb",
+      "bytes": 181488,
+      "triangles": 2208,
+      "meshCount": 1,
+      "materialCount": 1,
+      "textureSizes": [
+        [
+          1024,
+          512
+        ]
+      ],
+      "sha256": "57790b709e8595ce2c237fae173aba35f75b188dc1789bd6b4e1581d3ae0d44b"
+    },
+    {
+      "file": "public/models/celestial/moon.glb",
+      "bytes": 1180376,
+      "triangles": 16128,
+      "meshCount": 1,
+      "materialCount": 1,
+      "textureSizes": [
+        [
+          2048,
+          1024
+        ],
+        [
+          1440,
+          720
+        ]
+      ],
+      "sha256": "2fca18479a49c27e964d79c038c7018165ed3b9cccf230c3868827a2abfd69c0"
+    }
+  ],
+  "sourceSha256": {
+    "bluemarble-1024.png": "d1d3cb36ae6ae452c43cdf7ae0ffc13a959e8a5a2358f58b05e5f623c15119f9",
+    "ldem_4.tif": "330afa2556a86fd05ac6ba2f912f246600fdade35de2a0d90593d50d07b01b65",
+    "lroc_color_2k.jpg": "f7130a1822681fa7512d7dcfd40db8c10b9ba4f06777910348698260ed7a2170"
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "blenderVersion": "5.3.0",
+  "allPassed": true,
+  "assets": [
+    {
+      "file": "sun.glb",
+      "bytes": 103796,
+      "sha256": "f10ccf91069e344b1a2f4b7cb406803d344149be77bce7f44c4a8dbd4266ed9f",
+      "triangles": 2208,
+      "vertices": 1223,
+      "meshes": 1,
+      "materials": 1,
+      "embeddedImages": 1,
+      "extensionsRequired": [],
+      "radiusRange": [
+        0.9999999683350319,
+        1.0000000409781924
+      ],
+      "decodedTextureSizes": [
+        [
+          512,
+          256
+        ],
+        [
+          512,
+          256
+        ]
+      ],
+      "outwardFaces": true,
+      "nondegenerateTriangles": true,
+      "noExternalDependencies": true,
+      "blenderReimportPassed": true
+    },
+    {
+      "file": "earth.glb",
+      "bytes": 181488,
+      "sha256": "57790b709e8595ce2c237fae173aba35f75b188dc1789bd6b4e1581d3ae0d44b",
+      "triangles": 2208,
+      "vertices": 1223,
+      "meshes": 1,
+      "materials": 1,
+      "embeddedImages": 1,
+      "extensionsRequired": [],
+      "radiusRange": [
+        0.9999999683350319,
+        1.0000000409781924
+      ],
+      "decodedTextureSizes": [
+        [
+          1024,
+          512
+        ]
+      ],
+      "outwardFaces": true,
+      "nondegenerateTriangles": true,
+      "noExternalDependencies": true,
+      "blenderReimportPassed": true
+    },
+    {
+      "file": "moon.glb",
+      "bytes": 1180376,
+      "sha256": "2fca18479a49c27e964d79c038c7018165ed3b9cccf230c3868827a2abfd69c0",
+      "triangles": 16128,
+      "vertices": 8383,
+      "meshes": 1,
+      "materials": 1,
+      "embeddedImages": 2,
+      "extensionsRequired": [],
+      "radiusRange": [
+        0.9955501405385031,
+        1.005112273336291
+      ],
+      "decodedTextureSizes": [
+        [
+          2048,
+          1024
+        ],
+        [
+          1440,
+          720
+        ]
+      ],
+      "outwardFaces": true,
+      "nondegenerateTriangles": true,
+      "noExternalDependencies": true,
+      "blenderReimportPassed": true
+    }
+  ],
+  "preview": "preview.png",
+  "previewOrderLeftToRight": [
+    "Sun",
+    "Earth",
+    "Moon"
+  ],
+  "limits": "Equal presentation sizes, not physical scale. Blender checks only; no browser/mobile FPS measurement."
+}
