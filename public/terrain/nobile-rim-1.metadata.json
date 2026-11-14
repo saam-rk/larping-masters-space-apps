@@ -352,7 +352,9 @@
   "scaleReference": {
     "source": "docs/research/site-terrain/nobile-rim-2/astronaut.blend",
     "sourceSha256": "26b6998ac3566d8bad668ef71e628274baae9463f40b27a87286ba2dcaf43088",
-    "sourceLicense": "Not verified; integrator must confirm before public redistribution",
+    "sourceLicense": "Original team asset per integrator confirmation; no separate asset license selected",
+    "sourceAuthorship": "Integrator confirms creating the astronaut with AI assistance in another session (PR #13 follow-up)",
+    "rootName": "Astronaut_1p70m",
     "heightM": 1.7,
     "scale": [
       1.0,

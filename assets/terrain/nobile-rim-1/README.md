@@ -47,8 +47,11 @@ The rigid flat boots are raised minimally to avoid penetrating the sloped mesh;
 checked sole-corner clearances range from approximately 0 to **0.136 m**. This is
 illustrative contact on simplified terrain, not a spacesuit/ground-contact
 simulation or sub-meter terrain validation. The supplied source file is
-unchanged. Its redistribution license has **not** been verified; confirm it
-before public release.
+unchanged. During the PR #13 follow-up, the integrator explicitly confirmed
+creating the astronaut in another session with AI assistance. It is recorded as
+an original team asset on that basis, not as an unidentified third-party model.
+No separate asset license or legal certification is inferred from that statement;
+the project's public-release license selection remains pending.
 
 Observed after the addition: fresh-process `.blend` reopening, 1.70 m height,
 unit scale, full camera framing and sole-corner checks passed. Material-preview
@@ -140,7 +143,7 @@ The helper projects latitude/longitude and intersects the GLB triangles to recov
 
 **This is a projected height field, not a curved body-fixed surface or a true local east/north/up frame.** Grid directions are not geographic east/north at longitude 37°E. Do not directly align the app's azimuth vectors to these grid axes, treat mesh height as an observer-altitude validation, or use the planar scene for physical terrain-horizon calculations. A 10 km crop also omits potentially relevant distant obstacles. The light is illustrative, not the Sun at a selected UTC.
 
-NASA describes extensive interpolation (~90%) in these 5 m products. Valid pixels are not necessarily direct laser observations; the 5 m spacing is not effective resolution. This model did not ingest count/error maps and does not certify local scientific accuracy, landing safety, power, communications or disk visibility. Dataset attribution is retained; public-release licensing review remains with the project integrator.
+NASA describes extensive interpolation (~90%) in these 5 m products. Valid pixels are not necessarily direct laser observations; the 5 m spacing is not effective resolution. This model did not ingest count/error maps and does not certify local scientific accuracy, landing safety, power, communications or disk visibility. Dataset attribution is retained; project license selection remains with the integrator. Astronaut authorship was confirmed by the integrator during the PR #13 follow-up (see above).
 
 ## Validation and pending performance
 
@@ -160,6 +163,18 @@ Observed checks:
 **Mobile cold load ≤2 s, target 60 FPS and minimum 50 FPS: PENDING.** No physical mobile device/network session was available. No device, browser or network is fabricated; the metadata records null values. Node loader checks and Blender import durations are not substitutes for mobile measurements. End-to-end selection-to-interactive timing also needs the terrain to be wired into the viewer.
 
 Suggested test: record device/OS/browser, network throughput/latency, pixel ratio and app commit; clear browser caches; measure from selecting the site to the first visible frame that accepts controls; then record frame-time samples during a fixed 30 s orbit plus zoom sequence. Repeat at least three cold runs and report latency plus FPS distribution/minimum with browser/device conditions. Do not change a pending result into a pass based on file size alone.
+
+## PR #13 correction validation
+
+The follow-up regression in `tools/lunar-terrain/test_blender_pipeline.py` passed
+with Blender 5.2.2 LTS: two terrain generations in one process, suffixed legacy
+names, role-based renamed objects/collections, repeated astronaut placement,
+preservation of the first scene, normalization and fresh reopening. The generated
+GLB also passed `verify.py` against the source GeoTIFF and `check_web.mjs` through
+the installed Three.js loader, including the suffixed astronaut root (whose name
+Three.js sanitizes). The original delivered GLBs and `.blend` were not rewritten.
+The normal delivery's web-loader check and five Python tests also passed. These
+checks do not change the pending browser/mobile integration or scientific limits.
 
 ## Handoff / proposed project follow-up
 

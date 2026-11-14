@@ -22,8 +22,16 @@ parser.add_argument('--normalize', action='store_true')
 args = parser.parse_args(sys.argv[sys.argv.index('--') + 1:])
 assert bpy.app.background, 'Run only in a disposable background Blender process'
 scene = bpy.context.scene
-terrain = scene.objects['Terrain']
-collection = scene.collection.children.get('Astronaut_scale_reference')
+# Restrict lookups to this scene; global datablock names can gain numeric suffixes.
+terrains = [obj for obj in scene.objects if obj.type == 'MESH'
+            and (obj.get('terrain_role') == 'surface' or obj.name.split('.')[0] == 'Terrain')]
+assert len(terrains) == 1, 'Expected exactly one terrain surface in the active scene'
+terrain = terrains[0]
+collections = [child for child in scene.collection.children
+               if child.get('terrain_role') == 'scale_reference'
+               or child.name.split('.')[0] == 'Astronaut_scale_reference']
+assert len(collections) <= 1, 'Ambiguous astronaut collections in the active scene'
+collection = collections[0] if collections else None
 astronaut_objects = set(collection.all_objects) if collection else set()
 meshes = [obj for obj in scene.objects if obj.type == 'MESH' and obj not in astronaut_objects]
 cameras = [obj for obj in scene.objects if obj.type == 'CAMERA']

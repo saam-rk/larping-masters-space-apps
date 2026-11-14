@@ -41,12 +41,21 @@ def add_astronaut(repository):
     scene = bpy.context.scene
     if not scene.name.startswith('nobile-rim-1 |'):
         raise ValueError('Activate the Nobile Rim 1 terrain scene first')
-    terrain = scene.objects['Terrain']
+    # Legacy deliveries have no role tag; accept Blender's numeric name suffixes.
+    terrains = [obj for obj in scene.objects if obj.type == 'MESH'
+                and (obj.get('terrain_role') == 'surface' or obj.name.split('.')[0] == 'Terrain')]
+    if len(terrains) != 1:
+        raise ValueError('Expected exactly one terrain surface in the active scene')
+    terrain = terrains[0]
     camera = next(obj for obj in scene.objects if obj.type == 'CAMERA' and obj.name.startswith('Ground'))
     if scene.unit_settings.scale_length != 1 or terrain.matrix_world != Matrix.Identity(4):
         raise ValueError('Expected untransformed terrain in meters')
 
-    collection = scene.collection.children.get(COLLECTION)
+    collections = [child for child in scene.collection.children
+                   if child.get('terrain_role') == 'scale_reference' or child.name.split('.')[0] == COLLECTION]
+    if len(collections) > 1:
+        raise ValueError('Ambiguous astronaut collections in the active scene')
+    collection = collections[0] if collections else None
     if collection is None:
         with bpy.data.libraries.load(str(source), link=False) as (src, dst):
             if COLLECTION not in src.collections:
@@ -54,9 +63,10 @@ def add_astronaut(repository):
             dst.collections = [COLLECTION]
         collection = cast(Any, dst.collections[0])
         scene.collection.children.link(collection)
+    collection['terrain_role'] = 'scale_reference'
     roots = [obj for obj in collection.all_objects if obj.parent is None]
     meshes = [obj for obj in collection.all_objects if obj.type == 'MESH']
-    if len(roots) != 1 or len(meshes) != 13 or roots[0].name != 'Astronaut_1p70m':
+    if len(roots) != 1 or len(meshes) != 13 or roots[0].name.split('.')[0] != 'Astronaut_1p70m':
         raise ValueError('Unexpected astronaut hierarchy; refusing to edit it')
     root = roots[0]
     if tuple(root.scale) != (1, 1, 1):
@@ -134,7 +144,9 @@ def add_astronaut(repository):
     metadata['scaleReference'] = {
         'source': source.relative_to(repository).as_posix(),
         'sourceSha256': hashlib.sha256(source.read_bytes()).hexdigest(),
-        'sourceLicense': 'Not verified; integrator must confirm before public redistribution',
+        'sourceLicense': 'Original team asset per integrator confirmation; no separate asset license selected',
+        'sourceAuthorship': 'Integrator confirms creating the astronaut with AI assistance in another session (PR #13 follow-up)',
+        'rootName': root.name,
         'heightM': HEIGHT_M, 'scale': list(root.scale),
         'blenderPositionM': list(root.location),
         'glbPositionM': [root.location.x, root.location.z, -root.location.y],

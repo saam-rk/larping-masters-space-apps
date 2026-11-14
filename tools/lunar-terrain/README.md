@@ -77,6 +77,28 @@ namespace["build"]("<prepared>", "<repo>/public/terrain", "<repo>/assets/terrain
 
 The builder creates a new scene, exports **selected objects in the active scene only**, reimports the GLB to check it, and writes only the generated scene/dependencies to the `.blend`. Existing live scenes are preserved. Repeated builds create additional scenes, not destructive resets. Blender may append name suffixes in a populated session: geometry is deterministic under the recorded versions, but names, timestamps and `.blend` bytes need not be byte-identical between sessions. Verify numerical buffers, counts and the new artifact hashes after each build.
 
+Terrain and astronaut-collection lookups use scene-local `terrain_role` tags;
+legacy deliveries also accept Blender's numeric name suffixes. Exported astronaut
+metadata records `rootName` so loader checks do not assume a globally unique name.
+To exercise two full generations, repeated astronaut placement, preservation of
+the first scene, and fresh-process normalization/reopening, use a **new directory
+outside the repository** (the regression refuses to overwrite an existing one):
+
+```sh
+"$BLENDER" --background --factory-startup --python-exit-code 1 \
+  --python tools/lunar-terrain/test_blender_pipeline.py -- \
+  --prepared "$PREPARED" --output /path/to/new-temporary-regression-directory
+
+# Validate the resulting GLB against the source and through the real web loader.
+REGRESSION=/path/to/new-temporary-regression-directory
+"$PY" tools/lunar-terrain/verify.py \
+  --glb "$REGRESSION/public/terrain/nobile-rim-1.glb" \
+  --metadata "$REGRESSION/public/terrain/nobile-rim-1.metadata.json" \
+  --source "$SOURCE" \
+  --report "$REGRESSION/assets/terrain/nobile-rim-1/validation.json"
+node tools/lunar-terrain/check_web.mjs "$REGRESSION"
+```
+
 The embedded Blender text contains generation metadata. The external JSON is authoritative for final artifact hashes because a file cannot embed its own hash, and the `.blend` is subsequently normalized.
 
 ## Adapt to another zone

@@ -1,14 +1,18 @@
 import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
+import { resolve, sep } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   Box3, BufferGeometry, Float32BufferAttribute, Mesh, MeshStandardMaterial,
-  PerspectiveCamera, Raycaster, REVISION, Vector3,
+  PerspectiveCamera, PropertyBinding, Raycaster, REVISION, Vector3,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createTerrainSampler, projectCoordinate } from './marker.mjs';
 
-const root = new URL('../../', import.meta.url);
+// Optional delivery root lets the same checks validate temporary regenerated assets.
+const root = process.argv[2]
+  ? pathToFileURL(`${resolve(process.argv[2])}${sep}`)
+  : new URL('../../', import.meta.url);
 async function readJson(relative) {
   try {
     return JSON.parse(await readFile(new URL(relative, root), 'utf8'));
@@ -102,7 +106,10 @@ if (metadata.scaleReference) {
   const bounds = new Box3().setFromObject(figure.scene);
   const heightM = bounds.max.y - bounds.min.y;
   assert.ok(Math.abs(heightM - 1.7) < 0.001);
-  const figureRoot = figure.scene.getObjectByName('Astronaut_1p70m');
+  // GLTFLoader sanitizes Blender's dotted numeric suffixes for animation bindings.
+  const figureRoot = figure.scene.getObjectByName(
+    PropertyBinding.sanitizeNodeName(reference.rootName ?? 'Astronaut_1p70m'),
+  );
   assert.ok(figureRoot);
   assert.ok(figureRoot.getWorldPosition(new Vector3()).distanceTo(new Vector3(...reference.glbPositionM)) < 0.001);
   const savedCamera = reference.groundCamera;

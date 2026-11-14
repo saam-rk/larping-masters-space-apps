@@ -80,6 +80,7 @@ def build(prepared, web_output, editable_output):
     mesh.update()
     assert not mesh.validate(), "Blender repaired mesh unexpectedly"
     terrain = bpy.data.objects.new("Terrain", mesh)
+    terrain["terrain_role"] = "surface"
     scene.collection.objects.link(terrain)
     for polygon in mesh.polygons:
         polygon.use_smooth = True
