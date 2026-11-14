@@ -1,23 +1,21 @@
 /**
- * Project logo (landing window and sidebar): a cartoon half-lit Moon circled by a satellite drawn in
- * the same chalk-schematic style as the background sketches (see
- * backdrop/roughPath.ts). Decorative only: it is not to scale and does not
- * show any real orbit.
+ * Landing and settings logo: the Salamanca astronaut circled by a satellite
+ * on a decorative chalk orbit.
  *
- * The orbit is a tilted ellipse. Its back half is drawn before the Moon (so
- * the disc hides it) and its front half after. When `animated`, the satellite
- * travels the orbit with SMIL; a mask hides it behind the disc while it is on
- * the back half. Otherwise it rests on the front half.
+ * The astronaut sits between the back and front halves of the orbit. A mask
+ * covers the satellite as it passes behind the astronaut. With animation
+ * disabled, the satellite rests on the front half.
  */
 
-import { useId } from 'react';
+import { useId, type ComponentProps } from 'react';
 import { createRng, roughEllipse, roughLine, type Rng } from '../backdrop/roughPath';
+import astronautImage from './salamanca-astronaut.png';
 
 const WIDTH = 300;
 const HEIGHT = 210;
 const CX = 150;
 const CY = 105;
-const MOON_R = 60;
+const ASTRONAUT_SIZE = 122;
 const ORBIT_RX = 112;
 const ORBIT_RY = 30;
 const ORBIT_TILT_DEG = -16;
@@ -25,20 +23,8 @@ const ORBIT_TILT_DEG = -16;
 const REST_ANGLE_DEG = 62;
 const ORBIT_SECONDS = 14;
 
-/** Lit right half plus a slightly gibbous bulge past the terminator. */
-const LIT_PATH = `M${CX} ${CY - MOON_R}A${MOON_R} ${MOON_R} 0 0 1 ${CX} ${CY + MOON_R}A${MOON_R * 0.28} ${MOON_R} 0 0 1 ${CX} ${CY - MOON_R}Z`;
-
 /** Clean ellipse for the motion path: starts at +x and runs the front half first. */
 const MOTION_PATH = `M${CX + ORBIT_RX} ${CY}A${ORBIT_RX} ${ORBIT_RY} 0 1 1 ${CX - ORBIT_RX} ${CY}A${ORBIT_RX} ${ORBIT_RY} 0 1 1 ${CX + ORBIT_RX} ${CY}`;
-
-/** Craters on the lit side: [cx, cy, r]. */
-const CRATERS: readonly (readonly [number, number, number])[] = [
-  [CX + 26, CY - 30, 9],
-  [CX + 38, CY + 8, 6],
-  [CX + 14, CY + 30, 11],
-  [CX + 6, CY - 6, 4.5],
-  [CX + 46, CY - 10, 3.5],
-];
 
 function roughRect(rng: Rng, x: number, y: number, w: number, h: number): string {
   return (
@@ -77,15 +63,51 @@ const REST = (() => {
 
 const ORBIT_TRANSFORM = `rotate(${ORBIT_TILT_DEG} ${CX} ${CY})`;
 
+type AstronautPosition = Pick<ComponentProps<'svg'>, 'x' | 'y' | 'width' | 'height'>;
+
+export function AstronautMark(position: AstronautPosition) {
+  const tintId = useId();
+
+  return (
+    <svg viewBox="152 72 920 1128" aria-hidden="true" focusable="false" {...position}>
+      <defs>
+        <filter id={tintId} colorInterpolationFilters="sRGB">
+          <feComponentTransfer result="dense">
+            <feFuncA type="linear" slope="3" intercept="-0.05" />
+          </feComponentTransfer>
+          <feFlood floodColor="var(--amber)" />
+          <feComposite in2="dense" operator="in" />
+        </filter>
+      </defs>
+      {/* Fill the suit's interior so the visor and shadows occlude the orbit. */}
+      <path
+        fill="var(--panel-solid)"
+        d="M302 320Q269 242 313 165L365 107Q404 86 505 108Q564 110 596 193
+           Q613 241 600 321L628 343Q662 374 734 373L884 365L974 329L1019 327
+           L1038 375L993 412L920 428L857 445L730 445L672 455L648 509
+           Q720 527 737 612L729 637L815 639Q882 646 905 722L941 761
+           L978 748Q1042 733 1050 784Q1054 837 1005 866L967 928
+           Q918 970 858 927L784 861L732 776L691 770L650 723
+           Q664 777 682 818L731 908Q775 938 777 1013L802 1101
+           Q818 1173 754 1178Q694 1188 662 1122L606 1046L534 935
+           L493 859Q452 855 429 819Q385 772 406 711L365 691
+           Q341 745 289 720L228 665Q181 626 181 552Q194 496 235 457
+           Q213 427 235 400Q261 359 314 350Z"
+      />
+      <image href={astronautImage} width="1225" height="1284" filter={`url(#${tintId})`} />
+    </svg>
+  );
+}
+
 export function LandingLogo({ animated }: { animated: boolean }) {
-  // The logo can be on screen twice (landing window and sidebar): each copy needs its own SVG ids.
   const prefix = useId().replace(/\W/g, '');
   const ids = {
     chalk: `${prefix}-chalk`,
     orbit_back: `${prefix}-orbit-back`,
     orbit_front: `${prefix}-orbit-front`,
-    moon_disc: `${prefix}-moon-disc`,
-    behind_moon: `${prefix}-behind-moon`,
+    astronaut: `${prefix}-astronaut`,
+    silhouette: `${prefix}-silhouette`,
+    satellite_mask: `${prefix}-satellite-mask`,
   };
   const chalkStroke = {
     fill: 'none',
@@ -111,14 +133,21 @@ export function LandingLogo({ animated }: { animated: boolean }) {
         <clipPath id={ids.orbit_front}>
           <rect x={-WIDTH} y={CY} width={WIDTH * 3} height={HEIGHT * 2} />
         </clipPath>
-        <clipPath id={ids.moon_disc}>
-          <circle cx={CX} cy={CY} r={MOON_R} />
-        </clipPath>
-        {/* Hides the satellite behind the disc, only while it is on the back half. */}
-        <mask id={ids.behind_moon} maskUnits="userSpaceOnUse" x={-WIDTH} y={-HEIGHT} width={WIDTH * 3} height={HEIGHT * 3}>
-          <rect x={-WIDTH} y={-HEIGHT} width={WIDTH * 3} height={HEIGHT * 3} fill="#fff" />
-          <circle cx={CX} cy={CY} r={MOON_R} fill="#000" opacity="0">
-            {animated && (
+        <g id={ids.astronaut}>
+          <AstronautMark
+            x={CX - ASTRONAUT_SIZE / 2}
+            y={CY - ASTRONAUT_SIZE / 2}
+            width={ASTRONAUT_SIZE}
+            height={ASTRONAUT_SIZE}
+          />
+        </g>
+        <filter id={ids.silhouette}>
+          <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" />
+        </filter>
+        {animated && (
+          <mask id={ids.satellite_mask} maskUnits="userSpaceOnUse" x="0" y="0" width={WIDTH} height={HEIGHT}>
+            <rect width={WIDTH} height={HEIGHT} fill="#fff" />
+            <use href={`#${ids.astronaut}`} filter={`url(#${ids.silhouette})`} opacity="0">
               <animate
                 attributeName="opacity"
                 values="0;1"
@@ -127,34 +156,23 @@ export function LandingLogo({ animated }: { animated: boolean }) {
                 dur={`${ORBIT_SECONDS}s`}
                 repeatCount="indefinite"
               />
-            )}
-          </circle>
-        </mask>
+            </use>
+          </mask>
+        )}
       </defs>
 
-      {/* Back half of the orbit, hidden by the disc. */}
-      <g className="landing-logo__chalk" transform={ORBIT_TRANSFORM} clipPath={`url(#${ids.orbit_back})`}>
+      <g transform={ORBIT_TRANSFORM} clipPath={`url(#${ids.orbit_back})`}>
         <path d={ORBIT_STROKES} filter={`url(#${ids.chalk})`} {...chalkStroke} />
       </g>
 
-      {/* Cartoon Moon: dim night side, lit side with craters, bold outline. */}
-      <g className="landing-logo__moon">
-        <circle cx={CX} cy={CY} r={MOON_R} className="landing-logo__night" />
-        <g clipPath={`url(#${ids.moon_disc})`}>
-          <path d={LIT_PATH} className="landing-logo__day" />
-          {CRATERS.map(([x, y, r]) => (
-            <circle key={`${x}-${y}`} cx={x} cy={y} r={r} className="landing-logo__crater" />
-          ))}
-        </g>
-        <circle cx={CX} cy={CY} r={MOON_R} className="landing-logo__rim" />
+      <use href={`#${ids.astronaut}`} />
+
+      <g transform={ORBIT_TRANSFORM} clipPath={`url(#${ids.orbit_front})`}>
+        <path d={ORBIT_STROKES} filter={`url(#${ids.chalk})`} {...chalkStroke} />
       </g>
 
-      {/* Front half of the orbit and the satellite, over the disc. */}
-      <g className="landing-logo__chalk" transform={ORBIT_TRANSFORM}>
-        <g clipPath={`url(#${ids.orbit_front})`}>
-          <path d={ORBIT_STROKES} filter={`url(#${ids.chalk})`} {...chalkStroke} />
-        </g>
-        <g mask={animated ? `url(#${ids.behind_moon})` : undefined}>
+      <g mask={animated ? `url(#${ids.satellite_mask})` : undefined}>
+        <g transform={ORBIT_TRANSFORM}>
           <g transform={animated ? undefined : `translate(${REST.x} ${REST.y})`}>
             {animated && <animateMotion path={MOTION_PATH} dur={`${ORBIT_SECONDS}s`} repeatCount="indefinite" />}
             <g transform={`rotate(${-ORBIT_TILT_DEG}) scale(1.35)`}>
