@@ -1,0 +1,46 @@
+{
+  "blenderVersion": "5.2.2 LTS",
+  "renderEngine": "BLENDER_EEVEE",
+  "terrainObject": "Terrain_nobile-rim-1",
+  "vertices": 160801,
+  "triangles": 320000,
+  "meshSurfaceAtSiteBlenderZ": -0.1015625,
+  "groundCameraLocation": [
+    0.01002578902989626,
+    0.010791721753776073,
+    1.8984375
+  ],
+  "groundCameraTarget": "ridge-reference",
+  "overviewCameraLocation": [
+    5500.0,
+    -10500.0,
+    8500.0
+  ],
+  "illustrativeSun": {
+    "gridBearingDeg": 135.0,
+    "elevationDeg": 5.0,
+    "strength": 5.0
+  },
+  "glbExport": {
+    "options": {
+      "export_format": "GLB",
+      "use_selection": true,
+      "export_yup": true,
+      "export_apply": false,
+      "export_texcoords": false,
+      "export_normals": true,
+      "export_tangents": false,
+      "export_materials": "EXPORT",
+      "export_cameras": false,
+      "export_lights": false,
+      "export_extras": true,
+      "export_animations": false,
+      "export_skins": false,
+      "export_morph": false,
+      "export_draco_mesh_compression_enable": false
+    },
+    "unsupportedOptionsSkipped": []
+  },
+  "blend": "D:\\sams_workspace\\NASA_space_apps_challenge_team\\docs\\research\\site-terrain\\nobile-rim-1\\nobile-rim-1.blend",
+  "glb": "D:\\sams_workspace\\NASA_space_apps_challenge_team\\docs\\research\\site-terrain\\nobile-rim-1\\nobile-rim-1.glb"
+}
