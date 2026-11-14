@@ -7,10 +7,10 @@
  * (UTC, the time NASA uses for launches, or the browser's local zone) and the
  * update button. Explanations live in each section's help dialog.
  *
- * The update button is available for any valid selection while idle,
- * including the saved sample and retries of the same case. Once a complete live
- * result for the current selection is on screen it reads "Updated" (still
- * pressable to query again).
+ * The update button is available for valid selections while idle unless a
+ * complete live result already matches the selected coordinates and UTC instant.
+ * It then reads "Updated" and stays disabled until the point or date/time changes
+ * (D-020). Saved samples, failed requests and partial results remain retryable.
  */
 
 import { useId, useState, type FormEvent } from 'react';
@@ -137,7 +137,7 @@ export function ConfigPanel({
   const parsedTime = fieldsToUtc(fields, zone, selection.utc);
   const custom = selection.siteId === CUSTOM_SITE_ID;
   const valid = parsedTime.ok && isUsable(query);
-  const canUpdate = valid && !loading;
+  const canUpdate = valid && !loading && !upToDate;
 
   const wheelId = (part: DateTimePart) => `${wheelIdBase}-${part}`;
 
@@ -256,7 +256,7 @@ export function ConfigPanel({
         </span>
       </>
     );
-  } else if (canUpdate && upToDate) {
+  } else if (valid && upToDate) {
     buttonClass += ' button--done';
     buttonLabel = (
       <>

@@ -128,7 +128,7 @@ export interface Messages {
     readonly zoneLocalHint: (offset: string, utc: string) => string;
     readonly update: string;
     readonly updating: string;
-    /** Update button label once the live result on screen matches the selection (the button still allows a retry). */
+    /** Disabled update button label when a complete live result matches the selected point and UTC instant (D-020). */
     readonly upToDate: string;
     readonly invalidTime: string;
     /** The local time falls in a daylight-saving gap. */
