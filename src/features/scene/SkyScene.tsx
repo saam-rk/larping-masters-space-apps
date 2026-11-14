@@ -3,7 +3,8 @@
  * (`placeBodies`, from the azimuth/elevation shown in the results panel):
  *
  * - `first-person`: eye level next to a 1.70 m astronaut on the LOLA terrain
- *   of Nobile Rim 2 (only where a terrain model exists, see `viewMode.ts`).
+ *   of Nobile Rim 1 or 2 (only where a terrain model exists, see
+ *   `terrain/models.ts`).
  * - `third-person`: Moon, Earth and Sun to scale around the tangent horizon.
  *
  * Both have a decorative 3D star background. The canvas fills whatever height

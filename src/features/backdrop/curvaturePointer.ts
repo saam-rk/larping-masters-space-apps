@@ -28,7 +28,7 @@
 
 import { barrelShift } from './curvature';
 
-const INTERACTIVE = 'a[href], button, input, select, textarea, label, summary, [role="button"], [role="spinbutton"]';
+const INTERACTIVE = 'a[href], button, input, select, textarea, label, summary, [role="button"], [role="spinbutton"], [role="option"]';
 
 /** Pointer travel between press and click beyond which the click ends a drag, px. */
 const DRAG_SLOP_PX = 6;
@@ -172,6 +172,11 @@ function drawnPoint(clientX: number, clientY: number, frame: HTMLElement): { x: 
   return { x: clientX + shiftX, y: clientY + shiftY };
 }
 
+/** An element is full screen, natively or through the CSS fallback; neither is drawn through the filter. */
+function fullscreenShown(): boolean {
+  return Boolean(document.fullscreenElement) || document.querySelector('[data-fullscreen]') !== null;
+}
+
 /**
  * Layout point drawn under a client point: the point itself unless the
  * curved-glass filter is on. Lets a control that reacts to where it was
@@ -179,7 +184,9 @@ function drawnPoint(clientX: number, clientY: number, frame: HTMLElement): { x: 
  */
 export function drawnPointerPosition(clientX: number, clientY: number): { x: number; y: number } {
   const frame = frameElement();
-  if (document.documentElement.dataset.curve !== 'on' || !frame) return { x: clientX, y: clientY };
+  if (document.documentElement.dataset.curve !== 'on' || !frame || fullscreenShown() || document.querySelector('dialog[open]')) {
+    return { x: clientX, y: clientY };
+  }
   return drawnPoint(clientX, clientY, frame);
 }
 
@@ -187,8 +194,9 @@ export function drawnPointerPosition(clientX: number, clientY: number): { x: num
 function skip(target: EventTarget | null): boolean {
   if (document.documentElement.dataset.curve !== 'on') return true;
   if (!(target instanceof Element)) return true;
-  // The frame is inert behind a modal dialog, and dialogs are not distorted.
-  if (document.querySelector('dialog[open]')) return true;
+  // The frame is inert behind a modal dialog, and dialogs are not distorted;
+  // neither is the full-screen local horizon box (see `useFullscreen`).
+  if (document.querySelector('dialog[open]') || fullscreenShown()) return true;
   return !target.closest('.app__frame');
 }
 
@@ -214,7 +222,7 @@ export function installCurvaturePointer(): () => void {
   const updateHover = () => {
     frameId = 0;
     const frame = frameElement();
-    if (!pending || !frame || root.dataset.curve !== 'on' || document.querySelector('dialog[open]')) {
+    if (!pending || !frame || root.dataset.curve !== 'on' || document.querySelector('dialog[open]') || fullscreenShown()) {
       clearHover();
       return;
     }

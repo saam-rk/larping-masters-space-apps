@@ -2,7 +2,7 @@
  * Project-wide source list for the Sources dialog, taken from the research and
  * design documents in `docs/` (GUIA_PRIMERA_DEMO, LUNAR_DATA_RESEARCH,
  * LUNAR_SOUTH_POLE_RESEARCH, LUNAR_RELIABILITY_AUDIT,
- * POLAR_TERRAIN_SOURCE_REVIEW and the Nobile Rim 2 terrain README).
+ * POLAR_TERRAIN_SOURCE_REVIEW and the Nobile Rim 1 and 2 terrain READMEs).
  *
  * - `app`: sources whose data or definitions the application uses directly.
  * - `research`: sources the team consulted to choose data, frames and
@@ -51,7 +51,7 @@ export const SOURCE_CATALOG = [
   {
     id: 'pgda78',
     group: 'app',
-    title: 'NASA GSFC PGDA product 78: LRO/LOLA local 5 m topography (DM2)',
+    title: 'NASA GSFC PGDA product 78: LRO/LOLA local 5 m topography (Site06, DM2)',
     url: 'https://pgda.gsfc.nasa.gov/products/78',
   },
   {

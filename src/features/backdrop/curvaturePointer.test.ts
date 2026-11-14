@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { installCurvaturePointer, rangeValueAt, type RangeTrack } from './curvaturePointer';
+import { drawnPointerPosition, installCurvaturePointer, rangeValueAt, type RangeTrack } from './curvaturePointer';
 
 class TestElement {
   click = vi.fn();
@@ -78,6 +78,30 @@ describe('curvature pointer remapping', () => {
     expect(event.preventDefault).toHaveBeenCalledOnce();
     expect(drawn.click).toHaveBeenCalledOnce();
     stop();
+  });
+
+  it.each(['native', 'fallback', 'dialog'])('leaves %s top-layer pointer coordinates and clicks unwarped', (mode) => {
+    vi.stubGlobal('document', {
+      ...document,
+      fullscreenElement: mode === 'native' ? drawn : null,
+      querySelector: (selector: string) => {
+        if (selector === '.app__frame') return new TestElement();
+        if (selector === '[data-fullscreen]' && mode === 'fallback') return drawn;
+        if (selector === 'dialog[open]' && mode === 'dialog') return drawn;
+        return null;
+      },
+    });
+    expect(drawnPointerPosition(100, 50)).toEqual({ x: 100, y: 50 });
+    const stop = installCurvaturePointer();
+    const event = clickEvent(1, 100, 50);
+    fire('click', event);
+    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(drawn.click).not.toHaveBeenCalled();
+    stop();
+  });
+
+  it('keeps correcting drawn coordinates outside full screen and dialogs', () => {
+    expect(drawnPointerPosition(100, 50)).not.toEqual({ x: 100, y: 50 });
   });
 
   it('leaves the click that ends a drag on the dragged control', () => {

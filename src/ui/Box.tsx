@@ -1,4 +1,4 @@
-import type { ElementType, ReactNode } from 'react';
+import type { ElementType, ReactNode, Ref } from 'react';
 import { HelpButton } from './DialogButton';
 
 interface BoxProps {
@@ -15,6 +15,8 @@ interface BoxProps {
   /** id for the title, e.g. to label a group inside the box. */
   readonly titleId?: string;
   readonly className?: string;
+  /** The box element, e.g. to show it full screen. */
+  readonly ref?: Ref<HTMLElement>;
   readonly children: ReactNode;
 }
 
@@ -32,10 +34,11 @@ export function Box({
   titleAs: Title = 'h2',
   titleId,
   className,
+  ref,
   children,
 }: BoxProps) {
   return (
-    <Tag className={`box${className ? ` ${className}` : ''}`}>
+    <Tag ref={ref} className={`box${className ? ` ${className}` : ''}`}>
       <div className="box__head">
         <Title className="box__title" id={titleId}>
           {title}

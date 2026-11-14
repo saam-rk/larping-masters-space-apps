@@ -5,15 +5,14 @@
 
 import { useState } from 'react';
 import type { ObserverSiteId } from '../../../shared/sites';
+import { terrainForSite } from './terrain/models';
 
 export const VIEW_MODES = ['first-person', 'third-person'] as const;
 export type ViewMode = (typeof VIEW_MODES)[number];
 
-/** Sites with a terrain model for the first-person view. */
-const FIRST_PERSON_SITES: ReadonlySet<ObserverSiteId> = new Set(['nobile-rim-2']);
-
+/** Sites with a terrain model for the first-person view (see `terrain/models.ts`). */
 export function hasFirstPersonView(siteId: ObserverSiteId): boolean {
-  return FIRST_PERSON_SITES.has(siteId);
+  return terrainForSite(siteId) !== null;
 }
 
 /**
