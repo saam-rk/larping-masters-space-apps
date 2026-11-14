@@ -1,0 +1,272 @@
+{
+  "generatedUtc": "2026-11-14T15:21:24.222737+00:00",
+  "allPassed": true,
+  "checks": [
+    {
+      "name": "source-sha256",
+      "passed": true
+    },
+    {
+      "name": "vertices-at-source-pixel-centers",
+      "passed": true
+    },
+    {
+      "name": "numeric-source-heights",
+      "passed": true,
+      "maxAbsM": 6.103515625e-05
+    },
+    {
+      "name": "vertex-coordinates-match-prepared-mesh",
+      "passed": true
+    },
+    {
+      "name": "exported-topology-matches-error-analysis",
+      "passed": true
+    },
+    {
+      "name": "upward-winding-and-normals",
+      "passed": true
+    },
+    {
+      "name": "scale-axes-and-extent",
+      "passed": true,
+      "projectedLocalBoundsM": [
+        -4997.5,
+        5002.5,
+        -4997.5,
+        5002.5
+      ]
+    },
+    {
+      "name": "full-valid-crop-area",
+      "passed": true,
+      "meshProjectedAreaM2": 100000000.0
+    },
+    {
+      "name": "terrain-only",
+      "passed": true
+    },
+    {
+      "name": "no-compression-required",
+      "passed": true
+    },
+    {
+      "name": "file-budget",
+      "passed": true,
+      "bytes": 1796720,
+      "limitBytes": 2097152
+    },
+    {
+      "name": "geometry-budget",
+      "passed": true,
+      "vertices": 50000,
+      "triangles": 99198
+    },
+    {
+      "name": "blender-reimport",
+      "passed": true
+    },
+    {
+      "name": "reference-pixel-reproduces-research",
+      "passed": true,
+      "referenceM": 1009.58
+    },
+    {
+      "name": "reimport-height-comparisons",
+      "passed": true
+    },
+    {
+      "name": "arbitrary-interior-coordinates",
+      "passed": true,
+      "samples": 128,
+      "seed": 20261114
+    },
+    {
+      "name": "boundary-and-outside-coordinates",
+      "passed": true
+    }
+  ],
+  "pointComparisons": {
+    "site": {
+      "latitudeDeg": -83.954,
+      "longitudeEastDeg": 58.82206,
+      "projectedXM": 157000.45196514757,
+      "projectedYM": 95000.25340115099,
+      "sourceContainingCellM": 1009.5821533203125,
+      "sourceBilinearM": 1009.6715787481011,
+      "glbSurfaceM": 1009.6511412286594,
+      "glbMinusSourceBilinearM": -0.02043751944165706,
+      "glbMinusContainingCellM": 0.06898790834691226,
+      "reimportMinusGlbM": 1.2335793712736631e-05,
+      "gltfPositionAtSurfaceM": [
+        0.45196514757117257,
+        -0.34885877134058774,
+        -0.25340115098515525
+      ]
+    },
+    "ridge-reference": {
+      "latitudeDeg": -84.0689860676775,
+      "longitudeEastDeg": 59.18881423184684,
+      "projectedXM": 154602.49999999956,
+      "projectedYM": 92202.49999999977,
+      "sourceContainingCellM": 1465.3916015625,
+      "sourceBilinearM": 1465.391601562482,
+      "glbSurfaceM": 1465.391601562446,
+      "glbMinusSourceBilinearM": -3.5925040720030665e-11,
+      "glbMinusContainingCellM": -5.3887561080046e-11,
+      "reimportMinusGlbM": 5.3887561080046e-11,
+      "gltfPositionAtSurfaceM": [
+        -2397.5000000004366,
+        455.3916015624461,
+        2797.500000000233
+      ]
+    },
+    "southeast-slope": {
+      "latitudeDeg": -83.92966672212242,
+      "longitudeEastDeg": 59.7289188845076,
+      "projectedXM": 159123.40000000052,
+      "projectedYM": 92876.50000000029,
+      "sourceContainingCellM": 719.6064453125,
+      "sourceBilinearM": 719.2759531250282,
+      "glbSurfaceM": 718.8439604492653,
+      "glbMinusSourceBilinearM": -0.4319926757628991,
+      "glbMinusContainingCellM": -0.7624848632347039,
+      "reimportMinusGlbM": 3.369135970388015e-05,
+      "gltfPositionAtSurfaceM": [
+        2123.400000000518,
+        -291.1560395507347,
+        2123.499999999709
+      ]
+    }
+  },
+  "simplification": {
+    "method": "50 m regular base; one maximum absolute source-versus-base triangle height residual at an interior source pixel per 50 m quad; rank by residual times feature weight; split selected quads into four triangles around that pixel, retaining shared coarse edges",
+    "featureWeight": "1 + 3*exp(-distanceToFeatureSquared/(2*1000^2))",
+    "vertices": 50000,
+    "triangles": 99198,
+    "baseVertices": 40401,
+    "addedVertices": 9599,
+    "sourcePixelSpacingM": 5.0,
+    "errorAgainstAllSourceCenters": {
+      "samples": 4004001,
+      "meanM": -0.026899289548699013,
+      "rmsM": 0.3609313623073624,
+      "p95AbsM": 0.6181361607143572,
+      "p99AbsM": 1.036645507812409,
+      "maxAbsM": 40.944201660156295
+    },
+    "featureRegionError": {
+      "samples": 125619,
+      "meanM": -0.028671740540440742,
+      "rmsM": 0.535374611311332,
+      "p95AbsM": 0.5652060546874049,
+      "p99AbsM": 1.0780447998046236,
+      "maxAbsM": 30.60671386718741
+    },
+    "noDataPolicy": "Fail closed if any source pixel is invalid; no triangles bridge nodata. This DM2 crop has no missing pixels.",
+    "coverageValidFraction": 1.0
+  },
+  "blenderReimport": {
+    "blenderVersion": "5.3.0",
+    "importedObjects": [
+      "Terrain_nobile-rim-2"
+    ],
+    "terrainObject": "Terrain_nobile-rim-2",
+    "matrixWorldIsIdentity": true,
+    "vertices": 50000,
+    "triangles": 99198,
+    "polygons": 99198,
+    "bboxMinBlender": [
+      -4997.5,
+      -4997.5,
+      -1307.95654296875
+    ],
+    "bboxMaxBlender": [
+      5002.5,
+      5002.5,
+      459.9681396484375
+    ],
+    "bboxDimensionsM": [
+      10000.0,
+      10000.0,
+      1767.9246826171875
+    ],
+    "expectedExtentLocalM": {
+      "xMin": -4997.5,
+      "xMax": 5002.5,
+      "yMin": -4997.5,
+      "yMax": 5002.5
+    },
+    "extentErrorM": {
+      "xMin": 0.0,
+      "xMax": 0.0,
+      "yMin": 0.0,
+      "yMax": 0.0
+    },
+    "expectedElevationRangeLocalM": [
+      -1307.9565124511719,
+      459.9681396484375
+    ],
+    "meanPolygonNormalZ": 0.9782071873419765,
+    "materials": [
+      "Terrain_neutral_grey"
+    ],
+    "extras": {
+      "siteId": "nobile-rim-2",
+      "crs": "+proj=stere +lat_0=-90 +lat_ts=-90 +lon_0=0 +x_0=0 +y_0=0 +R=1737400 +units=m +no_defs=True",
+      "frame": "MOON_ME reference frame of ephemeris DE421 (stated by the provider README; not encoded in the GeoTIFF CRS)",
+      "originProjectedXM": 157000.0,
+      "originProjectedYM": 95000.0,
+      "originElevationM": 1010.0,
+      "source": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/DM2/DM2_final_adj_5mpp_surf.tif"
+    },
+    "rayCastProbes": {
+      "site": {
+        "hit": true,
+        "blenderXYZ": [
+          0.4519651532173157,
+          0.25340116024017334,
+          -0.348846435546875
+        ],
+        "elevationM": 1009.6511535644531,
+        "sourceBilinearElevationM": 1009.6715787481011,
+        "differenceM": -0.020425183647944323
+      },
+      "ridge-reference": {
+        "hit": true,
+        "blenderXYZ": [
+          -2397.5,
+          -2797.5,
+          455.3916015625
+        ],
+        "elevationM": 1465.3916015625,
+        "sourceBilinearElevationM": 1465.391601562482,
+        "differenceM": 1.7962520360015333e-11
+      },
+      "southeast-slope": {
+        "hit": true,
+        "blenderXYZ": [
+          2123.39990234375,
+          -2123.5,
+          -291.156005859375
+        ],
+        "elevationM": 718.843994140625,
+        "sourceBilinearElevationM": 719.2759531250282,
+        "differenceM": -0.43195898440319525
+      }
+    }
+  },
+  "methods": {
+    "containingCell": "GeoTIFF cell containing projected coordinate, no interpolation",
+    "sourceBilinear": "Four surrounding 5 m source pixel centers, bilinear weights",
+    "glbSurface": "Barycentric interpolation of exported GLB triangle, parsed independently",
+    "wholeCropError": "All source centers evaluated against planned adaptive triangle fans; exported coordinates and topology verified identical"
+  },
+  "mobilePerformance": {
+    "status": "pending",
+    "coldLoadTargetS": 2,
+    "fpsTarget": 60,
+    "fpsMinimum": 50,
+    "reason": "No physical mobile device available; repository viewer has no terrain loader. No device, browser or network performance result claimed."
+  }
+}

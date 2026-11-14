@@ -1,0 +1,3 @@
+-r requirements.txt
+# Optional source-inspection figure; not needed by preparation or verification.
+matplotlib==3.11.2

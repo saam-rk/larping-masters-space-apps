@@ -1,0 +1,391 @@
+{
+  "generatedUtc": "2026-11-14T15:11:02.934422+00:00",
+  "versions": {
+    "python": "3.13.13",
+    "rasterio": "1.4.4",
+    "gdal": "3.10.3",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "numpy": "2.4.6"
+  },
+  "config": {
+    "siteId": "nobile-rim-2",
+    "siteName": "Nobile Rim 2",
+    "latitudeDeg": -83.954,
+    "longitudeEastDeg": 58.82206,
+    "siteSource": "shared/sites.ts, from NASA Lunar Surface Data Book (M2M-30044) table A2.1-1. Center of an original candidate-region polygon; not an approved landing site.",
+    "raster": {
+      "product": "NASA GSFC PGDA product 78, adjusted local LOLA 5 m/pixel elevation (DM2 = Nobile rim 2)",
+      "productUrl": "https://pgda.gsfc.nasa.gov/products/78",
+      "sourceUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/DM2/DM2_final_adj_5mpp_surf.tif",
+      "readmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+      "frame": "MOON_ME reference frame of ephemeris DE421 (stated by the provider README; not encoded in the GeoTIFF CRS)",
+      "valueMeaning": "Surface height Z in meters above a 1,737,400 m reference sphere; interpolation fills pixels without LOLA returns",
+      "citation": "Barker et al. (2021), Planetary and Space Science 203, 105119, https://doi.org/10.1016/j.pss.2020.105119"
+    },
+    "crop": {
+      "halfSizeM": 5000
+    },
+    "mesh": {
+      "stepPixels": 10,
+      "analyzeStepsPixels": [
+        5,
+        10
+      ],
+      "targetVertices": 50000,
+      "featurePriorityRadiusM": 1000,
+      "featurePriorityMultiplier": 4
+    },
+    "referencePoints": [
+      {
+        "id": "ridge-reference",
+        "name": "Southwest broad crest",
+        "latitudeDeg": -84.0689860676775,
+        "longitudeEastDeg": 59.18881423184684,
+        "source": "Selected by visual inspection of numeric DM2 elevation and illustrative hillshade within the 10 km crop; descriptive label, not an IAU feature name. Crest approximately 400 m above the reference site."
+      }
+    ],
+    "checkPoints": [
+      {
+        "id": "site",
+        "use": "site"
+      },
+      {
+        "id": "ridge-reference",
+        "use": "referencePoint"
+      },
+      {
+        "id": "southeast-slope",
+        "name": "Southeast descending slope",
+        "latitudeDeg": -83.92966672212242,
+        "longitudeEastDeg": 59.7289188845076,
+        "source": "Off-grid coordinate selected for an independent surface check, no mission significance."
+      }
+    ],
+    "silhouette": {
+      "observerHeightM": 2.0,
+      "targetPoint": "ridge-reference",
+      "azimuthHalfWidthDeg": 20,
+      "azimuthStepDeg": 0.5,
+      "radialStepM": 1.25
+    },
+    "groundCamera": {
+      "heightAboveSurfaceM": 2.0,
+      "lookAtPoint": "ridge-reference"
+    }
+  },
+  "rasterInspection": {
+    "file": "DM2_final_adj_5mpp_surf.tif",
+    "sha256": "d88677c21633683061117db0a577f0510e0948fe9db315d13be28782407ff604",
+    "bytes": 64025607,
+    "driver": "GTiff",
+    "dtype": "float32",
+    "width": 4000,
+    "height": 4000,
+    "tiled": false,
+    "compression": null,
+    "nodata": "NaN",
+    "crsWkt": "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+    "crsProj4": "+proj=stere +lat_0=-90 +lat_ts=-90 +lon_0=0 +x_0=0 +y_0=0 +R=1737400 +units=m +no_defs=True",
+    "crsParameters": {
+      "proj": "stere",
+      "lat_0": -90,
+      "lat_ts": -90,
+      "lon_0": 0,
+      "x_0": 0,
+      "y_0": 0,
+      "R": 1737400,
+      "units": "m",
+      "no_defs": true
+    },
+    "transformGdal": [
+      147000.0,
+      5.0,
+      0.0,
+      105000.0,
+      0.0,
+      -5.0
+    ],
+    "boundsM": [
+      147000.0,
+      85000.0,
+      167000.0,
+      105000.0
+    ],
+    "cellSizeM": 5.0,
+    "areaOrPoint": "Area",
+    "gmtNodeOffset": "1",
+    "gmtHistory": "xyz2grd -bi3 -I5 -R1.47000000000e+05/1.67000000000e+05/8.50000000000e+04/1.05000000000e+05 -Gtest.grd -r",
+    "missingSamplesInFile": 0,
+    "elevationRangeM": [
+      -1429.971923828125,
+      1817.64306640625
+    ]
+  },
+  "sphereRadiusM": 1737400.0,
+  "siteProjection": {
+    "projectedXM": 157000.45196514757,
+    "projectedYM": 95000.25340115099,
+    "containingCell": {
+      "row": 1999,
+      "col": 2000
+    },
+    "containingCellElevationM": 1009.5821533203125,
+    "sourceBilinearElevationM": 1009.6715787481011
+  },
+  "localOrigin": {
+    "projectedXM": 157000.0,
+    "projectedYM": 95000.0,
+    "elevationM": 1010.0,
+    "rule": "Site projected X/Y and source bilinear elevation rounded to whole meters"
+  },
+  "crop": {
+    "requestedHalfSizeM": 5000,
+    "sourceWindow": {
+      "rowOff": 999,
+      "colOff": 1000,
+      "height": 2001,
+      "width": 2001
+    },
+    "sourcePixelEdgeBoundsM": {
+      "xMin": 152000.0,
+      "xMax": 162005.0,
+      "yMin": 90000.0,
+      "yMax": 100005.0
+    },
+    "meshVertexExtentM": {
+      "xMin": 152002.5,
+      "xMax": 162002.5,
+      "yMin": 90002.5,
+      "yMax": 100002.5
+    },
+    "meshVertexExtentLocalM": {
+      "xMin": -4997.5,
+      "xMax": 5002.5,
+      "yMin": -4997.5,
+      "yMax": 5002.5
+    },
+    "cornersGeographic": [
+      {
+        "xM": 152002.5,
+        "yM": 100002.5,
+        "latitudeDeg": -84.00519763499346,
+        "longitudeEastDeg": 56.65906765625414
+      },
+      {
+        "xM": 162002.5,
+        "yM": 100002.5,
+        "latitudeDeg": -83.72787473549108,
+        "longitudeEastDeg": 58.31338728716455
+      },
+      {
+        "xM": 162002.5,
+        "yM": 90002.5,
+        "latitudeDeg": -83.89416672309004,
+        "longitudeEastDeg": 60.94509561408581
+      },
+      {
+        "xM": 152002.5,
+        "yM": 90002.5,
+        "latitudeDeg": -84.1794683977696,
+        "longitudeEastDeg": 59.36971691469087
+      }
+    ],
+    "geographicEnvelope": {
+      "latitudeMinDeg": -84.1794683977696,
+      "latitudeMaxDeg": -83.72787473549108,
+      "longitudeMinEastDeg": 56.65906765625414,
+      "longitudeMaxEastDeg": 60.94509561408581,
+      "note": "Envelope of the projected square; the square itself is the coverage, not this lat/lon box."
+    },
+    "missingSourcePixelsInWindow": 0,
+    "validQuads": 40000,
+    "totalQuads": 40000,
+    "windowElevationRangeM": [
+      -297.9565124511719,
+      1469.9681396484375
+    ]
+  },
+  "grid": {
+    "stepPixels": 10,
+    "vertexSpacingM": 50.0,
+    "rows": 201,
+    "cols": 201,
+    "vertexValid": 40401,
+    "vertexSampling": "Exact source values at every step-th source pixel center (no averaging)",
+    "triangulation": "Each quad split along the diagonal from its north-west vertex to its south-east vertex (grid axes)"
+  },
+  "points": {
+    "site": {
+      "id": "site",
+      "name": "Nobile Rim 2",
+      "latitudeDeg": -83.954,
+      "longitudeEastDeg": 58.82206,
+      "source": "shared/sites.ts, from NASA Lunar Surface Data Book (M2M-30044) table A2.1-1. Center of an original candidate-region polygon; not an approved landing site.",
+      "projectedXM": 157000.45196514757,
+      "projectedYM": 95000.25340115099,
+      "containingCell": {
+        "row": 1999,
+        "col": 2000
+      },
+      "containingCellElevationM": 1009.5821533203125,
+      "sourceBilinearElevationM": 1009.6715787481011,
+      "insideMeshExtent": true,
+      "blenderLocalM": [
+        0.45196514757117257,
+        0.25340115098515525,
+        -0.3284212518989307
+      ],
+      "gltfLocalM": [
+        0.45196514757117257,
+        -0.3284212518989307,
+        -0.25340115098515525
+      ],
+      "distanceFromSiteGridM": 0.0,
+      "gridBearingFromSiteDeg": 0.0
+    },
+    "ridge-reference": {
+      "id": "ridge-reference",
+      "name": "Southwest broad crest",
+      "latitudeDeg": -84.0689860676775,
+      "longitudeEastDeg": 59.18881423184684,
+      "source": "Selected by visual inspection of numeric DM2 elevation and illustrative hillshade within the 10 km crop; descriptive label, not an IAU feature name. Crest approximately 400 m above the reference site.",
+      "projectedXM": 154602.49999999956,
+      "projectedYM": 92202.49999999977,
+      "containingCell": {
+        "row": 2559,
+        "col": 1520
+      },
+      "containingCellElevationM": 1465.3916015625,
+      "sourceBilinearElevationM": 1465.391601562482,
+      "insideMeshExtent": true,
+      "blenderLocalM": [
+        -2397.5000000004366,
+        -2797.500000000233,
+        455.39160156248204
+      ],
+      "gltfLocalM": [
+        -2397.5000000004366,
+        455.39160156248204,
+        2797.500000000233
+      ],
+      "distanceFromSiteGridM": 3684.7791956656506,
+      "gridBearingFromSiteDeg": 220.599849852227
+    },
+    "southeast-slope": {
+      "id": "southeast-slope",
+      "name": "Southeast descending slope",
+      "latitudeDeg": -83.92966672212242,
+      "longitudeEastDeg": 59.7289188845076,
+      "source": "Off-grid coordinate selected for an independent surface check, no mission significance.",
+      "projectedXM": 159123.40000000052,
+      "projectedYM": 92876.50000000029,
+      "containingCell": {
+        "row": 2424,
+        "col": 2424
+      },
+      "containingCellElevationM": 719.6064453125,
+      "sourceBilinearElevationM": 719.2759531250282,
+      "insideMeshExtent": true,
+      "blenderLocalM": [
+        2123.400000000518,
+        -2123.499999999709,
+        -290.7240468749718
+      ],
+      "gltfLocalM": [
+        2123.400000000518,
+        -290.7240468749718,
+        2123.499999999709
+      ],
+      "distanceFromSiteGridM": 3002.8714370723783,
+      "gridBearingFromSiteDeg": 135.01086586612345
+    }
+  },
+  "localGeometry": {
+    "polarStereographicScaleFactorAtSite": 1.002788929480997,
+    "gridBearingOfGeographicNorthAtSiteDeg": 58.82206,
+    "sphereDropAtHalfSizeM": 7.194658685391965
+  },
+  "silhouetteSource": {
+    "observerElevationM": 1011.6715787481011,
+    "targetGridBearingDeg": 220.599849852227,
+    "maxDistanceM": 5334.13526600342,
+    "targetBearingSourceAngleDeg": 7.694509171240502,
+    "targetBearingSourceHorizonDistanceM": 3052.5,
+    "targetBearingSourceHorizonHeightM": 1424.087897094316,
+    "method": "Planar grid-space rays from the site at +observerHeight; source bilinear sampled every radialStepM; maximum atan2(dz, grid distance). Compares mesh and source in identical geometry only; not a lunar horizon calculation."
+  },
+  "simplificationAnalysis": [
+    {
+      "stepPixels": 5,
+      "vertexSpacingM": 25.0,
+      "vertices": 160801,
+      "triangles": 320000,
+      "estimatedGlbBytesPositionsNormalsUint32Indices": 7699224,
+      "elevationErrorVsSourcePixelsM": {
+        "comparedPixels": 4004001,
+        "mean": -0.0017615861868158112,
+        "rms": 0.2061997701296362,
+        "p95Abs": 0.35300292968759095,
+        "p99Abs": 0.7116821289062045,
+        "maxAbs": 55.70708007812482
+      },
+      "ridgeSilhouette": {
+        "maxAbsElevationAngleDiffDeg": 0.017949596550734803,
+        "meanElevationAngleDiffDeg": -0.0030468303056206012,
+        "targetBearingAngleDiffDeg": -0.000601852822597948,
+        "targetBearingMeshAngleDeg": 7.693907318417904,
+        "targetBearingMeshHorizonDistanceM": 3028.75
+      }
+    },
+    {
+      "stepPixels": 10,
+      "vertexSpacingM": 50.0,
+      "vertices": 40401,
+      "triangles": 80000,
+      "estimatedGlbBytesPositionsNormalsUint32Indices": 1929624,
+      "elevationErrorVsSourcePixelsM": {
+        "comparedPixels": 4004001,
+        "mean": -0.006417161958075877,
+        "rms": 0.4242116085510906,
+        "p95Abs": 0.7748535156248408,
+        "p99Abs": 1.4036376953124545,
+        "maxAbs": 68.50058593749964
+      },
+      "ridgeSilhouette": {
+        "maxAbsElevationAngleDiffDeg": 0.027139848604391226,
+        "meanElevationAngleDiffDeg": -0.006506763914282053,
+        "targetBearingAngleDiffDeg": 0.0004111584861341555,
+        "targetBearingMeshAngleDeg": 7.694920329726636,
+        "targetBearingMeshHorizonDistanceM": 3026.25
+      }
+    }
+  ],
+  "adaptive": {
+    "method": "50 m regular base; one maximum absolute source-versus-base triangle height residual at an interior source pixel per 50 m quad; rank by residual times feature weight; split selected quads into four triangles around that pixel, retaining shared coarse edges",
+    "featureWeight": "1 + 3*exp(-distanceToFeatureSquared/(2*1000^2))",
+    "vertices": 50000,
+    "triangles": 99198,
+    "baseVertices": 40401,
+    "addedVertices": 9599,
+    "sourcePixelSpacingM": 5.0,
+    "errorAgainstAllSourceCenters": {
+      "samples": 4004001,
+      "meanM": -0.026899289548699013,
+      "rmsM": 0.3609313623073624,
+      "p95AbsM": 0.6181361607143572,
+      "p99AbsM": 1.036645507812409,
+      "maxAbsM": 40.944201660156295
+    },
+    "featureRegionError": {
+      "samples": 125619,
+      "meanM": -0.028671740540440742,
+      "rmsM": 0.535374611311332,
+      "p95AbsM": 0.5652060546874049,
+      "p99AbsM": 1.0780447998046236,
+      "maxAbsM": 30.60671386718741
+    },
+    "noDataPolicy": "Fail closed if any source pixel is invalid; no triangles bridge nodata. This DM2 crop has no missing pixels.",
+    "coverageValidFraction": 1.0
+  }
+}
