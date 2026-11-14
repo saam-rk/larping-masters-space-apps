@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { changeDatePart, currentUtcMinute, MAX_YEAR, MIN_YEAR, stepWheel } from './dateTimeWheel';
+import {
+  changeDatePart,
+  currentUtcMinute,
+  fieldParts,
+  MAX_YEAR,
+  MIN_YEAR,
+  rollPosition,
+  stepWheel,
+  typedPartsToFields,
+} from './dateTimeWheel';
 import { fieldsToUtc, utcToFields } from './timeZone';
 
 describe('date and time wheels', () => {
@@ -29,5 +38,31 @@ describe('date and time wheels', () => {
       const fields = utcToFields(utc, zone);
       expect(fieldsToUtc(fields, zone, utc)).toMatchObject({ ok: true, iso: utc });
     }
+  });
+
+  it('splits fields into numeric parts and builds fields from typed parts', () => {
+    expect(fieldParts({ date: '2026-01-12', time: '14:30' })).toEqual({ day: 12, month: 1, year: 2026, hour: 14, minute: 30 });
+    expect(typedPartsToFields({ day: '4', month: '5', year: '2034', hour: '9', minute: '05' })).toEqual({
+      date: '2034-05-04',
+      time: '09:05',
+    });
+  });
+
+  it('rejects missing, non-numeric or short-year typed parts, leaving ranges to the UTC parser', () => {
+    const base = { day: '12', month: '01', year: '2026', hour: '14', minute: '30' };
+    expect(typedPartsToFields({ ...base, day: '' })).toBeNull();
+    expect(typedPartsToFields({ ...base, minute: '3a' })).toBeNull();
+    expect(typedPartsToFields({ ...base, year: '26' })).toBeNull();
+    expect(typedPartsToFields({ ...base, hour: '123' })).toBeNull();
+    expect(typedPartsToFields({ ...base, month: '13' })).toEqual({ date: '2026-13-12', time: '14:30' });
+  });
+
+  it('rolls straight towards the target, counting down without wrapping', () => {
+    expect(rollPosition(12, 4, 0)).toBe(12);
+    expect(rollPosition(12, 4, 1)).toBe(4);
+    const halfway = rollPosition(12, 4, 0.5);
+    expect(halfway).toBeLessThan(8); // Fast at first, settling on the target.
+    expect(halfway).toBeGreaterThan(4);
+    expect(rollPosition(2026, 2034, 2)).toBe(2034);
   });
 });
