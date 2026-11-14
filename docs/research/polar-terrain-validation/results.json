@@ -1,0 +1,179 @@
+{
+  "retrievedUtc": "2026-11-14T11:37:18.356285+00:00",
+  "versions": {
+    "python": "3.11.9",
+    "rasterio": "1.4.4",
+    "gdal": "3.10.3",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "numpy": "2.4.6"
+  },
+  "samples": [
+    {
+      "site": "Site06",
+      "latitudeDeg": -85.4381,
+      "longitudeEastDeg": 37.36667,
+      "xM": 84000.01002578877,
+      "yM": 110000.01079172149,
+      "projectionResidualM": 1.4551915228366852e-11,
+      "layers": {
+        "surf": {
+          "containingValue": 5946.12841796875,
+          "row": 1999,
+          "col": 2000,
+          "sourceUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_surf.tif",
+          "sourceDimensions": [
+            4000,
+            4000
+          ],
+          "sourceTransform": [
+            5.0,
+            0.0,
+            74000.0,
+            0.0,
+            -5.0,
+            120000.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "sourceCrs": "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+          "window": [
+            1998,
+            1997,
+            5,
+            5
+          ],
+          "artifact": "Site06-surf.tif",
+          "sha256": "766d882b3eaebfa45c9fd044daf858796bfd6aa1e227e23385845859f45306d3",
+          "note": "Decoded/re-encoded window, not original TIFF byte ranges or a complete source-file hash."
+        },
+        "slp": {
+          "containingValue": 15.047022819519043,
+          "row": 1999,
+          "col": 2000,
+          "sourceUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_slp.tif",
+          "sourceDimensions": [
+            4000,
+            4000
+          ],
+          "sourceTransform": [
+            5.0,
+            0.0,
+            74000.0,
+            0.0,
+            -5.0,
+            120000.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "sourceCrs": "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+          "window": [
+            1998,
+            1997,
+            5,
+            5
+          ],
+          "artifact": "Site06-slp.tif",
+          "sha256": "3c2966b4f4e2c3568bd34d1332c4f3c0239a629b6459dcd62e5b0bcd55218df4",
+          "note": "Decoded/re-encoded window, not original TIFF byte ranges or a complete source-file hash."
+        }
+      },
+      "bilinearM": 5946.899465547405
+    },
+    {
+      "site": "DM2",
+      "latitudeDeg": -83.954,
+      "longitudeEastDeg": 58.82206,
+      "xM": 157000.45196514757,
+      "yM": 95000.25340115099,
+      "projectionResidualM": 0.0,
+      "layers": {}
+    },
+    {
+      "site": "Site04",
+      "latitudeDeg": -89.7668,
+      "longitudeEastDeg": -171.87,
+      "xM": -1000.0366057189258,
+      "yM": -7000.345565270377,
+      "projectionResidualM": 0.0,
+      "layers": {}
+    }
+  ],
+  "failures": [
+    {
+      "stage": "Site06-toterr",
+      "error": "Read failed. See previous exception for details."
+    },
+    {
+      "stage": "Site06-slperr",
+      "error": "HTTP response code: 403"
+    },
+    {
+      "stage": "Site06-ldec",
+      "error": "HTTP response code: 403"
+    },
+    {
+      "stage": "DM2-surf",
+      "error": "HTTP response code: 403"
+    },
+    {
+      "stage": "DM2-slp",
+      "error": "HTTP response code: 403"
+    },
+    {
+      "stage": "DM2-toterr",
+      "error": "HTTP response code: 403"
+    },
+    {
+      "stage": "DM2-slperr",
+      "error": "HTTP response code: 403"
+    },
+    {
+      "stage": "DM2-ldec",
+      "error": "HTTP response code: 403"
+    },
+    {
+      "stage": "Site04-surf",
+      "error": "HTTP response code: 403"
+    },
+    {
+      "stage": "Site04-slp",
+      "error": "HTTP response code: 403"
+    },
+    {
+      "stage": "Site04-toterr",
+      "error": "HTTP response code: 403"
+    },
+    {
+      "stage": "Site04-slperr",
+      "error": "HTTP response code: 403"
+    },
+    {
+      "stage": "Site04-ldec",
+      "error": "HTTP response code: 403"
+    },
+    {
+      "stage": "near-field",
+      "error": "Read failed. See previous exception for details."
+    },
+    {
+      "stage": "regional-ridge",
+      "error": "HTTP response code: 403"
+    }
+  ],
+  "geometry": {
+    "arc400kmDeg": 13.191154486723224,
+    "meridianHaloFrom80SDeg": -66.80884551327678,
+    "sphereHorizonAt2mDeg": -0.08693657193373108,
+    "oneMeterDifferentialHeightAngleApproxDeg": {
+      "10": 5.710593137499642,
+      "100": 0.5729386976834859,
+      "1000": 0.05729576041450061,
+      "10000": 0.005729577932209639
+    },
+    "terrainHeightAt400kmForHorizontalRayM": 53195.28737066104,
+    "terrainHeightAt400kmForMinus3_8795DegRayM": 25179.928633541567
+  }
+}
