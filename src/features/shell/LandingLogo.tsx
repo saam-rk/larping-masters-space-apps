@@ -1,5 +1,5 @@
 /**
- * Start screen logo: a cartoon half-lit Moon circled by a satellite drawn in
+ * Project logo (landing window and sidebar): a cartoon half-lit Moon circled by a satellite drawn in
  * the same chalk-schematic style as the background sketches (see
  * backdrop/roughPath.ts). Decorative only: it is not to scale and does not
  * show any real orbit.
@@ -10,6 +10,7 @@
  * the back half. Otherwise it rests on the front half.
  */
 
+import { useId } from 'react';
 import { createRng, roughEllipse, roughLine, type Rng } from '../backdrop/roughPath';
 
 const WIDTH = 300;
@@ -77,6 +78,15 @@ const REST = (() => {
 const ORBIT_TRANSFORM = `rotate(${ORBIT_TILT_DEG} ${CX} ${CY})`;
 
 export function LandingLogo({ animated }: { animated: boolean }) {
+  // The logo can be on screen twice (landing window and sidebar): each copy needs its own SVG ids.
+  const prefix = useId().replace(/\W/g, '');
+  const ids = {
+    chalk: `${prefix}-chalk`,
+    orbit_back: `${prefix}-orbit-back`,
+    orbit_front: `${prefix}-orbit-front`,
+    moon_disc: `${prefix}-moon-disc`,
+    behind_moon: `${prefix}-behind-moon`,
+  };
   const chalkStroke = {
     fill: 'none',
     stroke: 'currentColor',
@@ -88,24 +98,24 @@ export function LandingLogo({ animated }: { animated: boolean }) {
   return (
     <svg className="landing-logo" viewBox={`0 0 ${WIDTH} ${HEIGHT}`} aria-hidden="true" focusable="false">
       <defs>
-        <filter id="landing-chalk" x="-5%" y="-5%" width="110%" height="110%">
+        <filter id={ids.chalk} x="-5%" y="-5%" width="110%" height="110%">
           <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="noise" />
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.8" xChannelSelector="R" yChannelSelector="G" result="rough" />
           <feTurbulence type="fractalNoise" baseFrequency="1.6" numOctaves="1" seed="11" result="grain" />
           <feColorMatrix in="grain" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -1.6 0 0 0 1.6" result="mask" />
           <feComposite in="rough" in2="mask" operator="in" />
         </filter>
-        <clipPath id="landing-orbit-back">
+        <clipPath id={ids.orbit_back}>
           <rect x={-WIDTH} y={-HEIGHT} width={WIDTH * 3} height={HEIGHT + CY} />
         </clipPath>
-        <clipPath id="landing-orbit-front">
+        <clipPath id={ids.orbit_front}>
           <rect x={-WIDTH} y={CY} width={WIDTH * 3} height={HEIGHT * 2} />
         </clipPath>
-        <clipPath id="landing-moon-disc">
+        <clipPath id={ids.moon_disc}>
           <circle cx={CX} cy={CY} r={MOON_R} />
         </clipPath>
         {/* Hides the satellite behind the disc, only while it is on the back half. */}
-        <mask id="landing-behind-moon" maskUnits="userSpaceOnUse" x={-WIDTH} y={-HEIGHT} width={WIDTH * 3} height={HEIGHT * 3}>
+        <mask id={ids.behind_moon} maskUnits="userSpaceOnUse" x={-WIDTH} y={-HEIGHT} width={WIDTH * 3} height={HEIGHT * 3}>
           <rect x={-WIDTH} y={-HEIGHT} width={WIDTH * 3} height={HEIGHT * 3} fill="#fff" />
           <circle cx={CX} cy={CY} r={MOON_R} fill="#000" opacity="0">
             {animated && (
@@ -123,14 +133,14 @@ export function LandingLogo({ animated }: { animated: boolean }) {
       </defs>
 
       {/* Back half of the orbit, hidden by the disc. */}
-      <g className="landing-logo__chalk" transform={ORBIT_TRANSFORM} clipPath="url(#landing-orbit-back)">
-        <path d={ORBIT_STROKES} filter="url(#landing-chalk)" {...chalkStroke} />
+      <g className="landing-logo__chalk" transform={ORBIT_TRANSFORM} clipPath={`url(#${ids.orbit_back})`}>
+        <path d={ORBIT_STROKES} filter={`url(#${ids.chalk})`} {...chalkStroke} />
       </g>
 
       {/* Cartoon Moon: dim night side, lit side with craters, bold outline. */}
       <g className="landing-logo__moon">
         <circle cx={CX} cy={CY} r={MOON_R} className="landing-logo__night" />
-        <g clipPath="url(#landing-moon-disc)">
+        <g clipPath={`url(#${ids.moon_disc})`}>
           <path d={LIT_PATH} className="landing-logo__day" />
           {CRATERS.map(([x, y, r]) => (
             <circle key={`${x}-${y}`} cx={x} cy={y} r={r} className="landing-logo__crater" />
@@ -141,14 +151,14 @@ export function LandingLogo({ animated }: { animated: boolean }) {
 
       {/* Front half of the orbit and the satellite, over the disc. */}
       <g className="landing-logo__chalk" transform={ORBIT_TRANSFORM}>
-        <g clipPath="url(#landing-orbit-front)">
-          <path d={ORBIT_STROKES} filter="url(#landing-chalk)" {...chalkStroke} />
+        <g clipPath={`url(#${ids.orbit_front})`}>
+          <path d={ORBIT_STROKES} filter={`url(#${ids.chalk})`} {...chalkStroke} />
         </g>
-        <g mask={animated ? 'url(#landing-behind-moon)' : undefined}>
+        <g mask={animated ? `url(#${ids.behind_moon})` : undefined}>
           <g transform={animated ? undefined : `translate(${REST.x} ${REST.y})`}>
             {animated && <animateMotion path={MOTION_PATH} dur={`${ORBIT_SECONDS}s`} repeatCount="indefinite" />}
             <g transform={`rotate(${-ORBIT_TILT_DEG}) scale(1.35)`}>
-              <path d={SATELLITE_STROKES} filter="url(#landing-chalk)" {...chalkStroke} strokeWidth={1.2} />
+              <path d={SATELLITE_STROKES} filter={`url(#${ids.chalk})`} {...chalkStroke} strokeWidth={1.2} />
             </g>
           </g>
         </g>

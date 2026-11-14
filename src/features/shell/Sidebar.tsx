@@ -1,5 +1,6 @@
 /**
- * Narrow settings rail: visual effects switch (full / low performance),
+ * Narrow settings rail: project logo (the landing window's, at rest), visual
+ * effects switch (full / low performance),
  * language, and (bottom, round settings button) the landing window with the
  * preferences.
  */
@@ -7,6 +8,7 @@
 import { useI18n } from '../../i18n/context';
 import { LOCALES } from '../../i18n/messages';
 import { usePreferences } from '../../preferences/context';
+import { LandingLogo } from './LandingLogo';
 
 /**
  * Settings cog for a 24×24 box: square teeth around a ring with a hole
@@ -43,7 +45,7 @@ export function Sidebar() {
   return (
     <nav className="sidebar" aria-label={settings.heading}>
       <div className="sidebar__logo" aria-hidden="true">
-        ☾
+        <LandingLogo animated={false} />
       </div>
 
       <button
