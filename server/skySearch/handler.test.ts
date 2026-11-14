@@ -71,10 +71,12 @@ describe('sky-search handler', () => {
     expect(body.site.id).toBe('nobile-rim-1');
     expect(body.source).toMatchObject({ apiVersion: '1.2', planetaryEphemeris: 'DE441', observerFrame: 'MEAN_ME (high precision)' });
     expect(body.method.terrainModeled).toBe(false);
-    // Only the Sun has a condition, so the Earth is never requested; steps go hours -> minutes -> seconds.
+    // Discovery uses hours -> minutes -> seconds; seven hourly second tables
+    // then certify that no closer whole second matches. Only the Sun is queried.
     expect(fetch.calls.every((url) => url.includes('COMMAND=%2710%27'))).toBe(true);
-    expect(fetch.calls.map((url) => new URL(url).searchParams.get('STEP_SIZE'))).toEqual(["'1h'", "'60'", "'60'"]);
-    expect(body.horizonsRequests).toBe(3);
+    expect(fetch.calls.map((url) => new URL(url).searchParams.get('STEP_SIZE'))).toEqual(["'1h'", "'60'", "'60'", ...Array<string>(7).fill("'3600'")]);
+    expect(body.horizonsRequests).toBe(10);
+    expect(body.outcome.complete).toBe(true);
   });
 
   it('queries both bodies when both have conditions', async () => {

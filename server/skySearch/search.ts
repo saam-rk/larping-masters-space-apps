@@ -6,16 +6,18 @@
  *   1. Sample the conditioned bodies every hour, first within ±32 days of the
  *      reference, then out to the full window if nothing matched closer.
  *   2. For each hour, interpolate linearly between its two samples, with the
- *      ranges widened by a safety margin, to keep only hours in which every
- *      condition could hold. The margin (0.002°) is larger than the error of
- *      linear interpolation over one hour for the slow motion of the Sun and
- *      the Earth in the lunar sky (on the order of 1e-5° to 1e-3°).
+ *      ranges widened by a discovery margin (0.002°), to prioritize hours in
+ *      which every condition is likely to hold. This is not an error bound:
+ *      azimuth/elevation can be strongly nonlinear near a zenith or nadir.
  *   3. Resample each candidate hour every minute and repeat with a smaller
  *      margin, then resample each candidate minute every second.
  *   4. A second matches only if the Horizons values printed for that second,
- *      rounded to 4 decimals, satisfy every range. The closest such second is
- *      the answer; candidates are visited by increasing distance and the search
- *      stops once no remaining candidate can be closer.
+ *      rounded to 4 decimals, satisfy every range. Interpolation is only a
+ *      discovery heuristic: near a zenith/nadir it can miss an interior peak.
+ *   5. Before claiming completeness, sample every whole second of any coarse
+ *      interval that could contain a closer match (or any match if none was
+ *      found). The budget may prevent certification, never justify a false
+ *      "no match" or "closest match" claim.
  *
  * Limits: a match window narrower than one second can fall between whole
  * seconds and be missed. Azimuth changes faster than 20° per hour (a body near
@@ -117,6 +119,7 @@ export async function searchSky(input: SearchInput, sampler: Sampler, limits: Se
   let searched: { startMs: number; endMs: number } | null = null;
   let best: { readonly timeMs: number; readonly values: SkySearchMatch['values'] } | null = null;
   let budgetHit = false;
+  const unverified: Candidate[] = [];
 
   const sample = async (startMs: number, stopMs: number, step: ObserverStep): Promise<SkySeries> => {
     if (samples >= limits.maxSamples || now() >= limits.deadlineMs) throw new BudgetExhausted();
@@ -146,18 +149,35 @@ export async function searchSky(input: SearchInput, sampler: Sampler, limits: Se
     for (const stage of searchStages(input)) {
       const coarse: Candidate[] = [];
       for (const [startMs, stopMs] of stage) {
-        const series = await sample(startMs, stopMs, { kind: 'hours', hours: COARSE_STEP_MINUTES / 60 });
+        const series = await sample(startMs, stopMs, stopMs - startMs < HOUR_MS
+          ? { kind: 'intervals', count: 1 }
+          : { kind: 'hours', hours: COARSE_STEP_MINUTES / 60 });
+        checkSeconds(series);
         const previous = searched as { startMs: number; endMs: number } | null;
         searched = {
           startMs: Math.min(previous?.startMs ?? startMs, startMs),
           endMs: Math.max(previous?.endMs ?? stopMs, stopMs),
         };
+        for (let i = 0; i + 1 < series.times.length; i += 1) {
+          const from = series.times[i] as number;
+          const to = series.times[i + 1] as number;
+          unverified.push({ startMs: from, stopMs: to, distanceMs: distanceTo(referenceMs, from, to) });
+        }
         coarse.push(...findCandidates(series, conditions, COARSE_MARGIN_DEG, referenceMs));
       }
+      // No whole second can be closer than the reference itself.
+      if (bestDistance() === 0) break;
       sortCandidates(coarse);
 
       for (const hour of coarse) {
         if (!worthVisiting(hour)) break;
+        // A clipped boundary interval may not contain a whole number of
+        // minutes. Sample its whole seconds directly rather than creating a
+        // fractional-second grid with a unitless Horizons step.
+        if ((hour.stopMs - hour.startMs) % MINUTE_MS !== 0) {
+          checkSeconds(await sample(hour.startMs, hour.stopMs, { kind: 'intervals', count: intervalsOf(hour, SECOND_MS) }));
+          continue;
+        }
         const minutes = await sample(hour.startMs, hour.stopMs, { kind: 'intervals', count: intervalsOf(hour, MINUTE_MS) });
         const minuteCandidates = sortCandidates(findCandidates(minutes, conditions, FINE_MARGIN_DEG, referenceMs));
         for (const minute of minuteCandidates) {
@@ -167,6 +187,18 @@ export async function searchSky(input: SearchInput, sampler: Sampler, limits: Se
       }
       // Later stages are farther away than anything found in this one.
       if (best !== null) break;
+    }
+
+    // An interpolated rejection is not evidence that all the whole seconds
+    // inside an interval fail. Verify every interval that could change the
+    // answer, in true temporal-distance order, before certifying completeness.
+    if (bestDistance() !== 0) {
+      for (const interval of sortCandidates(unverified)) {
+        if (!worthVisiting(interval)) break;
+        checkSeconds(await sample(interval.startMs, interval.stopMs, {
+          kind: 'intervals', count: intervalsOf(interval, SECOND_MS),
+        }));
+      }
     }
   } catch (cause) {
     if (cause instanceof UpstreamFailed) return { ok: false, error: cause.apiError };
@@ -199,8 +231,8 @@ function sortCandidates(candidates: Candidate[]): Candidate[] {
 
 /**
  * Time spans to sample, in order: the near window, then the rest of the full
- * window. Each span starts and ends a whole number of hours from the
- * reference, so every grid (hours, minutes, seconds) contains the reference.
+ * window. Interior spans use the reference's hourly grid; partial hours at
+ * the supported boundaries are kept separately so no valid seconds are lost.
  */
 export function searchStages(input: SearchInput): Interval[][] {
   const { referenceMs: t0, direction, supportedRange } = input;
@@ -218,13 +250,19 @@ export function searchStages(input: SearchInput): Interval[][] {
   const alignDown = (ms: number) => t0 + Math.floor((ms - t0) / HOUR_MS) * HOUR_MS;
   const low = alignUp(supportedRange.startMs);
   const high = alignDown(supportedRange.endMs);
-  return stages
-    .map((stage) =>
-      stage
-        .map(([start, stop]): Interval => [Math.max(start, low), Math.min(stop, high)])
-        .filter(([start, stop]) => stop > start),
-    )
-    .filter((stage) => stage.length > 0);
+  return stages.map((stage) => stage.flatMap(([start, stop]): Interval[] => {
+    const from = Math.max(start, supportedRange.startMs);
+    const to = Math.min(stop, supportedRange.endMs);
+    if (from > to) return [];
+    if (from === to) return [[from, to]];
+    const innerStart = Math.max(from, low);
+    const innerStop = Math.min(to, high);
+    const spans: Interval[] = [];
+    if (from < innerStart) spans.push([from, Math.min(innerStart, to)]);
+    if (innerStart < innerStop) spans.push([innerStart, innerStop]);
+    if (innerStop < to && innerStop >= from) spans.push([innerStop, to]);
+    return spans;
+  })).filter((stage) => stage.length > 0);
 }
 
 function valuesAt(series: SkySeries, index: number): { [K in SkyTarget]?: number | null } {
@@ -253,9 +291,9 @@ export function findCandidates(series: SkySeries, conditions: SkyConditions, mar
       if (feasible.length === 0) break;
     }
     if (feasible.length === 0) continue;
-    const distanceMs = Math.min(
-      ...feasible.map(([s0, s1]) => distanceTo(referenceMs, startMs + s0 * (stopMs - startMs), startMs + s1 * (stopMs - startMs))),
-    );
+    // Interpolated fractions can exclude the actual matching second. Only
+    // the full interval gives a valid lower bound for ordering and pruning.
+    const distanceMs = distanceTo(referenceMs, startMs, stopMs);
     candidates.push({ startMs, stopMs, distanceMs });
   }
   return candidates;

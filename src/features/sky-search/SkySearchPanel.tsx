@@ -57,6 +57,8 @@ export function SkySearchPanel({ selection, onShow }: SkySearchPanelProps) {
   const [state, setState] = useState<SearchState>({ status: 'idle' });
   const inFlight = useRef<AbortController | null>(null);
 
+  const current = useRef({ selection, onShow });
+  useEffect(() => { current.current = { selection, onShow }; }, [selection, onShow]);
   useEffect(() => () => inFlight.current?.abort(), []);
 
   const reading = readForm(inputs, selection);
@@ -90,7 +92,9 @@ export function SkySearchPanel({ selection, onShow }: SkySearchPanelProps) {
         return;
       }
       setState({ status: 'done', data: result.data });
-      if (result.data.outcome.status === 'found') onShow(result.data.outcome.match.utc);
+      if (result.data.outcome.status === 'found' && sameSite(current.current.selection, result.data)) {
+        current.current.onShow(result.data.outcome.match.utc);
+      }
     });
   }
 

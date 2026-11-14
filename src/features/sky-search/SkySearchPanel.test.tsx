@@ -165,6 +165,21 @@ describe('SkySearchPanel', () => {
     expect(onShow).toHaveBeenCalledTimes(1);
   });
 
+  it('does not show a background result after the selected site changes', async () => {
+    let resolve!: (response: Response) => void;
+    vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>((done) => { resolve = done; })));
+    const { field, submit, onShow } = mount();
+    type(field('Earth, Elevation, minimum'), '1.2345');
+    act(() => submit().click());
+    const otherSite = findSite('shackleton-rim');
+    const nextOnShow = vi.fn();
+    act(() => root.render(<SkySearchPanel selection={{ ...selection, siteId: otherSite.id, latitudeDeg: otherSite.latitudeDeg, longitudeEastDeg: otherSite.longitudeEastDeg }} onShow={nextOnShow} />));
+    await act(async () => resolve(new Response(JSON.stringify(FOUND), { status: 200 })));
+    expect(onShow).not.toHaveBeenCalled();
+    expect(nextOnShow).not.toHaveBeenCalled();
+    expect(container.textContent).toContain('2026-11-16 02:19:35 UTC');
+  });
+
   it('reports a search without matches', async () => {
     const notFound = { ...FOUND, outcome: { status: 'not-found', reason: 'no-match' } };
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(notFound), { status: 200 })));

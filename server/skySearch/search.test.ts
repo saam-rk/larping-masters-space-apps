@@ -24,7 +24,7 @@ function modelSampler(targets: readonly SkyTarget[] = ['sunAzimuth', 'sunElevati
   const calls: { startMs: number; stopMs: number; step: ObserverStep }[] = [];
   const sampler: Sampler = async (startMs, stopMs, step) => {
     calls.push({ startMs, stopMs, step });
-    const stepMs = step.kind === 'hours' ? step.hours * HOUR : (stopMs - startMs) / step.count;
+    const stepMs = startMs === stopMs ? 1000 : step.kind === 'hours' ? step.hours * HOUR : (stopMs - startMs) / step.count;
     const times: number[] = [];
     for (let time = startMs; time <= stopMs + 1e-6; time += stepMs) times.push(Math.round(time));
     const values = Object.fromEntries(
@@ -86,28 +86,83 @@ describe('searchSky', () => {
     expect(value >= 359.5 || value <= 0.5).toBe(true);
   });
 
-  it('combines conditions on both bodies', async () => {
+  it('combines conditions on both bodies without certifying unverified closer intervals', async () => {
     const conditions = { sunElevation: { min: 1, max: 1.5 }, earthElevation: { min: 2, max: 3 } };
     const result = await searchSky(input(conditions), modelSampler(), LIMITS);
     if (!result.ok || result.outcome.status !== 'found') throw new Error('expected a match');
     expect(matchesConditions(conditions, valuesAt(Date.parse(result.outcome.match.utc)))).toBe(true);
-    expect(result.outcome.complete).toBe(true);
+    expect(result.outcome.complete).toBe(false);
   });
 
-  it('reports no match after sampling the whole window', async () => {
+  it('reports no match only after checking every whole second of the supported window', async () => {
     const sampler = modelSampler(['sunElevation']);
-    const result = await searchSky(input({ sunElevation: { min: 40, max: 50 } }), sampler, LIMITS);
+    const supportedRange = { startMs: T0 - HOUR, endMs: T0 + HOUR };
+    const result = await searchSky({ ...input({ sunElevation: { min: 40, max: 50 } }), supportedRange }, sampler, LIMITS);
     expect(result).toEqual({
       ok: true,
       outcome: { status: 'not-found', reason: 'no-match' },
-      searched: { startMs: T0 - 366 * DAY, endMs: T0 + 366 * DAY },
+      searched: supportedRange,
     });
-    expect(sampler.calls.every((call) => call.step.kind === 'hours')).toBe(true);
+    expect(sampler.calls.filter(call => call.step.kind === 'intervals')).toHaveLength(2);
+  });
+
+  it('does not turn heuristic rejections into a false no-match when verification exceeds the budget', async () => {
+    const result = await searchSky(input({ sunElevation: { min: 40, max: 50 } }), modelSampler(), { ...LIMITS, maxSamples: 4 });
+    expect(result.ok && result.outcome).toEqual({ status: 'not-found', reason: 'budget' });
+  });
+
+  it('finds an interior near-zenith peak rejected by hourly interpolation', async () => {
+    // Regression shape from JPL Horizons, DE441, AIRLESS, quantity 4:
+    // lat=-1.52, lon=-0.25, 2026-11-24 at 10:00 / 10:30 / 11:00 UTC.
+    const referenceMs = Date.parse('2026-11-24T10:00:00Z');
+    const elevations = [89.763376, 89.983830, 89.731334];
+    const sampler: Sampler = async (start, stop, step) => {
+      const count = step.kind === 'hours' ? (stop - start) / HOUR : step.count;
+      const times = Array.from({ length: count + 1 }, (_, i) => start + i * (stop - start) / count);
+      const values = times.map(time => {
+        const x = (time - referenceMs) / HOUR;
+        return (elevations[0] as number) + 0.913858 * x - 0.9459 * x * x;
+      });
+      return { ok: true, series: { times, values: { sunElevation: values } } };
+    };
+    const conditions = { sunElevation: { min: 89.98, max: 89.99 } };
+    expect(segmentFeasibility('elevation', conditions.sunElevation, elevations[0]!, elevations[2]!, 0.002)).toEqual([]);
+    const result = await searchSky({ ...input(conditions, 'after', referenceMs), supportedRange: { startMs: referenceMs, endMs: referenceMs + HOUR } }, sampler, LIMITS);
+    expect(result.ok && result.outcome).toMatchObject({ status: 'found', complete: true });
+    if (!result.ok || result.outcome.status !== 'found') return;
+    expect(matchesConditions(conditions, result.outcome.match.values)).toBe(true);
+    expect(result.outcome.match.offsetSeconds).toBeGreaterThan(0);
+    expect(result.outcome.match.offsetSeconds).toBeLessThan(1800);
+  });
+
+  it('marks a distant match incomplete when closer rejected intervals remain unverified', async () => {
+    const result = await searchSky(input({ sunAzimuth: { min: 80, max: 80 } }, 'after'), modelSampler(), { ...LIMITS, maxSamples: 3 });
+    expect(result.ok && result.outcome).toMatchObject({ status: 'found', complete: false });
   });
 
   it('says when the request budget ran out instead of claiming there is no match', async () => {
     const result = await searchSky(input({ sunAzimuth: { min: 80, max: 80 } }, 'after'), modelSampler(), { ...LIMITS, maxSamples: 1 });
     expect(result.ok && result.outcome).toEqual({ status: 'not-found', reason: 'budget' });
+  });
+
+  it('includes the reference at either supported boundary for a one-sided search', async () => {
+    for (const [reference, direction] of [[SUPPORTED.startMs, 'before'], [SUPPORTED.endMs, 'after']] as const) {
+      const result = await searchSky(input({ sunElevation: { min: -90, max: 90 } }, direction, reference), modelSampler(), LIMITS);
+      expect(result.ok && result.outcome).toMatchObject({ status: 'found', match: { utc: new Date(reference).toISOString().replace('.000Z', 'Z'), offsetSeconds: 0 } });
+    }
+  });
+
+  it('finds matches in the partial hour next to the supported boundary', async () => {
+    const reference = SUPPORTED.startMs + HOUR + 37_000;
+    const target = SUPPORTED.startMs + 10_000;
+    const sampler: Sampler = async (start, stop, step) => {
+      const count = start === stop ? 0 : step.kind === 'intervals' ? step.count : (stop - start) / HOUR;
+      const times = Array.from({ length: count + 1 }, (_, i) => count === 0 ? start : start + i * (stop - start) / count);
+      expect(times.every(t => t % 1000 === 0)).toBe(true);
+      return { ok: true, series: { times, values: { sunElevation: times.map(t => (t - target) / HOUR) } } };
+    };
+    const result = await searchSky(input({ sunElevation: { min: 0, max: 0 } }, 'before', reference), sampler, LIMITS);
+    expect(result.ok && result.outcome).toMatchObject({ status: 'found', match: { utc: '2000-01-01T00:00:10Z' } });
   });
 
   it('propagates upstream failures', async () => {
@@ -131,10 +186,11 @@ describe('searchStages', () => {
     expect(searchStages(input({}, 'before'))).toEqual([[[T0 - 32 * DAY, T0]], [[T0 - 366 * DAY, T0 - 32 * DAY]]]);
   });
 
-  it('clips to the supported range on whole hours from the reference', () => {
+  it('keeps the partial hour at the supported boundary', () => {
     const reference = Date.parse('2000-01-05T00:30:00Z');
     const [first] = searchStages(input({}, 'nearest', reference));
-    expect(first?.[0]?.[0]).toBe(Date.parse('2000-01-01T00:30:00Z'));
+    expect(first?.[0]).toEqual([SUPPORTED.startMs, Date.parse('2000-01-01T00:30:00Z')]);
+    expect(first?.[1]?.[0]).toBe(Date.parse('2000-01-01T00:30:00Z'));
   });
 });
 
@@ -165,7 +221,7 @@ describe('findCandidates', () => {
     const candidates = findCandidates(series, { sunElevation: { min: 1.5, max: 1.5 } }, 0, T0);
     expect(candidates).toHaveLength(1);
     expect(candidates[0]?.startMs).toBe(T0 + HOUR);
-    // 1.5° is reached halfway through the second hour; the rounding tolerance moves it by < 1 s.
-    expect(Math.abs((candidates[0]?.distanceMs ?? 0) - 1.5 * HOUR)).toBeLessThan(1000);
+    // The full interval, not the interpolated crossing, bounds true distance.
+    expect(candidates[0]?.distanceMs).toBe(HOUR);
   });
 });

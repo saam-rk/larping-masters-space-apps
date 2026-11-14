@@ -6,7 +6,7 @@
 
 import type { BodyId } from '../../shared/ephemeris.js';
 import { SKY_TARGETS, SKY_TARGET_INFO, type SkySearchSource, type SkyTarget } from '../../shared/skySearch.js';
-import { fetchObserverSeries, type HorizonsClientOptions } from '../horizons/client.js';
+import { fetchObserverSeries, fetchObserverTable, type HorizonsClientOptions } from '../horizons/client.js';
 import { HORIZONS_API_URL } from '../horizons/query.js';
 import type { Sampler, SkySeries } from './search.js';
 
@@ -39,11 +39,15 @@ export function createHorizonsSampler(
 
     for (const body of bodies) {
       requests += 1;
-      const result = await fetchObserverSeries(
-        { body, ...site, start: new Date(startMs), stop: new Date(stopMs), step },
-        options,
-        signal,
-      );
+      // Horizons range tables require STOP_TIME > START_TIME. A one-sided
+      // search at the supported boundary still includes that single instant.
+      const result = startMs === stopMs
+        ? await sampleInstant(body, startMs)
+        : await fetchObserverSeries(
+          { body, ...site, start: new Date(startMs), stop: new Date(stopMs), step },
+          options,
+          signal,
+        );
       if (!result.ok) return result;
       const { series } = result;
       if (times !== null && !sameTimes(times, series.times)) {
@@ -67,6 +71,22 @@ export function createHorizonsSampler(
     const merged: SkySeries = { times: times ?? [], values };
     return { ok: true, series: merged };
   };
+
+  async function sampleInstant(body: BodyId, timeMs: number) {
+    const result = await fetchObserverTable({ body, ...site, instant: new Date(timeMs) }, options, signal);
+    if (!result.ok) return result;
+    const { table } = result;
+    return {
+      ok: true as const,
+      retrievedAt: result.retrievedAt,
+      series: {
+        ...table,
+        times: [timeMs],
+        azimuthDeg: [table.observation.azimuthDeg],
+        elevationDeg: [table.observation.elevationDeg],
+      },
+    };
+  }
 
   return { sample, requests: () => requests, source: () => source };
 }

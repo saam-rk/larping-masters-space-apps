@@ -163,8 +163,8 @@ export type SkySearchOutcome =
       readonly status: 'found';
       readonly match: SkySearchMatch;
       /**
-       * True when every closer candidate was checked, so no closer whole second
-       * matches within the method's limits. False when the request budget ran
+       * True when every closer whole second was checked, including intervals
+       * rejected by interpolation. False when the request budget ran
        * out first: the match is real, but a closer one may exist.
        */
       readonly complete: boolean;
