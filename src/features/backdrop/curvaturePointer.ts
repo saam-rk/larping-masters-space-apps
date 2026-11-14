@@ -28,7 +28,7 @@
 
 import { barrelShift } from './curvature';
 
-const INTERACTIVE = 'a[href], button, input, select, textarea, label, summary, [role="button"]';
+const INTERACTIVE = 'a[href], button, input, select, textarea, label, summary, [role="button"], [role="spinbutton"]';
 
 /** Input types that open a picker instead of taking typed text on click. */
 const PICKER_TYPES = new Set(['date', 'time', 'datetime-local', 'month', 'week', 'color']);

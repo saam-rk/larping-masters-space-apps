@@ -12,7 +12,7 @@
  * pressable to query again).
  */
 
-import { useEffect, useId, useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 import { CUSTOM_SITE_ID, findSite, REFERENCE_SITES, type SiteId } from '../../../shared/sites';
 import type { EphemerisSelection } from '../../api/ephemerisClient';
 import { formatCoordinates } from '../../format';
@@ -22,7 +22,17 @@ import { prefersReducedMotion } from '../../preferences/preferences';
 import { Box } from '../../ui/Box';
 import { NumberWheel } from '../../ui/NumberWheel';
 import { formatCoordinateQuery, parseCoordinateQuery, type CoordinateQuery } from './coordinateQuery';
-import { changeDatePart, changeTimePart, currentUtcMinute, daysInMonth, MAX_YEAR, MIN_YEAR } from './dateTimeWheel';
+import { DateTimeEntry } from './DateTimeEntry';
+import {
+  changeDatePart,
+  changeTimePart,
+  currentUtcMinute,
+  daysInMonth,
+  fieldParts,
+  MAX_YEAR,
+  MIN_YEAR,
+  type DateTimePart,
+} from './dateTimeWheel';
 import {
   fieldsToUtc,
   formatUtcMinute,
@@ -68,35 +78,55 @@ export function ConfigPanel({
   const timeFieldId = useId();
   const zoneFieldId = useId();
   const timeHintId = useId();
+  const wheelHintId = useId();
+  const wheelIdBase = useId();
+  const entryId = useId();
   const [searchInput, setSearchInput] = useState(() =>
     formatCoordinateQuery(selection.latitudeDeg, selection.longitudeEastDeg),
   );
   const [zone, setZone] = useState<TimeZoneMode>('utc');
   const [fields, setFields] = useState<DateTimeFields>(() => utcToFields(selection.utc, 'utc'));
-  const [livePulse, setLivePulse] = useState(0);
-  const [scrambling, setScrambling] = useState(false);
-  const [year, month, day] = fields.date.split('-').map(Number) as [number, number, number];
-  const [hour, minute] = fields.time.split(':').map(Number) as [number, number];
+  /** LIVE and the exact entry roll every wheel from `from` to the new fields. */
+  const [roll, setRoll] = useState<{ id: number; from: DateTimeFields }>(() => ({ id: 0, from: fields }));
+  const [entryPart, setEntryPart] = useState<DateTimePart | null>(null);
+  const { day, month, year, hour, minute } = fieldParts(fields);
+  const rollFrom = fieldParts(roll.from);
   const query = parseCoordinateQuery(searchInput);
   const parsedTime = fieldsToUtc(fields, zone, selection.utc);
   const custom = selection.siteId === CUSTOM_SITE_ID;
   const valid = parsedTime.ok && isUsable(query);
   const canUpdate = valid && !loading;
 
-  useEffect(() => {
-    if (livePulse === 0) return;
-    const timer = window.setTimeout(() => setScrambling(false), 330);
-    return () => window.clearTimeout(timer);
-  }, [livePulse]);
+  const wheelId = (part: DateTimePart) => `${wheelIdBase}-${part}`;
+
+  /** Sets every wheel at once; with effects on, each one rolls to its new value. */
+  function rollTo(next: DateTimeFields) {
+    if (animated) setRoll((current) => ({ id: current.id + 1, from: fields }));
+    setFields(next);
+  }
 
   function handleLive() {
     const utc = currentUtcMinute();
-    setFields(utcToFields(utc, zone));
+    setEntryPart(null);
+    rollTo(utcToFields(utc, zone));
     onUtcChange(utc);
-    if (animated) {
-      setScrambling(true);
-      setLivePulse((pulse) => pulse + 1);
-    }
+  }
+
+  function handleEntryApply(next: DateTimeFields): string | null {
+    const parsed = fieldsToUtc(next, zone, selection.utc);
+    if (!parsed.ok) return parsed.reason === 'nonexistent-local-time' ? config.nonexistentTime : config.invalidTime;
+    const part = entryPart;
+    setEntryPart(null);
+    rollTo(next);
+    onUtcChange(parsed.iso);
+    if (part) document.getElementById(wheelId(part))?.focus({ preventScroll: true });
+    return null;
+  }
+
+  function handleEntryClose(restoreFocus: boolean) {
+    const part = entryPart;
+    setEntryPart(null);
+    if (restoreFocus && part) document.getElementById(wheelId(part))?.focus({ preventScroll: true });
   }
 
   function handlePresetChange(siteId: SiteId) {
@@ -128,6 +158,7 @@ export function ConfigPanel({
 
   /** Switching zones keeps the same instant: the fields are rewritten in the new zone. */
   function handleZoneChange(next: TimeZoneMode) {
+    setEntryPart(null);
     if (parsedTime.ok) setFields(utcToFields(parsedTime.iso, next));
     setZone(next);
   }
@@ -268,15 +299,19 @@ export function ConfigPanel({
               ] as const).map(({ part, value, min, max }) => (
                 <NumberWheel
                   key={part}
+                  id={wheelId(part)}
                   label={config.wheels[part]}
                   value={value}
                   min={min}
                   max={max}
                   wrap={part !== 'year'}
                   animated={animated}
-                  scrambling={scrambling}
                   invalid={!parsedTime.ok}
-                  describedBy={timeHintId}
+                  describedBy={`${timeHintId} ${wheelHintId}`}
+                  rollId={roll.id}
+                  rollFrom={rollFrom[part]}
+                  controls={entryPart ? entryId : undefined}
+                  onOpen={() => setEntryPart(part)}
                   onChange={(value) => handleFieldsChange({ date: changeDatePart(fields.date, part, value) })}
                 />
               ))}
@@ -293,19 +328,36 @@ export function ConfigPanel({
               ] as const).map(({ part, value, index, max }) => (
                 <NumberWheel
                   key={part}
+                  id={wheelId(part)}
                   label={config.wheels[part]}
                   value={value}
                   min={0}
                   max={max}
                   animated={animated}
-                  scrambling={scrambling}
                   invalid={!parsedTime.ok}
-                  describedBy={timeHintId}
+                  describedBy={`${timeHintId} ${wheelHintId}`}
+                  rollId={roll.id}
+                  rollFrom={rollFrom[part]}
+                  controls={entryPart ? entryId : undefined}
+                  onOpen={() => setEntryPart(part)}
                   onChange={(value) => handleFieldsChange({ time: changeTimePart(fields, index, value) })}
                 />
               ))}
             </div>
           </div>
+          <span id={wheelHintId} className="visually-hidden">
+            {config.wheelEntryHint}
+          </span>
+          {entryPart && (
+            <DateTimeEntry
+              id={entryId}
+              fields={fields}
+              focusPart={entryPart}
+              zoneName={zone === 'utc' ? 'UTC' : (localZoneId() ?? localOffsetLabel(selection.utc))}
+              onApply={handleEntryApply}
+              onClose={handleEntryClose}
+            />
+          )}
         </div>
 
         <label className="search-field__label" htmlFor={zoneFieldId}>
