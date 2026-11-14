@@ -1,0 +1,40 @@
+{
+  "passedChecks": [
+    "surf: SHA256",
+    "surf: finite window",
+    "surf: containing cell",
+    "bilinear vs previous audit",
+    "slp: SHA256",
+    "slp: finite window",
+    "slp: containing cell",
+    "PROJ vs analytic stereographic: 200 cases",
+    "smooth-sphere tangent",
+    "100 m high at 1 km is above horizontal",
+    "sphere below tangent plane",
+    "raising observer lowers obstruction angle",
+    "inherited ridge geometry"
+  ],
+  "projectionCases": 200,
+  "maxProjectionResidualM": 1.6463612699567982e-10,
+  "bilinearGroundM": 5946.899465547405,
+  "retained25mWindow": {
+    "minimumCellHeightM": 5942.9208984375,
+    "maximumCellHeightM": 5949.17138671875,
+    "rangeM": 6.25048828125,
+    "note": "5 by 5 cell values, 5 m spacing; not a continuous-surface bound or a centered circular neighborhood."
+  },
+  "ridgeUsingInheritedHeight": {
+    "distanceM": 3739.941390250268,
+    "bearingDeg": 320.81578818011,
+    "angleDeg": 6.557183726517228,
+    "heightSource": "LUNAR_RELIABILITY_AUDIT.md section 4.5; NOT freshly read ridge terrain"
+  },
+  "conditionalFarTerrainBound": {
+    "distanceM": 400000,
+    "assumedMaximumTerrainHeightM": 12000,
+    "observerAltitudeM": 5948.899465547405,
+    "maximumAngleAtCutoffDeg": -5.7371516118210755,
+    "condition": "Illustration only: 12000 m is an assumed cap, not an established bound for this dataset or unresolved terrain. If rMax >= rObserver and terrain is bounded by rMax, its upper angle decreases with central angle from cutoff to antipode."
+  },
+  "unverified": "Full profiles, physical accuracy, whole-cap terrain validity, uncertainty propagation and disk visibility remain unverified."
+}
