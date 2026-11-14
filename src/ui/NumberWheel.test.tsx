@@ -29,7 +29,7 @@ function mountWheel(overrides: Partial<WheelProps> = {}) {
   const onChange = vi.fn();
   const props: WheelProps = {
     label: 'Minute', value: 30, min: 0, max: 59,
-    animated: false, scrambling: false, invalid: false,
+    animated: false, invalid: false,
     describedBy: 'time-hint', ...overrides,
     onChange,
   };
@@ -178,30 +178,30 @@ describe('NumberWheel component interactions', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it('steps neighboring rows on click while keeping focus on the stable spinbutton', () => {
-    const { control, value } = mountWheel();
-    const neighbor = (index: number) => control.querySelectorAll<HTMLButtonElement>('button')[index]!;
-    expect(neighbor(0).tabIndex).toBe(-1);
-    act(() => neighbor(0).click());
-    expect(value()).toBe(29);
-    expect(document.activeElement).toBe(control);
-    act(() => neighbor(1).click());
+  it('opens the exact entry on a click or Enter/Space without changing the value', () => {
+    const onOpen = vi.fn();
+    const { control, value, onChange } = mountWheel({ onOpen });
+    act(() => control.click());
+    expect(onOpen).toHaveBeenCalledTimes(1);
+    expect(key(control, 'Enter').defaultPrevented).toBe(true);
+    key(control, ' ');
+    expect(onOpen).toHaveBeenCalledTimes(3);
     expect(value()).toBe(30);
-    expect(document.activeElement).toBe(control);
+    expect(onChange).not.toHaveBeenCalled();
   });
 
-  it('disables the neighboring row at a non-cyclic boundary', () => {
-    const { control, onChange } = mountWheel({ label: 'Year', value: 2000, min: 2000, max: 2099, wrap: false });
-    const previous = control.querySelector<HTMLButtonElement>('button')!;
-    expect(previous.disabled).toBe(true);
-    act(() => previous.click());
-    expect(onChange).not.toHaveBeenCalled();
+  it('shows the neighboring rows as decoration, blank past a non-cyclic boundary', () => {
+    const { control } = mountWheel({ label: 'Year', value: 2000, min: 2000, max: 2099, wrap: false });
+    const rows = () => [...control.querySelectorAll('.number-wheel__row')].map((row) => row.textContent);
+    expect(control.querySelector('button')).toBeNull();
+    expect(rows()).toEqual(['\u00a0', '2000', '2001']);
     key(control, 'End');
-    expect(control.querySelectorAll<HTMLButtonElement>('button')[1]!.disabled).toBe(true);
+    expect(rows()).toEqual(['2098', '2099', '\u00a0']);
   });
 
   it('steps during a vertical drag, releases capture and suppresses the trailing click', () => {
-    const { control, value, onChange, setPointerCapture, releasePointerCapture } = mountWheel();
+    const onOpen = vi.fn();
+    const { control, value, onChange, setPointerCapture, releasePointerCapture } = mountWheel({ onOpen });
     pointer(control, 'pointerdown', 100);
     expect(document.activeElement).toBe(control);
     pointer(control, 'pointermove', 80);
@@ -215,12 +215,13 @@ describe('NumberWheel component interactions', () => {
     expect(value()).toBe(31);
     pointer(control, 'pointerup', 75);
     expect(releasePointerCapture).toHaveBeenCalledWith(1);
-    const next = control.querySelectorAll<HTMLButtonElement>('button')[1]!;
-    expect(dispatch(next, new MouseEvent('click', { bubbles: true, cancelable: true })).defaultPrevented).toBe(true);
+    expect(onOpen).not.toHaveBeenCalled();
+    act(() => control.click()); // The click that ends the drag does not open the entry.
+    expect(onOpen).not.toHaveBeenCalled();
     expect(value()).toBe(31);
     expect(onChange).toHaveBeenCalledTimes(3);
-    act(() => next.click()); // A later deliberate click is not suppressed.
-    expect(value()).toBe(32);
+    act(() => control.click()); // A later deliberate click does.
+    expect(onOpen).toHaveBeenCalledTimes(1);
   });
 
   it('ignores non-primary presses and stops a cancelled or abandoned gesture', () => {
@@ -243,5 +244,34 @@ describe('NumberWheel component interactions', () => {
     act(() => root.render(null));
     expect(turn(control, 30, 100).defaultPrevented).toBe(false);
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('rolls unit by unit from the previous value to a value set from outside, then settles', () => {
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => frames.push(callback));
+    vi.stubGlobal('cancelAnimationFrame', vi.fn());
+    const render = (value: number, rollId: number, animated = true) => act(() => root.render(
+      <NumberWheel label="Day" value={value} min={1} max={31} animated={animated} invalid={false}
+        describedBy="hint" rollId={rollId} rollFrom={12} onChange={vi.fn()} />,
+    ));
+    const frame = (now: number) => act(() => frames.shift()!(now));
+    const shown = () => [...container.querySelectorAll('.number-wheel__row')].map((row) => row.textContent);
+    render(12, 0);
+    render(4, 1);
+    const control = container.querySelector('[role="spinbutton"]')!;
+    expect(control.getAttribute('aria-valuenow')).toBe('4'); // The real value is exposed at once.
+    expect(shown()).toEqual(['11', '12', '13', '14']); // Still on 12: the roll counts down from here.
+    frame(0);
+    frame(150);
+    const middle = shown();
+    expect(Number(middle[1])).toBeLessThan(12);
+    expect(Number(middle[1])).toBeGreaterThanOrEqual(4);
+    frame(5000);
+    expect(shown()).toEqual(['03', '04', '05']);
+    expect(container.querySelector('.number-wheel__reel')!.getAttribute('data-animated')).toBe('false');
+    expect(frames).toHaveLength(0);
+    // Without effects the value changes at once.
+    render(20, 2, false);
+    expect(shown()).toEqual(['19', '20', '21']);
   });
 });

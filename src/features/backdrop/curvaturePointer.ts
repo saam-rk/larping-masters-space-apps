@@ -28,7 +28,7 @@
 
 import { barrelShift } from './curvature';
 
-const INTERACTIVE = 'a[href], button, input, select, textarea, label, summary, [role="button"]';
+const INTERACTIVE = 'a[href], button, input, select, textarea, label, summary, [role="button"], [role="spinbutton"]';
 
 /** Input types that open a picker instead of taking typed text on click. */
 const PICKER_TYPES = new Set(['date', 'time', 'datetime-local', 'month', 'week', 'color']);
@@ -167,6 +167,17 @@ function drawnPoint(clientX: number, clientY: number, frame: HTMLElement): { x: 
   const dy = clientY - rect.top - window.innerHeight / 2;
   const [shiftX, shiftY] = barrelShift(dx, dy, window.innerWidth, window.innerHeight);
   return { x: clientX + shiftX, y: clientY + shiftY };
+}
+
+/**
+ * Layout point drawn under a client point: the point itself unless the
+ * curved-glass filter is on. Lets a control that reacts to where it was
+ * pressed (e.g. the row of a number wheel) use the position the user sees.
+ */
+export function drawnPointerPosition(clientX: number, clientY: number): { x: number; y: number } {
+  const frame = frameElement();
+  if (document.documentElement.dataset.curve !== 'on' || !frame) return { x: clientX, y: clientY };
+  return drawnPoint(clientX, clientY, frame);
 }
 
 /** True when the page is not being drawn through the filter at this event. */

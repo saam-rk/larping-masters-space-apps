@@ -718,6 +718,7 @@ button {
 }
 
 .datetime {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
   gap: 0 0.65rem;
@@ -734,7 +735,7 @@ button {
 .datetime__wheels {
   display: grid;
   gap: 0.15rem;
-  padding: 0.25rem 0.15rem 0;
+  padding: 0.1rem 0.15rem 0;
   border: 1px solid var(--line-dim);
   background: var(--panel-solid);
 }
@@ -755,17 +756,19 @@ button {
 .number-wheel__label {
   display: block;
   color: var(--muted);
-  font-size: 0.65em;
+  font-size: 0.6em;
+  line-height: 1.1;
   text-transform: var(--title-case);
   letter-spacing: 0.04em;
 }
 
+/* Compact reel: three short rows, so the box fits without scrolling the controls. */
 .number-wheel__control {
-  --wheel-row: 2rem;
+  --wheel-row: 1.3rem;
   position: relative;
   height: calc(3 * var(--wheel-row));
   overflow: hidden;
-  cursor: ns-resize;
+  cursor: pointer;
   touch-action: pan-x;
   user-select: none;
   font-variant-numeric: tabular-nums;
@@ -781,6 +784,12 @@ button {
   pointer-events: none;
 }
 
+:where(:root:not([data-curve='on'])) .number-wheel__control:hover::before,
+.number-wheel__control[data-hover]::before,
+.number-wheel__control[data-open='true']::before {
+  border-color: var(--accent);
+}
+
 .number-wheel__control:focus-visible {
   outline-offset: -2px;
 }
@@ -793,41 +802,31 @@ button {
   position: relative;
 }
 
-.number-wheel__neighbor,
-.number-wheel__selected {
+.number-wheel__row {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: var(--wheel-row);
-  padding: 0;
   line-height: 1;
   white-space: nowrap;
 }
 
 .number-wheel__neighbor {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
   color: #69866e;
-  font-size: 0.85em;
-  text-shadow: none;
-  cursor: pointer;
+  font-size: 0.75em;
 }
 
-.number-wheel__neighbor:disabled {
-  cursor: default;
-}
-
-:where(:root:not([data-curve='on'])) .number-wheel__neighbor:not(:disabled):hover,
-.number-wheel__neighbor:not(:disabled)[data-hover] {
-  color: var(--text);
-  background: rgba(57, 255, 136, 0.05);
-}
-
-.number-wheel__selected {
+.number-wheel__selected,
+.number-wheel__row--rolling {
   color: var(--accent);
-  font-size: 1.3em;
+  font-size: 1.1em;
+}
+
+/* Odometer roll (LIVE, exact entry): `--roll-offset` is the fraction of a row travelled. */
+.number-wheel__reel--rolling {
+  transform: translateY(calc(var(--roll-offset, 0) * -1 * var(--wheel-row)));
+  will-change: transform;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -841,13 +840,121 @@ button {
 }
 
 @keyframes wheel-step-up {
-  from { transform: translateY(0.7rem); }
+  from { transform: translateY(0.45rem); }
   to { transform: translateY(0); }
 }
 
 @keyframes wheel-step-down {
-  from { transform: translateY(-0.7rem); }
+  from { transform: translateY(-0.45rem); }
   to { transform: translateY(0); }
+}
+
+/* Exact date and time dropdown, opened from a wheel; it overlays what is below the wheels. */
+.datetime-entry {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  right: 0;
+  margin: 0.75em 0 0;
+  background: var(--panel-solid);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.8),
+    0 10px 24px rgba(0, 0, 0, 0.75),
+    0 0 16px rgba(57, 255, 136, 0.18);
+}
+
+.datetime-entry .box__title {
+  font-size: 0.85em;
+}
+
+.datetime-entry .icon-button {
+  font-size: 0.8em;
+}
+
+.datetime-entry__fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  gap: 0 0.65rem;
+}
+
+.datetime-entry__group {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.datetime-entry__group--date {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.45fr);
+}
+
+.datetime-entry__group--time {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.datetime-entry__part {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.datetime-entry__label {
+  color: var(--muted);
+  font-size: 0.6em;
+  line-height: 1.1;
+  text-align: center;
+  text-transform: var(--title-case);
+  letter-spacing: 0.04em;
+}
+
+/* Separators sit in the gap between fields: "/" for the date, ":" for the time. */
+.datetime-entry__separator {
+  position: absolute;
+  bottom: 0.35rem;
+  left: -0.3rem;
+  transform: translateX(-50%);
+  color: var(--muted);
+}
+
+.datetime-entry__input {
+  width: 100%;
+  padding: 0.15rem 0.2rem;
+  text-align: center;
+}
+
+.datetime-entry .hint {
+  margin-top: 0.35rem;
+}
+
+.datetime-entry__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.45rem;
+}
+
+.datetime-entry__apply {
+  color: var(--accent);
+}
+
+:where(:root:not([data-curve='on'])) .datetime-entry__apply:hover,
+.datetime-entry__apply[data-hover],
+.datetime-entry__apply:focus-visible {
+  color: #000;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-fx='on'] .datetime-entry {
+    animation: dropdown-open 140ms ease-out;
+    transform-origin: top;
+  }
+}
+
+@keyframes dropdown-open {
+  from { opacity: 0; transform: scaleY(0.6); }
+  to { opacity: 1; transform: scaleY(1); }
 }
 
 .search-field__prompt {
