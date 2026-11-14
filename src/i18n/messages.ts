@@ -114,6 +114,10 @@ export interface Messages {
       /** Accessible name of the time zone wheel. */
       readonly zone: string;
     };
+    /** Screen-reader description of the wheels: how to open the exact picker. */
+    readonly wheelPickerHint: string;
+    /** Titles of the exact picker opened from each date wheel's label (the time is only set with its wheels). */
+    readonly picker: { readonly day: string; readonly month: string; readonly year: string };
     readonly timeZone: string;
     /** Option for UTC, the time standard NASA uses for launches. */
     readonly zoneUtc: string;
@@ -282,7 +286,8 @@ const es: Messages = {
     dateTime: 'Fecha y hora',
     dateTimeInfo: [
       'Fecha y hora entre 2000 y 2099, con la zona horaria que elijas.',
-      'Gira las ruletas con la rueda del ratón, desliza verticalmente o pulsa el número anterior o siguiente. Con el teclado, usa las flechas, RePág/AvPág, Inicio/Fin o escribe un número.',
+      'Gira las ruletas con la rueda del ratón, deslizando verticalmente (con impulso) o pulsando el número de arriba o de abajo. Con el teclado, usa las flechas, RePág/AvPág, Inicio/Fin o escribe un número.',
+      'Para elegir una fecha exacta, pulsa el nombre encima de una ruleta de la fecha («Día», «Mes» o «Año»), o Intro sobre la ruleta: se abre un desplegable solo con ese campo. Al elegir un valor se aplica y la ruleta gira hasta él; Escape o un clic fuera lo cierran sin cambios. La hora y los minutos se eligen solo con sus ruletas.',
       '«EN VIVO» selecciona la fecha y hora actuales de tu dispositivo, al minuto, en la zona elegida. Se toma al pulsar el botón; no avanza automáticamente ni consulta datos hasta que pulses «Actualizar vista».',
       'UTC es el horario que usa la NASA para los lanzamientos y el que usa el cálculo. «Local» es la zona de tu dispositivo: se convierte a UTC (se muestra la hora UTC equivalente) y cambiar de zona conserva el mismo instante.',
       'Tras cambiar el lugar o la fecha, pulsa «Actualizar vista» para consultar JPL Horizons.',
@@ -292,6 +297,8 @@ const es: Messages = {
     live: 'EN VIVO',
     liveHint: 'Seleccionar la fecha y hora actuales',
     wheels: { day: 'Día', month: 'Mes', year: 'Año', hour: 'Hora', minute: 'Min', zone: 'Zona horaria' },
+    wheelPickerHint: 'Pulsa Intro para elegir un valor exacto de la lista.',
+    picker: { day: 'Elegir día', month: 'Elegir mes', year: 'Elegir año' },
     timeZone: 'Zona horaria',
     zoneUtc: 'UTC · NASA (lanzamientos)',
     zoneLocal: (id) => `Local · ${id}`,
@@ -520,7 +527,8 @@ const en: Messages = {
     dateTime: 'Date and time',
     dateTimeInfo: [
       'Date and time between 2000 and 2099, in the time zone you choose.',
-      'Turn the wheels with your mouse wheel, swipe vertically or press the previous or next number. On a keyboard, use the arrows, Page Up/Down, Home/End or type a number.',
+      'Turn the wheels with your mouse wheel, by swiping vertically (they keep spinning) or by pressing the number above or below. On a keyboard, use the arrows, Page Up/Down, Home/End or type a number.',
+      'To pick an exact date, press the name above a date wheel (“Day”, “Month” or “Year”), or Enter on the wheel: a dropdown opens with just that field. Picking a value applies it and the wheel rolls to it; Escape or a click outside closes it without changes. The hour and minute are set with their wheels only.',
       '“LIVE” selects your device’s current date and time, to the minute, in the chosen zone. It captures the time when pressed; it does not keep ticking or query data until you press “Update view”.',
       'UTC is the time standard NASA uses for launches and the one the calculation uses. “Local” is your device’s time zone: it is converted to UTC (the equivalent UTC time is shown) and switching zones keeps the same instant.',
       'After changing the place or the date, press “Update view” to query JPL Horizons.',
@@ -530,6 +538,8 @@ const en: Messages = {
     live: 'LIVE',
     liveHint: 'Select the current date and time',
     wheels: { day: 'Day', month: 'Month', year: 'Year', hour: 'Hour', minute: 'Min', zone: 'Time zone' },
+    wheelPickerHint: 'Press Enter to pick an exact value from a list.',
+    picker: { day: 'Pick the day', month: 'Pick the month', year: 'Pick the year' },
     timeZone: 'Time zone',
     zoneUtc: 'UTC · NASA (launches)',
     zoneLocal: (id) => `Local · ${id}`,

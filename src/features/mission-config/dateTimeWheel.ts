@@ -4,6 +4,15 @@ import type { DateTimeFields } from './timeZone';
 export const MIN_YEAR = Number(SUPPORTED_UTC_RANGE.startInclusive.slice(0, 4));
 export const MAX_YEAR = Number(SUPPORTED_UTC_RANGE.endExclusive.slice(0, 4)) - 1;
 export type DatePart = 'day' | 'month' | 'year';
+export type TimePart = 'hour' | 'minute';
+export type DateTimePart = DatePart | TimePart;
+
+/** Numeric parts of the fields (`YYYY-MM-DD`, `HH:mm`). */
+export function fieldParts(fields: DateTimeFields): Record<DateTimePart, number> {
+  const [year, month, day] = fields.date.split('-').map(Number) as [number, number, number];
+  const [hour, minute] = fields.time.split(':').map(Number) as [number, number];
+  return { day, month, year, hour, minute };
+}
 
 export function daysInMonth(year: number, month: number): number {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();

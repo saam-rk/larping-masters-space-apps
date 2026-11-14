@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shackleton GLB verification — illustrative terrain</title>
+  <style>body{margin:0;background:#080808;color:#ddd;font:14px monospace}canvas{display:block}pre{white-space:pre-wrap;padding:12px;max-width:780px}</style>
+</head>
+<body>
+  <canvas id="view" width="390" height="844"></canvas>
+  <pre id="report">Loading separate terrain and astronaut GLBs. Illustrative light and grain; not a landing or visibility assessment.</pre>
+  <script type="module">
+    import { reviewShackleton } from './check_shackleton_web.mjs';
+    reviewShackleton(document.querySelector('#view')).then((report) => {
+      document.querySelector('#report').textContent = JSON.stringify(report, null, 2);
+    }).catch((error) => {
+      window.shackletonReviewError = error.stack;
+      document.querySelector('#report').textContent = error.stack;
+      console.error(error);
+    });
+  </script>
+</body>
+</html>

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { changeDatePart, currentUtcMinute, MAX_YEAR, MIN_YEAR, stepWheel } from './dateTimeWheel';
+import {
+  changeDatePart,
+  currentUtcMinute,
+  fieldParts,
+  MAX_YEAR,
+  MIN_YEAR,
+  stepWheel,
+} from './dateTimeWheel';
 import { fieldsToUtc, utcToFields } from './timeZone';
 
 describe('date and time wheels', () => {
@@ -29,5 +36,9 @@ describe('date and time wheels', () => {
       const fields = utcToFields(utc, zone);
       expect(fieldsToUtc(fields, zone, utc)).toMatchObject({ ok: true, iso: utc });
     }
+  });
+
+  it('splits fields into numeric parts', () => {
+    expect(fieldParts({ date: '2026-01-12', time: '14:30' })).toEqual({ day: 12, month: 1, year: 2026, hour: 14, minute: 30 });
   });
 });

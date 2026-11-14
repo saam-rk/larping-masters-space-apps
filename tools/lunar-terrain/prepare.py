@@ -164,6 +164,17 @@ def prepare(config_path, source_path, output, reference_window=None):
     selected[rr, cc] = valid[rr, cc]
     for c, r in anchors:
         selected[r, c] = True
+    # Optional camera-led support: retain every measured grid sample near the
+    # initial view, then relax the seed spacing in bands with distance.
+    detail = config.get("nearDetail")
+    if detail:
+        dcx, dcy = detail["centerProjectedM"]
+        xx = transform.c + (np.arange(cols) + 0.5) * 5
+        yy = transform.f - (np.arange(rows) + 0.5) * 5
+        distance = np.hypot(xx[None, :] - dcx, yy[:, None] - dcy)
+        grid_r, grid_c = np.indices(data.shape)
+        for radius, step in detail["seedBandsRadiusMStridePixels"]:
+            selected |= (distance <= radius) & (grid_r % step == 0) & (grid_c % step == 0) & valid
     stride = config["candidateStridePixels"]
     cc, rr = np.meshgrid(np.arange(0, cols, stride), np.arange(0, rows, stride))
     candidates = np.column_stack([cc.ravel(), rr.ravel()])
@@ -177,6 +188,11 @@ def prepare(config_path, source_path, output, reference_window=None):
     distance2 = (x - ridge_x)**2 + (y - ridge_y)**2
     priority = 1 + (config["ridgePriorityMultiplier"] - 1) * np.exp(
         -distance2 / (2 * config["ridgePriorityRadiusM"]**2))
+    if detail:
+        dcx, dcy = detail["centerProjectedM"]
+        distance = np.hypot(x - dcx, y - dcy)
+        priority *= 1 + detail["residualPriorityBoost"] * np.exp(
+            -distance**2 / (2 * detail["residualPriorityRadiusM"]**2))
     history = []
     while selected.sum() < target:
         r, c = np.nonzero(selected)

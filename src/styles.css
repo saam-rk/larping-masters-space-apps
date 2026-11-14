@@ -94,30 +94,9 @@ body,
   height: 100%;
 }
 
-/*
- * Zoom-independent scale. Every length in this file is in rem/em (or a
- * viewport unit), and 1rem follows the viewport instead of CSS pixels, so the
- * page keeps the same size on screen whatever browser zoom is applied: zooming
- * shrinks the viewport in CSS px and 1rem shrinks with it. Contents depend
- * only on the viewport aspect ratio. The only px left are screen-level CRT
- * effects (scanlines, grain, bezel) and viewport-sized values set from JS.
- *
- * - Wide (landscape) viewports: the desktop layout as designed for a
- *   `--design-width` x `--design-height` CSS px viewport (1rem = 16px there),
- *   scaled to fit the limiting side.
- * - Narrow (portrait) viewports stack the columns and scale with the width:
- *   `--design-width-stacked` (tablets) or `--design-width-phone` (phones),
- *   see the media queries at the end.
- */
-:root {
-  --design-width: 1600;
-  --design-height: 840;
-  --design-width-stacked: 768;
-  --design-width-phone: 390;
-}
-
+/* Keep rem units tied to the user's font size; shrinking them with the viewport cancels browser zoom. */
 html {
-  font-size: min(100vw / var(--design-width) * 16, 100vh / var(--design-height) * 16);
+  font-size: 100%;
   background: var(--bg);
 }
 
@@ -741,6 +720,7 @@ button {
 }
 
 .datetime {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
   gap: 0 0.65rem;
@@ -757,7 +737,7 @@ button {
 .datetime__wheels {
   display: grid;
   gap: 0.15rem;
-  padding: 0.25rem 0.15rem 0;
+  padding: 0.1rem 0.15rem 0;
   border: 0.0625rem solid var(--line-dim);
   background: var(--panel-solid);
 }
@@ -791,8 +771,7 @@ button {
 }
 
 /* Block rows (not flex) so long option names end in an ellipsis. */
-.number-wheel--text .number-wheel__neighbor,
-.number-wheel--text .number-wheel__selected {
+.number-wheel--text .number-wheel__row {
   display: block;
   overflow: hidden;
   padding: 0 0.6rem;
@@ -800,9 +779,6 @@ button {
   text-overflow: ellipsis;
 }
 
-.number-wheel--text .number-wheel__selected {
-  font-size: 1.1em;
-}
 
 .number-wheel {
   min-width: 0;
@@ -811,31 +787,100 @@ button {
 
 .number-wheel__label {
   display: block;
+  width: 100%;
+  /* Same box as the label buttons, so the date and time reels line up. */
+  margin: 0 0 0.1rem;
+  padding: 0.05rem 0;
+  border: 1px solid transparent;
   color: var(--muted);
-  font-size: 0.65em;
+  font-size: 0.6em;
+  line-height: 1.1;
   text-transform: var(--title-case);
   letter-spacing: 0.04em;
 }
 
+/* The label opens the exact picker for this part: it reads as a small dropdown trigger. */
+.number-wheel__label--button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2em;
+  margin: 0 0 0.1rem;
+  padding: 0.05rem 0;
+  font: inherit;
+  font-size: 0.6em;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.number-wheel__caret {
+  font-size: 0.85em;
+  line-height: 1;
+  transition: transform 120ms ease-out;
+}
+
+:where(:root:not([data-curve='on'])) .number-wheel__label--button:hover,
+.number-wheel__label--button[data-hover],
+.number-wheel__label--button:focus-visible,
+.number-wheel__label--button[aria-expanded='true'] {
+  color: var(--accent);
+  border-color: var(--line-dim);
+}
+
+.number-wheel__label--button[aria-expanded='true'] .number-wheel__caret {
+  transform: rotate(180deg);
+}
+
+/* Compact drum: three short rows, so the box fits without scrolling the controls. */
 .number-wheel__control {
-  --wheel-row: 2rem;
+  --wheel-row: 1.3rem;
   position: relative;
   height: calc(3 * var(--wheel-row));
   overflow: hidden;
-  cursor: ns-resize;
+  cursor: grab;
   touch-action: pan-x;
   user-select: none;
   font-variant-numeric: tabular-nums;
+}
+
+.number-wheel__control:active {
+  cursor: grabbing;
 }
 
 /* A fixed illuminated slot keeps the selected row distinct as the reel turns. */
 .number-wheel__control::before {
   content: '';
   position: absolute;
+  z-index: 1;
   inset: var(--wheel-row) 0;
   border-block: 0.0625rem solid var(--line-dim);
   background: rgba(57, 255, 136, 0.07);
   pointer-events: none;
+}
+
+/* The drum curves away at the top and bottom edges. */
+.number-wheel__control::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--panel-solid) 0%,
+    transparent 30%,
+    transparent 70%,
+    var(--panel-solid) 100%
+  );
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+:where(:root:not([data-curve='on'])) .number-wheel__control:hover::before,
+.number-wheel__control[data-hover]::before,
+.number-wheel__control[data-open='true']::before {
+  border-color: var(--accent);
 }
 
 .number-wheel__control:focus-visible {
@@ -847,64 +892,121 @@ button {
 }
 
 .number-wheel__reel {
-  position: relative;
+  position: absolute;
+  inset: 0;
 }
 
-.number-wheel__neighbor,
-.number-wheel__selected {
+/*
+ * Each row is placed and sized from its distance to the slot (set inline on
+ * every frame): `--focus` is 1 for the centered row and 0 one row away, so
+ * size and color change continuously as the reel turns.
+ */
+.number-wheel__row {
+  --focus: 0;
+  position: absolute;
+  top: calc(50% - var(--wheel-row) / 2);
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
   height: var(--wheel-row);
-  padding: 0;
+  font-size: 1.1em;
   line-height: 1;
   white-space: nowrap;
+  color: #69866e;
+  color: color-mix(in srgb, var(--accent) calc(var(--focus) * 100%), #69866e);
+  will-change: transform;
 }
 
-.number-wheel__neighbor {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: #69866e;
+/* Exact picker for one part, opened from a wheel's label; it overlays what is below the wheels. */
+.datetime-picker {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  right: 0;
+  margin: 0.75em 0 0;
+  background: var(--panel-solid);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.8),
+    0 10px 24px rgba(0, 0, 0, 0.75),
+    0 0 16px rgba(57, 255, 136, 0.18);
+}
+
+.datetime-picker .box__title {
   font-size: 0.85em;
-  text-shadow: none;
+}
+
+.datetime-picker .icon-button {
+  font-size: 0.8em;
+}
+
+.datetime-picker__grid {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The years (100 values) scroll inside the dropdown. */
+.datetime-picker__grid[data-scroll='true'] {
+  max-height: 9.5rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.datetime-picker__grid:focus-visible {
+  outline-offset: 2px;
+}
+
+.datetime-picker__option {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0 0.25em;
+  min-width: 0;
+  padding: 0.2rem 0;
+  font-size: 0.85em;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--muted);
+  border: 1px solid transparent;
   cursor: pointer;
 }
 
-.number-wheel__neighbor:disabled {
-  cursor: default;
-}
-
-:where(:root:not([data-curve='on'])) .number-wheel__neighbor:not(:disabled):hover,
-.number-wheel__neighbor:not(:disabled)[data-hover] {
-  color: var(--text);
-  background: rgba(57, 255, 136, 0.05);
-}
-
-.number-wheel__selected {
+.datetime-picker__option[aria-selected='true'] {
   color: var(--accent);
-  font-size: 1.3em;
+  border-color: var(--line-dim);
+  background: rgba(57, 255, 136, 0.07);
+}
+
+.datetime-picker__option[data-active='true'] {
+  color: #000;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.datetime-picker__month-number {
+  font-size: 0.75em;
+  opacity: 0.75;
+}
+
+.datetime-picker__month-name {
+  text-transform: var(--title-case);
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  :root[data-fx='on'] .number-wheel__reel[data-animated='true'] {
-    animation: wheel-step-up 140ms ease-out;
-  }
-
-  :root[data-fx='on'] .number-wheel__reel[data-animated='true'][data-direction='-1'] {
-    animation-name: wheel-step-down;
+  :root[data-fx='on'] .datetime-picker {
+    animation: dropdown-open 140ms ease-out;
+    transform-origin: top;
   }
 }
 
-@keyframes wheel-step-up {
-  from { transform: translateY(0.7rem); }
-  to { transform: translateY(0); }
-}
-
-@keyframes wheel-step-down {
-  from { transform: translateY(-0.7rem); }
-  to { transform: translateY(0); }
+@keyframes dropdown-open {
+  from { opacity: 0; transform: scaleY(0.6); }
+  to { opacity: 1; transform: scaleY(1); }
 }
 
 .search-field__prompt {
@@ -2187,18 +2289,10 @@ input[aria-invalid='true'] {
   }
 }
 
-/* ───────────────────────── Stacked layout (narrow aspect ratios) ───────────────────────── */
+/* ───────────────────────── Stacked layout (tablets, phones and browser zoom) ───────────────────────── */
 
-/*
- * Portrait and square-ish viewports stack the columns. Breakpoints use the
- * aspect ratio, not widths in CSS px, so browser zoom never changes the layout
- * (see "Zoom-independent scale" at the top).
- */
-@media (max-aspect-ratio: 1/1) {
-  html {
-    font-size: calc(100vw / var(--design-width-stacked) * 16);
-  }
-
+/* Width-based breakpoints let the layout reflow as browser zoom reduces the CSS viewport. */
+@media (max-width: 1040px) {
   .workspace {
     grid-template-columns: minmax(0, 1fr);
     /* `max-content`, not `auto`: the controls row must not shrink below its content and overlap the view. */
@@ -2239,11 +2333,7 @@ input[aria-invalid='true'] {
   }
 }
 
-@media (max-aspect-ratio: 13/20) {
-  html {
-    font-size: calc(100vw / var(--design-width-phone) * 16);
-  }
-
+@media (max-width: 700px) {
   :root {
     --font-size: 1.1875rem;
   }

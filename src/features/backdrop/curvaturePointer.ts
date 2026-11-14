@@ -28,7 +28,10 @@
 
 import { barrelShift } from './curvature';
 
-const INTERACTIVE = 'a[href], button, input, select, textarea, label, summary, [role="button"], [role="option"]';
+const INTERACTIVE = 'a[href], button, input, select, textarea, label, summary, [role="button"], [role="spinbutton"], [role="option"]';
+
+/** Pointer travel between press and click beyond which the click ends a drag, px. */
+const DRAG_SLOP_PX = 6;
 
 /** Input types that open a picker instead of taking typed text on click. */
 const PICKER_TYPES = new Set(['date', 'time', 'datetime-local', 'month', 'week', 'color']);
@@ -174,6 +177,19 @@ function fullscreenShown(): boolean {
   return Boolean(document.fullscreenElement) || document.querySelector('[data-fullscreen]') !== null;
 }
 
+/**
+ * Layout point drawn under a client point: the point itself unless the
+ * curved-glass filter is on. Lets a control that reacts to where it was
+ * pressed (e.g. the row of a number wheel) use the position the user sees.
+ */
+export function drawnPointerPosition(clientX: number, clientY: number): { x: number; y: number } {
+  const frame = frameElement();
+  if (document.documentElement.dataset.curve !== 'on' || !frame || fullscreenShown() || document.querySelector('dialog[open]')) {
+    return { x: clientX, y: clientY };
+  }
+  return drawnPoint(clientX, clientY, frame);
+}
+
 /** True when the page is not being drawn through the filter at this event. */
 function skip(target: EventTarget | null): boolean {
   if (document.documentElement.dataset.curve !== 'on') return true;
@@ -239,11 +255,23 @@ export function installCurvaturePointer(): () => void {
     clearHover();
   };
 
+  /** Where the last primary press started, to tell a click from the end of a drag. */
+  let press: { x: number; y: number } | null = null;
+
+  const onPress = (event: PointerEvent) => {
+    press = event.button === 0 ? { x: event.clientX, y: event.clientY } : null;
+  };
+
   /** Control drawn under the pointer and control under it for the browser; null when no remapping is needed. */
   const resolve = (event: MouseEvent): { real: Element | null; drawn: Element | null } | null => {
     // Keyboard and assistive-technology clicks activate the focused control;
     // their zero coordinates are not a pointer position to remap.
     if (busy || !event.isTrusted || event.detail === 0 || skip(event.target)) return null;
+    // The click that ends a drag (e.g. turning a number wheel) belongs to the
+    // dragged control: it must not activate whatever is drawn where it ended.
+    if (event.type === 'click' && press && Math.hypot(event.clientX - press.x, event.clientY - press.y) > DRAG_SLOP_PX) {
+      return null;
+    }
     const frame = frameElement();
     if (!frame) return null;
     const real = controlOf(event.target as Element);
@@ -314,6 +342,7 @@ export function installCurvaturePointer(): () => void {
     onPointerLeave();
   };
 
+  window.addEventListener('pointerdown', onPress, true);
   window.addEventListener('pointerdown', onPointerDown, true);
   window.addEventListener('pointermove', onSlideMove, true);
   window.addEventListener('pointerup', onSlideEnd, true);
@@ -325,6 +354,7 @@ export function installCurvaturePointer(): () => void {
   window.addEventListener('blur', onBlur);
 
   return () => {
+    window.removeEventListener('pointerdown', onPress, true);
     window.removeEventListener('pointerdown', onPointerDown, true);
     window.removeEventListener('pointermove', onSlideMove, true);
     window.removeEventListener('pointerup', onSlideEnd, true);
