@@ -45,6 +45,7 @@
   --font-hand: 'Caveat', 'Segoe Print', cursive;
   --border: 2px;
   --stack-gap: clamp(0.6rem, 1.8vh, 1.25rem);
+  --column-gap: clamp(1.25rem, 2.5vw, 2.5rem);
 }
 
 /*
@@ -167,7 +168,7 @@ button {
 .workspace {
   display: grid;
   grid-template-columns: minmax(18rem, 30rem) minmax(0, 1fr);
-  gap: var(--stack-gap) clamp(1.25rem, 2.5vw, 2.5rem);
+  gap: var(--stack-gap) var(--column-gap);
   height: 100%;
   min-height: 0;
   min-width: 0;
@@ -181,6 +182,25 @@ button {
   gap: var(--stack-gap);
   min-width: 0;
   min-height: min-content;
+}
+
+/*
+ * Separator between the control and view columns: a vertical rule centered in
+ * the column gap. Stacked layouts (see the media queries below) draw the same
+ * rule horizontally in the row gap, above the view column.
+ */
+.column--view {
+  position: relative;
+}
+
+.column--view::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--column-gap) / -2 - var(--border) / 2);
+  border-left: var(--border) dashed var(--muted);
+  pointer-events: none;
 }
 
 /* ───────────────────────── Section headings ───────────────────────── */
@@ -457,6 +477,7 @@ button {
 /* ───────────────────────── Sidebar ───────────────────────── */
 
 .sidebar {
+  position: relative;
   z-index: 5;
   display: flex;
   flex-direction: column;
@@ -1243,6 +1264,23 @@ input[type='time']::-webkit-calendar-picker-indicator {
     radial-gradient(ellipse 75% 70% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.6) 100%);
 }
 
+/*
+ * Curvature overscan (CrtCurvature.tsx): near the sides the filter draws
+ * content sampled from outside the frame. The sidebar background continues
+ * past the screen edge so that area is not left empty and the backdrop does
+ * not show beside the sidebar.
+ */
+:root[data-curve='on'] .sidebar::before {
+  content: '';
+  position: absolute;
+  top: calc(-1 * var(--curve-pad, 0px));
+  bottom: calc(-1 * var(--curve-pad, 0px));
+  right: 100%;
+  width: var(--curve-pad, 0px);
+  background: var(--panel);
+  pointer-events: none;
+}
+
 /* Rounded tube corners and dark curved edges. */
 .crt__bezel {
   border-radius: 22px / 26px;
@@ -1433,6 +1471,15 @@ input[type='time']::-webkit-calendar-picker-indicator {
     grid-template-rows: max-content minmax(min-content, 1fr);
   }
 
+  .column--view::before {
+    top: calc(var(--stack-gap) / -2 - var(--border) / 2);
+    bottom: auto;
+    left: 0;
+    right: 0;
+    border-left: none;
+    border-top: var(--border) dashed var(--muted);
+  }
+
   /* Box titles already name each part. */
   .ascii-heading {
     display: none;
@@ -1474,6 +1521,18 @@ input[type='time']::-webkit-calendar-picker-indicator {
     padding: 0.4rem 0.75rem;
     border-right: none;
     border-bottom: var(--border) solid var(--line);
+  }
+
+  /* The bar spans the screen: the overscan is also needed above it and on its right. */
+  :root[data-curve='on'] .sidebar::after {
+    content: '';
+    position: absolute;
+    top: calc(-1 * var(--curve-pad, 0px));
+    bottom: 0;
+    left: 100%;
+    width: var(--curve-pad, 0px);
+    background: var(--panel);
+    pointer-events: none;
   }
 
   .sidebar__logo {

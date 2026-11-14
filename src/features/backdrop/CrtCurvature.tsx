@@ -35,8 +35,16 @@ const MAP_SCALE = 1 / 8;
 
 interface CurvatureMap {
   readonly url: string;
+  /** Viewport size, px. */
   readonly width: number;
   readonly height: number;
+  /**
+   * Overscan, px: the filter region and the map extend this far beyond each
+   * edge of the viewport. Near the sides the barrel samples the source from
+   * outside the frame; a region clipped to the frame would leave that
+   * transparent and show the backdrop beside the sidebar.
+   */
+  readonly pad: number;
   /** feDisplacementMap `scale`, px. */
   readonly scale: number;
   readonly channels: MapChannels;
@@ -48,12 +56,16 @@ interface CurvatureMap {
  * `barrelFit` (keeps the top and bottom rows in place). Encoded for
  * feDisplacementMap as channel = 0.5 + shift / scale (8 bits), one axis in a
  * grey and the other in alpha so that colour management cannot alter it (see
- * `mapChannels`).
+ * `mapChannels`). The map covers the viewport plus `pad` px on every side.
  */
 function createMap(width: number, height: number): CurvatureMap | null {
   try {
-    const mapWidth = Math.max(16, Math.round(width * MAP_SCALE));
-    const mapHeight = Math.max(16, Math.round(height * MAP_SCALE));
+    const shift = maxShift(width, height);
+    const pad = Math.ceil(shift) + 2;
+    const regionWidth = width + 2 * pad;
+    const regionHeight = height + 2 * pad;
+    const mapWidth = Math.max(16, Math.round(regionWidth * MAP_SCALE));
+    const mapHeight = Math.max(16, Math.round(regionHeight * MAP_SCALE));
     const canvas = document.createElement('canvas');
     canvas.width = mapWidth;
     canvas.height = mapHeight;
@@ -64,13 +76,13 @@ function createMap(width: number, height: number): CurvatureMap | null {
     const cy = height / 2;
     const channels = mapChannels(width, height);
     // Room for the largest shift on either side, with a small margin.
-    const scale = Math.ceil(2 * maxShift(width, height) * 1.05) + 1;
+    const scale = Math.ceil(2 * shift * 1.05) + 1;
     const image = context.createImageData(mapWidth, mapHeight);
 
     for (let j = 0; j < mapHeight; j++) {
-      const dy = ((j + 0.5) / mapHeight) * height - cy;
+      const dy = ((j + 0.5) / mapHeight) * regionHeight - pad - cy;
       for (let i = 0; i < mapWidth; i++) {
-        const dx = ((i + 0.5) / mapWidth) * width - cx;
+        const dx = ((i + 0.5) / mapWidth) * regionWidth - pad - cx;
         const [shiftX, shiftY] = barrelShift(dx, dy, width, height);
         const grey = encodeShift(channels.x === 'R' ? shiftX : shiftY, scale);
         const alpha = encodeShift(channels.x === 'R' ? shiftY : shiftX, scale);
@@ -82,7 +94,7 @@ function createMap(width: number, height: number): CurvatureMap | null {
       }
     }
     context.putImageData(image, 0, 0);
-    return { url: canvas.toDataURL('image/png'), width, height, scale, channels };
+    return { url: canvas.toDataURL('image/png'), width, height, pad, scale, channels };
   } catch {
     return null;
   }
@@ -213,10 +225,13 @@ export function CrtCurvature({ enabled: requested }: { enabled: boolean }) {
   useEffect(() => {
     const root = document.documentElement;
     root.dataset.curve = active ? 'on' : 'off';
+    // The sidebar paints its background into the overscan (see `.sidebar::before`).
+    if (active) root.style.setProperty('--curve-pad', `${map.pad}px`);
     return () => {
       root.dataset.curve = 'off';
+      root.style.removeProperty('--curve-pad');
     };
-  }, [active]);
+  }, [active, map]);
 
   // Hover and clicks follow the drawn position of the controls, not the layout one.
   useEffect(() => {
@@ -245,13 +260,21 @@ export function CrtCurvature({ enabled: requested }: { enabled: boolean }) {
         id={CRT_CURVATURE_FILTER_ID}
         filterUnits="userSpaceOnUse"
         primitiveUnits="userSpaceOnUse"
-        x="0"
-        y="0"
-        width={map.width}
-        height={map.height}
+        x={-map.pad}
+        y={-map.pad}
+        width={map.width + 2 * map.pad}
+        height={map.height + 2 * map.pad}
         colorInterpolationFilters="sRGB"
       >
-        <feImage href={map.url} x="0" y="0" width={map.width} height={map.height} preserveAspectRatio="none" result="map" />
+        <feImage
+          href={map.url}
+          x={-map.pad}
+          y={-map.pad}
+          width={map.width + 2 * map.pad}
+          height={map.height + 2 * map.pad}
+          preserveAspectRatio="none"
+          result="map"
+        />
         <feDisplacementMap in="SourceGraphic" in2="map" scale={map.scale} xChannelSelector={map.channels.x} yChannelSelector={map.channels.y} />
       </filter>
     </svg>
