@@ -8,12 +8,14 @@
  * effects or low performance (the same look, static).
  */
 
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useRef, useState } from 'react';
 import { Backdrop } from './features/backdrop/Backdrop';
 import { CrtCurvature } from './features/backdrop/CrtCurvature';
 import { ConfigPanel } from './features/mission-config/ConfigPanel';
 import { ResultsPanel } from './features/results/ResultsPanel';
 import { CompassToggle } from './features/scene/CompassToggle';
+import { FullscreenToggle } from './features/scene/FullscreenToggle';
+import { useFullscreen } from './features/scene/useFullscreen';
 import { useViewMode } from './features/scene/viewMode';
 import { ViewToggle } from './features/scene/ViewToggle';
 import { SetupScreen } from './features/shell/SetupScreen';
@@ -76,6 +78,9 @@ export function App() {
   const warp = viewSwitch.warp;
   // "Compass" switch: horizon line (first person) and grid (third person), one for both views.
   const [showCompass, setShowCompass] = useState(true);
+  // Full screen for the local horizon box, in both views.
+  const sceneBoxRef = useRef<HTMLElement>(null);
+  const fullscreen = useFullscreen(sceneBoxRef);
 
   function handleUpdate() {
     viewSwitch.resetWarp();
@@ -113,11 +118,13 @@ export function App() {
               title={messages.scene.heading}
               titleAs="h3"
               className="scene-box"
+              ref={sceneBoxRef}
               help={messages.scene.info[view.mode]}
               actions={
                 <>
                   <CompassToggle shown={showCompass} onChange={setShowCompass} />
                   <ViewToggle mode={viewSwitch.selected} firstPersonAvailable={view.firstPersonAvailable} onChange={viewSwitch.request} />
+                  <FullscreenToggle active={fullscreen.active} onToggle={fullscreen.toggle} />
                 </>
               }
             >

@@ -378,3 +378,42 @@ describe('NumberWheel component interactions', () => {
     expect(onChange).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('NumberWheel with named options', () => {
+  const zones = ['UTC', 'Local · Europe/Madrid'];
+
+  it('shows option names and exposes the chosen one as the accessible value', () => {
+    const { control } = mountWheel({ label: 'Time zone', value: 0, min: 0, max: 1, wrap: false, format: (index) => zones[index] ?? '' });
+    expect(control.getAttribute('aria-valuetext')).toBe('UTC');
+    expect(centered()).toBe('UTC');
+    expect(container.querySelector('.number-wheel')?.classList.contains('number-wheel--text')).toBe(true);
+    key(control, 'ArrowUp');
+    expect(control.getAttribute('aria-valuetext')).toBe('Local · Europe/Madrid');
+    // No wrap: the last option stays selected.
+    key(control, 'ArrowUp');
+    expect(control.getAttribute('aria-valuenow')).toBe('1');
+    expect(centered()).toBe(zones[1]);
+    expect(rows().every((row) => row.text === '\u00a0' || zones.includes(row.text ?? ''))).toBe(true);
+  });
+
+  it('animates named options using the continuous reel without displaying numeric indexes', () => {
+    const { play } = stubFrames();
+    const { control, onChange } = mountWheel({
+      label: 'Time zone', value: 0, min: 0, max: 1, wrap: false, animated: true,
+      format: (index) => zones[index] ?? '',
+    });
+    key(control, 'ArrowUp');
+    expect(control.getAttribute('aria-valuetext')).toBe(zones[1]);
+    play(() => {
+      expect(rows().every((row) => row.text === '\u00a0' || zones.includes(row.text ?? ''))).toBe(true);
+    });
+    expect(centered()).toBe(zones[1]);
+    expect(onChange).toHaveBeenCalledExactlyOnceWith(1);
+  });
+
+  it('keeps two-digit numbers without a format', () => {
+    const { control } = mountWheel({ value: 5 });
+    expect(control.getAttribute('aria-valuetext')).toBe('05');
+    expect(centered()).toBe('05');
+  });
+});

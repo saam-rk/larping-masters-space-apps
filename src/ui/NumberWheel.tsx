@@ -43,6 +43,13 @@ interface NumberWheelProps {
   readonly animated: boolean;
   readonly invalid: boolean;
   readonly describedBy: string;
+  /**
+   * Text for each value, for a wheel of named options (e.g. the time zone):
+   * values are then indexes, the text is also the accessible value and the
+   * wheel label is only read by assistive technology. Numbers are shown with
+   * two digits otherwise.
+   */
+  readonly format?: (value: number) => string;
   /** Whether this wheel's exact picker is open, and its id. */
   readonly open?: boolean;
   readonly popupId?: string;
@@ -309,13 +316,14 @@ interface Gesture {
 }
 
 export function NumberWheel({
-  id, label, value, min, max, wrap = true, animated, invalid, describedBy,
+  id, label, value, min, max, wrap = true, animated, invalid, describedBy, format,
   open = false, popupId, onOpen, onChange,
 }: NumberWheelProps) {
   const labelId = useId();
   const control = useRef<HTMLDivElement>(null);
   const gesture = useRef<Gesture | null>(null);
   const digits = useRef({ text: '', at: 0 });
+  const display = format ?? pad;
   const [position, setPosition] = useState(value);
   /** Largest value labels may show: a day can exceed the new month's length until the reel has rolled back. */
   const [labelMax, setLabelMax] = useState(max);
@@ -455,8 +463,8 @@ export function NumberWheel({
     const offset = row - position;
     if (Math.abs(offset) > 2) continue;
     let text = '\u00a0';
-    if (wrap) text = pad(wrapValue(row, min, labelMaxShown));
-    else if (row >= min && row <= labelMaxShown) text = pad(row);
+    if (wrap) text = display(wrapValue(row, min, labelMaxShown));
+    else if (row >= min && row <= labelMaxShown) text = display(row);
     const look = rowAppearance(offset);
     const scale = 0.68 + 0.32 * look.focus;
     rows.push({
@@ -471,7 +479,7 @@ export function NumberWheel({
   }
 
   return (
-    <div className="number-wheel">
+    <div className={`number-wheel${format ? ' number-wheel--text' : ''}`}>
       {onOpen ? (
         <button
           type="button"
@@ -496,7 +504,7 @@ export function NumberWheel({
         tabIndex={0}
         aria-labelledby={labelId}
         aria-valuenow={value}
-        aria-valuetext={pad(value)}
+        aria-valuetext={display(value)}
         aria-valuemin={min}
         aria-valuemax={max}
         aria-invalid={invalid}

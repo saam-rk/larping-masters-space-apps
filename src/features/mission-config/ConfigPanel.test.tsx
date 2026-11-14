@@ -33,7 +33,7 @@ function submitButton(loading: boolean, utc = DEFAULT_UTC, upToDate = false): st
 }
 
 describe('ConfigPanel update availability', () => {
-  it('allows querying the same valid selection, including a sample or partial result', () => {
+  it('allows querying a valid selection that has no complete live result, including a sample or partial result', () => {
     expect(submitButton(false)).not.toContain('disabled');
   });
 
@@ -41,11 +41,11 @@ describe('ConfigPanel update availability', () => {
     expect(submitButton(true)).toContain('disabled');
   });
 
-  it('shows Updated, still pressable, once a live result matches the selection', () => {
+  it('shows Updated and blocks duplicate updates once a complete live result matches the selection', () => {
     const button = submitButton(false, DEFAULT_UTC, true);
     expect(button).toContain('Updated');
     expect(button).toContain('button--done');
-    expect(button).not.toContain('disabled');
+    expect(button).toContain('disabled');
     expect(submitButton(false)).toContain('Update view');
   });
 
