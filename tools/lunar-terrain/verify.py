@@ -17,7 +17,7 @@ import rasterio
 from prepare import bilinear, sha256, supported_faces, write_json
 
 
-def read_glb(path):
+def read_glb(path, allow_textures=False):
     data = Path(path).read_bytes()
     magic, version, length = struct.unpack_from('<4sII', data)
     assert magic == b'glTF' and version == 2 and length == len(data)
@@ -33,13 +33,15 @@ def read_glb(path):
     assert len(binary) == bin_length
     assert len(document['scenes']) == len(document['nodes']) == len(document['meshes']) == 1
     assert not document.get('extensionsRequired'), "Compressed or otherwise extension-dependent GLB"
-    assert not document.get('images') and not document.get('animations') and not document.get('cameras')
+    assert (allow_textures or not document.get('images'))
+    assert not document.get('animations') and not document.get('cameras')
     node = document['nodes'][0]
     assert not any(key in node for key in ('matrix', 'translation', 'rotation', 'scale'))
     primitive = document['meshes'][0]['primitives'][0]
     assert len(document['meshes'][0]['primitives']) == 1
     assert primitive.get('mode', 4) == 4
-    assert set(primitive['attributes']) == {'POSITION', 'NORMAL'}
+    expected = {'POSITION', 'NORMAL', 'TEXCOORD_0'} if allow_textures else {'POSITION', 'NORMAL'}
+    assert set(primitive['attributes']) == expected
 
     def accessor(index):
         acc = document['accessors'][index]
@@ -82,7 +84,8 @@ def verify(glb_path, metadata_path, source_path, report_path):
         raise ValueError("Cannot read terrain metadata") from exc
     assert sha256(source_path) == meta['source']['sha256']
     assert sha256(glb_path) == meta['artifacts']['glb']['sha256']
-    document, vertices, normals, faces = read_glb(glb_path)
+    document, vertices, normals, faces = read_glb(
+        glb_path, allow_textures='TEXCOORD_0' in meta['generation']['exportAttributes'])
     assert np.isfinite(vertices).all() and np.isfinite(normals).all()
     assert faces.min() == 0 and faces.max() < len(vertices)
     assert len(np.unique(faces)) == len(vertices)
@@ -125,7 +128,7 @@ def verify(glb_path, metadata_path, source_path, report_path):
                     missing += 1
                     continue
                 errors.append(height + oz - bilinear(raster, ds.transform, x, y))
-    assert missing == 0, "Unexpected missing terrain in fully valid Site06 crop"
+    assert missing == 0, "Unexpected missing terrain in this fully valid rectangular crop"
     assert mesh_height(vertices, faces, min_x-ox-1, -(min_y-oy)) is None
     vectors = vertices[faces]
     cross = np.cross(vectors[:, 1]-vectors[:, 0], vectors[:, 2]-vectors[:, 0])
@@ -142,7 +145,8 @@ def verify(glb_path, metadata_path, source_path, report_path):
         'status': 'passed', 'glb': {'bytes': size, 'mib': size / 1048576,
             'budgetBytes': config['maxGlbBytes'], 'remainingBytes': config['maxGlbBytes']-size,
             'vertices': len(vertices), 'triangles': len(faces),
-            'attributes': ['POSITION', 'NORMAL'], 'indexComponentType': 5123,
+            'attributes': list(document['meshes'][0]['primitives'][0]['attributes']),
+            'indexComponentType': document['accessors'][document['meshes'][0]['primitives'][0]['indices']]['componentType'],
             'extensionsRequired': document.get('extensionsRequired', []),
             'sha256': sha256(glb_path), 'boundsM': [vertices.min(axis=0).tolist(), vertices.max(axis=0).tolist()]},
         'topology': {'boundaryEdges': int((incidence == 1).sum()), 'nonManifoldEdges': 0,
