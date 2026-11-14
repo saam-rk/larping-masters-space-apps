@@ -7,6 +7,10 @@ import { NumberWheel } from './NumberWheel';
 
 type WheelProps = ComponentProps<typeof NumberWheel>;
 
+/** Layout of the reel in these tests: three 21 px rows from y = 0 (jsdom has no layout). */
+const ROW = 21;
+const RECT = { top: 0, bottom: 3 * ROW, left: 0, right: 40, width: 40, height: 3 * ROW, x: 0, y: 0 };
+
 let container: HTMLDivElement;
 let root: Root;
 
@@ -20,9 +24,28 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   container.remove();
+  vi.useRealTimers();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
+
+/** Collects animation frames so a test can play them at chosen times. */
+function stubFrames() {
+  const frames: FrameRequestCallback[] = [];
+  vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => frames.push(callback));
+  vi.stubGlobal('cancelAnimationFrame', vi.fn());
+  let now = performance.now();
+  /** Plays frames 16 ms apart until the reel rests (or `limit` frames), calling `each` after every one. */
+  const play = (each: () => void = () => {}, limit = 400) => {
+    for (let count = 0; frames.length > 0 && count < limit; count += 1) {
+      now += 16;
+      const frame = frames.shift()!;
+      act(() => frame(now));
+      each();
+    }
+  };
+  return { frames, play };
+}
 
 /** Keep the value controlled, as ConfigPanel does, so each event sees the latest value. */
 function mountWheel(overrides: Partial<WheelProps> = {}) {
@@ -44,8 +67,9 @@ function mountWheel(overrides: Partial<WheelProps> = {}) {
   }
   act(() => root.render(<Harness />));
   const control = container.querySelector<HTMLDivElement>('[role="spinbutton"]')!;
+  vi.spyOn(control, 'getBoundingClientRect').mockReturnValue({ ...RECT, toJSON: () => RECT } as DOMRect);
   const captured = new Set<number>();
-  // jsdom has no pointer-capture layout implementation; keep its state observable.
+  // jsdom has no pointer-capture implementation; keep its state observable.
   const setPointerCapture = vi.fn((id: number) => { captured.add(id); });
   const releasePointerCapture = vi.fn((id: number) => { captured.delete(id); });
   Object.assign(control, {
@@ -57,26 +81,46 @@ function mountWheel(overrides: Partial<WheelProps> = {}) {
   return { control, onChange, value, setPointerCapture, releasePointerCapture };
 }
 
-function dispatch(target: HTMLElement, event: Event) {
+function dispatch(target: Element, event: Event) {
   act(() => { target.dispatchEvent(event); });
   return event;
 }
 
-function key(target: HTMLElement, value: string, options: KeyboardEventInit = {}) {
+function key(target: Element, value: string, options: KeyboardEventInit = {}) {
   return dispatch(target, new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: value, ...options }));
 }
 
-function turn(target: HTMLElement, deltaY: number, timeStamp: number, options: WheelEventInit = {}) {
+function turn(target: Element, deltaY: number, timeStamp: number, options: WheelEventInit = {}) {
   const event = new WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY, ...options });
   Object.defineProperty(event, 'timeStamp', { value: timeStamp });
   return dispatch(target, event);
 }
 
-function pointer(target: HTMLElement, type: string, clientY: number, button = 0) {
+function pointer(target: Element, type: string, clientY: number, { button = 0, timeStamp }: { button?: number; timeStamp?: number } = {}) {
   // React reads these pointer fields from the native event; no layout engine is needed.
-  const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientY, button });
+  const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: 10, clientY, button });
   Object.defineProperty(event, 'pointerId', { value: 1 });
+  if (timeStamp !== undefined) Object.defineProperty(event, 'timeStamp', { value: timeStamp });
   return dispatch(target, event);
+}
+
+/** A press and release without moving. */
+function tap(target: Element, clientY: number) {
+  pointer(target, 'pointerdown', clientY);
+  pointer(target, 'pointerup', clientY);
+}
+
+/** The rows on the reel, with how centered each one is (1 in the slot, 0 one row away or more). */
+function rows() {
+  return [...container.querySelectorAll<HTMLElement>('.number-wheel__row')].map((row) => ({
+    text: row.textContent,
+    focus: Number(row.style.getPropertyValue('--focus')),
+  }));
+}
+
+/** Text of the row in the slot (the most centered one). */
+function centered() {
+  return rows().reduce((best, row) => (row.focus > best.focus ? row : best)).text;
 }
 
 describe('NumberWheel component interactions', () => {
@@ -151,155 +195,186 @@ describe('NumberWheel component interactions', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it('accumulates wheel deltas and throttles steps without scrolling the page', () => {
-    const { control, value, onChange } = mountWheel();
-    expect(turn(control, 10, 100).defaultPrevented).toBe(true);
-    expect(onChange).not.toHaveBeenCalled();
-    turn(control, 10, 110);
-    expect(value()).toBe(31);
-    turn(control, 30, 150); // Less than 90 ms after the previous step.
-    expect(value()).toBe(31);
-    turn(control, 1, 210);
-    expect(value()).toBe(32);
-    turn(control, -18, 310);
-    expect(value()).toBe(31);
-    expect(onChange.mock.calls.map(([next]) => next)).toEqual([31, 32, 31]);
+  it('turns one row per mouse-wheel notch without scrolling the page', () => {
+    const { control, value, onChange } = mountWheel({ value: 59 });
+    expect(turn(control, 100, 100).defaultPrevented).toBe(true);
+    expect(value()).toBe(0);
+    turn(control, 3, 200, { deltaMode: 1 });
+    expect(value()).toBe(1);
+    turn(control, -1, 300, { deltaMode: 2 });
+    expect(value()).toBe(0);
+    turn(control, -100, 400);
+    expect(value()).toBe(59);
+    expect(onChange.mock.calls.map(([next]) => next)).toEqual([0, 1, 0, 59]);
   });
 
-  it('normalizes line/page wheel deltas and does not intercept pinch-to-zoom or horizontal scroll', () => {
-    const { control, value, onChange } = mountWheel({ value: 59 });
-    turn(control, 2, 100, { deltaMode: 1 });
-    expect(value()).toBe(0);
-    turn(control, -1, 200, { deltaMode: 2 });
-    expect(value()).toBe(59);
-    onChange.mockClear();
+  it('follows small trackpad scrolls and settles on a row once they pause', () => {
+    vi.useFakeTimers();
+    const { control, value, onChange } = mountWheel();
+    for (const [index, delta] of [12, 12, 12, 12, 12, 12].entries()) turn(control, delta, 100 + index * 16);
+    expect(onChange).not.toHaveBeenCalled(); // 72 px is two rows, reported once the reel stops.
+    expect(centered()).toBe('32');
+    act(() => vi.advanceTimersByTime(200));
+    expect(value()).toBe(32);
+    expect(onChange).toHaveBeenCalledExactlyOnceWith(32);
+  });
+
+  it('does not intercept pinch-to-zoom or horizontal scroll', () => {
+    const { control, onChange } = mountWheel();
     expect(turn(control, 100, 300, { ctrlKey: true }).defaultPrevented).toBe(false);
     expect(turn(control, 0, 400, { deltaX: 100 }).defaultPrevented).toBe(false);
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it('opens the exact entry on a click or Enter/Space without changing the value', () => {
+  it('turns to the row pressed above or below; pressing the slot changes nothing', () => {
+    const { control, value, onChange } = mountWheel();
+    tap(control, 5); // Top row.
+    expect(value()).toBe(29);
+    tap(control, 60); // Bottom row.
+    tap(control, 58);
+    expect(value()).toBe(31);
+    tap(control, ROW * 1.5); // The slot.
+    expect(value()).toBe(31);
+    expect(onChange.mock.calls.map(([next]) => next)).toEqual([29, 30, 31]);
+  });
+
+  it('opens the exact picker from its label or Enter/Space/Alt+↓, never from a press on the reel', () => {
     const onOpen = vi.fn();
-    const { control, value, onChange } = mountWheel({ onOpen });
+    const { control, value, onChange } = mountWheel({ onOpen, popupId: 'picker' });
+    const label = container.querySelector<HTMLButtonElement>('button.number-wheel__label')!;
+    expect(label.getAttribute('aria-haspopup')).toBe('listbox');
+    expect(label.getAttribute('aria-expanded')).toBe('false');
+    expect(label.hasAttribute('aria-controls')).toBe(false);
+    expect(document.getElementById(control.getAttribute('aria-labelledby')!)).toBe(label);
+    tap(control, ROW * 1.5);
     act(() => control.click());
+    expect(onOpen).not.toHaveBeenCalled();
+    act(() => label.click());
     expect(onOpen).toHaveBeenCalledTimes(1);
     expect(key(control, 'Enter').defaultPrevented).toBe(true);
     key(control, ' ');
-    expect(onOpen).toHaveBeenCalledTimes(3);
+    key(control, 'ArrowDown', { altKey: true });
+    expect(onOpen).toHaveBeenCalledTimes(4);
     expect(value()).toBe(30);
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it('marks the label as expanded and pointing to the picker while it is open', () => {
+    mountWheel({ onOpen: vi.fn(), open: true, popupId: 'picker' });
+    const label = container.querySelector('button.number-wheel__label')!;
+    expect(label.getAttribute('aria-expanded')).toBe('true');
+    expect(label.getAttribute('aria-controls')).toBe('picker');
+  });
+
   it('shows the neighboring rows as decoration, blank past a non-cyclic boundary', () => {
     const { control } = mountWheel({ label: 'Year', value: 2000, min: 2000, max: 2099, wrap: false });
-    const rows = () => [...control.querySelectorAll('.number-wheel__row')].map((row) => row.textContent);
+    const visible = () => rows().filter((row) => row.focus > 0 || row.text !== ' ').map((row) => row.text);
     expect(control.querySelector('button')).toBeNull();
-    expect(rows()).toEqual(['\u00a0', '2000', '2001']);
+    expect(centered()).toBe('2000');
+    expect(visible()).toEqual(['2000', '2001', '2002']);
     key(control, 'End');
-    expect(rows()).toEqual(['2098', '2099', '\u00a0']);
+    expect(centered()).toBe('2099');
+    expect(visible()).toEqual(['2097', '2098', '2099']);
   });
 
-  it('steps during a vertical drag, releases capture and suppresses the trailing click', () => {
+  it('follows a vertical drag and reports the row it stops on when released', () => {
     const onOpen = vi.fn();
     const { control, value, onChange, setPointerCapture, releasePointerCapture } = mountWheel({ onOpen });
-    pointer(control, 'pointerdown', 100);
+    pointer(control, 'pointerdown', 40);
     expect(document.activeElement).toBe(control);
-    pointer(control, 'pointermove', 80);
-    expect(onChange).not.toHaveBeenCalled();
-    pointer(control, 'pointermove', 75);
-    expect(value()).toBe(31);
+    pointer(control, 'pointermove', 38);
+    expect(setPointerCapture).not.toHaveBeenCalled(); // Below the drag threshold.
+    pointer(control, 'pointermove', 40 - ROW * 1.8);
     expect(setPointerCapture).toHaveBeenCalledWith(1);
-    pointer(control, 'pointermove', 50);
-    expect(value()).toBe(32);
-    pointer(control, 'pointermove', 75);
-    expect(value()).toBe(31);
-    pointer(control, 'pointerup', 75);
+    expect(centered()).toBe('32'); // The reel follows the finger…
+    expect(onChange).not.toHaveBeenCalled(); // …and reports nothing until it is let go.
+    pointer(control, 'pointerup', 40 - ROW * 1.8);
     expect(releasePointerCapture).toHaveBeenCalledWith(1);
+    expect(value()).toBe(32);
+    expect(onChange).toHaveBeenCalledExactlyOnceWith(32);
+    act(() => control.click()); // The click that ends the drag opens nothing.
     expect(onOpen).not.toHaveBeenCalled();
-    act(() => control.click()); // The click that ends the drag does not open the entry.
-    expect(onOpen).not.toHaveBeenCalled();
-    expect(value()).toBe(31);
-    expect(onChange).toHaveBeenCalledTimes(3);
-    act(() => control.click()); // A later deliberate click does.
-    expect(onOpen).toHaveBeenCalledTimes(1);
   });
 
-  it('ignores non-primary presses and stops a cancelled or abandoned gesture', () => {
+  it('ignores non-primary presses and snaps back after a cancelled or abandoned gesture', () => {
     const { control, onChange } = mountWheel();
-    pointer(control, 'pointerdown', 100, 2);
-    pointer(control, 'pointermove', 50);
+    pointer(control, 'pointerdown', 30, { button: 2 });
+    pointer(control, 'pointermove', 0);
+    pointer(control, 'pointerup', 0);
     expect(onChange).not.toHaveBeenCalled();
-    pointer(control, 'pointerdown', 100);
-    pointer(control, 'pointercancel', 100);
-    pointer(control, 'pointermove', 50);
+    pointer(control, 'pointerdown', 30);
+    pointer(control, 'pointercancel', 30);
+    pointer(control, 'pointermove', 0);
     expect(onChange).not.toHaveBeenCalled();
-    pointer(control, 'pointerdown', 100);
-    pointer(control, 'pointerout', 100);
-    pointer(control, 'pointermove', 50);
+    pointer(control, 'pointerdown', 30);
+    pointer(control, 'pointerout', 30);
+    pointer(control, 'pointermove', 0);
     expect(onChange).not.toHaveBeenCalled();
+    expect(centered()).toBe('30');
   });
 
   it('removes the native wheel listener when unmounted', () => {
     const { control, onChange } = mountWheel();
     act(() => root.render(null));
-    expect(turn(control, 30, 100).defaultPrevented).toBe(false);
+    expect(turn(control, 100, 100).defaultPrevented).toBe(false);
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it('cancels an active roll when effects are disabled and does not resume it when re-enabled', () => {
-    const frames = new Map<number, FrameRequestCallback>();
-    let nextId = 0;
-    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
-      frames.set(++nextId, callback);
-      return nextId;
-    });
-    const cancel = vi.fn((id: number) => { frames.delete(id); });
-    vi.stubGlobal('cancelAnimationFrame', cancel);
-    const render = (value: number, rollId: number, animated: boolean) => act(() => root.render(
+  it('rolls through the values in between when set from outside, with only the slot row lit', () => {
+    const { frames, play } = stubFrames();
+    const render = (value: number, animated = true) => act(() => root.render(
       <NumberWheel label="Day" value={value} min={1} max={31} animated={animated} invalid={false}
-        describedBy="hint" rollId={rollId} rollFrom={12} onChange={vi.fn()} />,
+        describedBy="hint" onChange={vi.fn()} />,
     ));
-    render(12, 0, true);
-    render(4, 1, true);
-    expect(container.querySelector('.number-wheel__reel--rolling')).not.toBeNull();
-    expect(frames.size).toBe(1);
-    render(4, 1, false);
-    expect(container.querySelector('.number-wheel__reel--rolling')).toBeNull();
-    expect(container.querySelector('.number-wheel__selected')?.textContent).toBe('04');
-    expect(cancel).toHaveBeenCalledTimes(1);
-    expect(frames.size).toBe(0);
-    render(4, 1, true);
-    expect(container.querySelector('.number-wheel__reel--rolling')).toBeNull();
-    expect(container.querySelector('.number-wheel__selected')?.textContent).toBe('04');
-    expect(frames.size).toBe(0);
-  });
-
-  it('rolls unit by unit from the previous value to a value set from outside, then settles', () => {
-    const frames: FrameRequestCallback[] = [];
-    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => frames.push(callback));
-    vi.stubGlobal('cancelAnimationFrame', vi.fn());
-    const render = (value: number, rollId: number, animated = true) => act(() => root.render(
-      <NumberWheel label="Day" value={value} min={1} max={31} animated={animated} invalid={false}
-        describedBy="hint" rollId={rollId} rollFrom={12} onChange={vi.fn()} />,
-    ));
-    const frame = (now: number) => act(() => frames.shift()!(now));
-    const shown = () => [...container.querySelectorAll('.number-wheel__row')].map((row) => row.textContent);
-    render(12, 0);
-    render(4, 1);
+    render(12);
+    render(4);
     const control = container.querySelector('[role="spinbutton"]')!;
     expect(control.getAttribute('aria-valuenow')).toBe('4'); // The real value is exposed at once.
-    expect(shown()).toEqual(['11', '12', '13', '14']); // Still on 12: the roll counts down from here.
-    frame(0);
-    frame(150);
-    const middle = shown();
-    expect(Number(middle[1])).toBeLessThan(12);
-    expect(Number(middle[1])).toBeGreaterThanOrEqual(4);
-    frame(5000);
-    expect(shown()).toEqual(['03', '04', '05']);
-    expect(container.querySelector('.number-wheel__reel')!.getAttribute('data-animated')).toBe('false');
+    expect(centered()).toBe('12'); // The reel starts from the previous value.
+    const passed = new Set<string | null>();
+    play(() => {
+      passed.add(centered());
+      // Only the row nearest the slot is more than half lit, never several at once.
+      expect(rows().filter((row) => row.focus > 0.5).length).toBeLessThanOrEqual(1);
+      expect(Math.max(...rows().map((row) => row.focus))).toBeGreaterThanOrEqual(0.5);
+    });
     expect(frames).toHaveLength(0);
+    expect(centered()).toBe('04');
+    expect(rows().find((row) => row.text === '04')!.focus).toBe(1);
+    expect([...passed]).toEqual(expect.arrayContaining(['11', '08', '05', '04']));
+    for (const value of passed) expect(Number(value)).toBeGreaterThanOrEqual(4); // Straight down, no wrap.
     // Without effects the value changes at once.
-    render(20, 2, false);
-    expect(shown()).toEqual(['19', '20', '21']);
+    render(20, false);
+    expect(centered()).toBe('20');
+  });
+
+  it('takes the shortest way round a cyclic wheel', () => {
+    const { play } = stubFrames();
+    const render = (value: number) => act(() => root.render(
+      <NumberWheel label="Minute" value={value} min={0} max={59} animated invalid={false} describedBy="hint" onChange={vi.fn()} />,
+    ));
+    render(58);
+    render(2);
+    const passed = new Set<string | null>();
+    play(() => passed.add(centered()));
+    expect([...passed]).toEqual(['58', '59', '00', '01', '02']);
+  });
+
+  it('keeps coasting after a quick swipe and reports where it will stop at once', () => {
+    const { frames, play } = stubFrames();
+    const { control, onChange } = mountWheel({ animated: true });
+    pointer(control, 'pointerdown', 60, { timeStamp: 0 });
+    pointer(control, 'pointermove', 50, { timeStamp: 10 });
+    pointer(control, 'pointermove', 30, { timeStamp: 20 });
+    pointer(control, 'pointermove', 10, { timeStamp: 30 });
+    pointer(control, 'pointerup', 10, { timeStamp: 32 });
+    expect(onChange).toHaveBeenCalledTimes(1);
+    const stop = onChange.mock.calls[0]![0] as number;
+    expect(stop).toBeGreaterThan(36); // Well past the 2.4 rows dragged.
+    expect(centered()).toBe('32');
+    play();
+    expect(frames).toHaveLength(0);
+    expect(centered()).toBe(String(stop).padStart(2, '0'));
+    expect(onChange).toHaveBeenCalledTimes(1);
   });
 });

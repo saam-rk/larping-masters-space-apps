@@ -8,7 +8,12 @@ class TestElement {
   getBoundingClientRect() { return { left: 0, top: 0 }; }
 }
 
-const listeners = new Map<string, (event: MouseEvent) => void>();
+const listeners = new Map<string, ((event: MouseEvent) => void)[]>();
+
+/** Calls every window listener of a type, in registration order. */
+function fire(type: string, event: MouseEvent) {
+  for (const listener of listeners.get(type) ?? []) listener(event);
+}
 let drawn: TestElement;
 
 beforeEach(() => {
@@ -22,7 +27,8 @@ beforeEach(() => {
   vi.stubGlobal('window', {
     innerWidth: 1000,
     innerHeight: 500,
-    addEventListener: (type: string, listener: (event: MouseEvent) => void) => listeners.set(type, listener),
+    addEventListener: (type: string, listener: (event: MouseEvent) => void) =>
+      listeners.set(type, [...(listeners.get(type) ?? []), listener]),
     removeEventListener: vi.fn(),
   });
   vi.stubGlobal('document', {
@@ -39,8 +45,11 @@ beforeEach(() => {
 
 afterEach(() => vi.unstubAllGlobals());
 
-function clickEvent(detail: number, clientX = 0, clientY = 0): MouseEvent {
+function clickEvent(detail: number, clientX = 0, clientY = 0, type = 'click'): MouseEvent {
   return {
+    type,
+    button: 0,
+    pointerId: 1,
     isTrusted: true,
     target: new TestElement(),
     detail,
@@ -55,7 +64,7 @@ describe('curvature pointer remapping', () => {
   it('leaves keyboard and assistive-technology activation on the focused control', () => {
     const stop = installCurvaturePointer();
     const event = clickEvent(0);
-    listeners.get('click')!(event);
+    fire('click', event);
     expect(event.preventDefault).not.toHaveBeenCalled();
     expect(event.stopImmediatePropagation).not.toHaveBeenCalled();
     expect(drawn.click).not.toHaveBeenCalled();
@@ -65,8 +74,23 @@ describe('curvature pointer remapping', () => {
   it('still redirects a pointer click to the drawn control', () => {
     const stop = installCurvaturePointer();
     const event = clickEvent(1, 500, 250);
-    listeners.get('click')!(event);
+    fire('click', event);
     expect(event.preventDefault).toHaveBeenCalledOnce();
+    expect(drawn.click).toHaveBeenCalledOnce();
+    stop();
+  });
+
+  it('leaves the click that ends a drag on the dragged control', () => {
+    const stop = installCurvaturePointer();
+    fire('pointerdown', clickEvent(1, 500, 250, 'pointerdown'));
+    const event = clickEvent(1, 500, 210);
+    fire('click', event);
+    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(event.stopImmediatePropagation).not.toHaveBeenCalled();
+    expect(drawn.click).not.toHaveBeenCalled();
+    // A press that barely moved is still a click on what is drawn there.
+    fire('pointerdown', clickEvent(1, 500, 250, 'pointerdown'));
+    fire('click', clickEvent(1, 502, 252));
     expect(drawn.click).toHaveBeenCalledOnce();
     stop();
   });

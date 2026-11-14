@@ -755,6 +755,11 @@ button {
 
 .number-wheel__label {
   display: block;
+  width: 100%;
+  /* Same box as the label buttons, so the date and time reels line up. */
+  margin: 0 0 0.1rem;
+  padding: 0.05rem 0;
+  border: 1px solid transparent;
   color: var(--muted);
   font-size: 0.6em;
   line-height: 1.1;
@@ -762,25 +767,81 @@ button {
   letter-spacing: 0.04em;
 }
 
-/* Compact reel: three short rows, so the box fits without scrolling the controls. */
+/* The label opens the exact picker for this part: it reads as a small dropdown trigger. */
+.number-wheel__label--button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2em;
+  margin: 0 0 0.1rem;
+  padding: 0.05rem 0;
+  font: inherit;
+  font-size: 0.6em;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.number-wheel__caret {
+  font-size: 0.85em;
+  line-height: 1;
+  transition: transform 120ms ease-out;
+}
+
+:where(:root:not([data-curve='on'])) .number-wheel__label--button:hover,
+.number-wheel__label--button[data-hover],
+.number-wheel__label--button:focus-visible,
+.number-wheel__label--button[aria-expanded='true'] {
+  color: var(--accent);
+  border-color: var(--line-dim);
+}
+
+.number-wheel__label--button[aria-expanded='true'] .number-wheel__caret {
+  transform: rotate(180deg);
+}
+
+/* Compact drum: three short rows, so the box fits without scrolling the controls. */
 .number-wheel__control {
   --wheel-row: 1.3rem;
   position: relative;
   height: calc(3 * var(--wheel-row));
   overflow: hidden;
-  cursor: pointer;
+  cursor: grab;
   touch-action: pan-x;
   user-select: none;
   font-variant-numeric: tabular-nums;
+}
+
+.number-wheel__control:active {
+  cursor: grabbing;
 }
 
 /* A fixed illuminated slot keeps the selected row distinct as the reel turns. */
 .number-wheel__control::before {
   content: '';
   position: absolute;
+  z-index: 1;
   inset: var(--wheel-row) 0;
   border-block: 1px solid var(--line-dim);
   background: rgba(57, 255, 136, 0.07);
+  pointer-events: none;
+}
+
+/* The drum curves away at the top and bottom edges. */
+.number-wheel__control::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--panel-solid) 0%,
+    transparent 30%,
+    transparent 70%,
+    var(--panel-solid) 100%
+  );
+  opacity: 0.55;
   pointer-events: none;
 }
 
@@ -799,58 +860,35 @@ button {
 }
 
 .number-wheel__reel {
-  position: relative;
+  position: absolute;
+  inset: 0;
 }
 
+/*
+ * Each row is placed and sized from its distance to the slot (set inline on
+ * every frame): `--focus` is 1 for the centered row and 0 one row away, so
+ * size and color change continuously as the reel turns.
+ */
 .number-wheel__row {
+  --focus: 0;
+  position: absolute;
+  top: calc(50% - var(--wheel-row) / 2);
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
   height: var(--wheel-row);
+  font-size: 1.1em;
   line-height: 1;
   white-space: nowrap;
-}
-
-.number-wheel__neighbor {
   color: #69866e;
-  font-size: 0.75em;
-}
-
-.number-wheel__selected,
-.number-wheel__row--rolling {
-  color: var(--accent);
-  font-size: 1.1em;
-}
-
-/* Odometer roll (LIVE, exact entry): `--roll-offset` is the fraction of a row travelled. */
-.number-wheel__reel--rolling {
-  transform: translateY(calc(var(--roll-offset, 0) * -1 * var(--wheel-row)));
+  color: color-mix(in srgb, var(--accent) calc(var(--focus) * 100%), #69866e);
   will-change: transform;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  :root[data-fx='on'] .number-wheel__reel[data-animated='true'] {
-    animation: wheel-step-up 140ms ease-out;
-  }
-
-  :root[data-fx='on'] .number-wheel__reel[data-animated='true'][data-direction='-1'] {
-    animation-name: wheel-step-down;
-  }
-}
-
-@keyframes wheel-step-up {
-  from { transform: translateY(0.45rem); }
-  to { transform: translateY(0); }
-}
-
-@keyframes wheel-step-down {
-  from { transform: translateY(-0.45rem); }
-  to { transform: translateY(0); }
-}
-
-/* Exact date and time dropdown, opened from a wheel; it overlays what is below the wheels. */
-.datetime-entry {
+/* Exact picker for one part, opened from a wheel's label; it overlays what is below the wheels. */
+.datetime-picker {
   position: absolute;
   z-index: 20;
   top: calc(100% + 0.35rem);
@@ -864,89 +902,71 @@ button {
     0 0 16px rgba(57, 255, 136, 0.18);
 }
 
-.datetime-entry .box__title {
+.datetime-picker .box__title {
   font-size: 0.85em;
 }
 
-.datetime-entry .icon-button {
+.datetime-picker .icon-button {
   font-size: 0.8em;
 }
 
-.datetime-entry__fields {
-  display: grid;
-  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
-  gap: 0 0.65rem;
-}
-
-.datetime-entry__group {
-  display: grid;
-  gap: 0.6rem;
-}
-
-.datetime-entry__group--date {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.45fr);
-}
-
-.datetime-entry__group--time {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.datetime-entry__part {
+.datetime-picker__grid {
   position: relative;
+  display: grid;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The years (100 values) scroll inside the dropdown. */
+.datetime-picker__grid[data-scroll='true'] {
+  max-height: 9.5rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.datetime-picker__grid:focus-visible {
+  outline-offset: 2px;
+}
+
+.datetime-picker__option {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0 0.25em;
   min-width: 0;
-}
-
-.datetime-entry__label {
-  color: var(--muted);
-  font-size: 0.6em;
-  line-height: 1.1;
+  padding: 0.2rem 0;
+  font-size: 0.85em;
+  line-height: 1.2;
   text-align: center;
-  text-transform: var(--title-case);
-  letter-spacing: 0.04em;
-}
-
-/* Separators sit in the gap between fields: "/" for the date, ":" for the time. */
-.datetime-entry__separator {
-  position: absolute;
-  bottom: 0.35rem;
-  left: -0.3rem;
-  transform: translateX(-50%);
   color: var(--muted);
+  border: 1px solid transparent;
+  cursor: pointer;
 }
 
-.datetime-entry__input {
-  width: 100%;
-  padding: 0.15rem 0.2rem;
-  text-align: center;
-}
-
-.datetime-entry .hint {
-  margin-top: 0.35rem;
-}
-
-.datetime-entry__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 0.45rem;
-}
-
-.datetime-entry__apply {
+.datetime-picker__option[aria-selected='true'] {
   color: var(--accent);
+  border-color: var(--line-dim);
+  background: rgba(57, 255, 136, 0.07);
 }
 
-:where(:root:not([data-curve='on'])) .datetime-entry__apply:hover,
-.datetime-entry__apply[data-hover],
-.datetime-entry__apply:focus-visible {
+.datetime-picker__option[data-active='true'] {
   color: #000;
   background: var(--accent);
   border-color: var(--accent);
 }
 
+.datetime-picker__month-number {
+  font-size: 0.75em;
+  opacity: 0.75;
+}
+
+.datetime-picker__month-name {
+  text-transform: var(--title-case);
+}
+
 @media (prefers-reduced-motion: no-preference) {
-  :root[data-fx='on'] .datetime-entry {
+  :root[data-fx='on'] .datetime-picker {
     animation: dropdown-open 140ms ease-out;
     transform-origin: top;
   }
