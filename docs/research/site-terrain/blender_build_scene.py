@@ -168,6 +168,7 @@ def _export_glb(path: Path, terrain) -> dict:
         "filepath": str(path),
         "export_format": "GLB",
         "use_selection": True,
+        "use_active_scene": True,
         "export_yup": True,
         "export_apply": False,
         "export_texcoords": False,
@@ -214,9 +215,7 @@ def build(prep_json, grid_npz, out_blend, out_glb) -> dict:
     scene.unit_settings.length_unit = "METERS"
 
     root = scene.collection
-    markers_coll = bpy.data.collections.get("Markers") or bpy.data.collections.new(
-        "Markers"
-    )
+    markers_coll = bpy.data.collections.new("Markers")
     if markers_coll.name not in root.children:
         root.children.link(markers_coll)
 

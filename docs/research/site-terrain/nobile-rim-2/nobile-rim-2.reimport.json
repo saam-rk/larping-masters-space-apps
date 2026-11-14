@@ -1,0 +1,90 @@
+{
+  "blenderVersion": "5.3.0",
+  "importedObjects": [
+    "Terrain_nobile-rim-2"
+  ],
+  "terrainObject": "Terrain_nobile-rim-2",
+  "matrixWorldIsIdentity": true,
+  "vertices": 50000,
+  "triangles": 99198,
+  "polygons": 99198,
+  "bboxMinBlender": [
+    -4997.5,
+    -4997.5,
+    -1307.95654296875
+  ],
+  "bboxMaxBlender": [
+    5002.5,
+    5002.5,
+    459.9681396484375
+  ],
+  "bboxDimensionsM": [
+    10000.0,
+    10000.0,
+    1767.9246826171875
+  ],
+  "expectedExtentLocalM": {
+    "xMin": -4997.5,
+    "xMax": 5002.5,
+    "yMin": -4997.5,
+    "yMax": 5002.5
+  },
+  "extentErrorM": {
+    "xMin": 0.0,
+    "xMax": 0.0,
+    "yMin": 0.0,
+    "yMax": 0.0
+  },
+  "expectedElevationRangeLocalM": [
+    -1307.9565124511719,
+    459.9681396484375
+  ],
+  "meanPolygonNormalZ": 0.9782071873419765,
+  "materials": [
+    "Terrain_neutral_grey"
+  ],
+  "extras": {
+    "siteId": "nobile-rim-2",
+    "crs": "+proj=stere +lat_0=-90 +lat_ts=-90 +lon_0=0 +x_0=0 +y_0=0 +R=1737400 +units=m +no_defs=True",
+    "frame": "MOON_ME reference frame of ephemeris DE421 (stated by the provider README; not encoded in the GeoTIFF CRS)",
+    "originProjectedXM": 157000.0,
+    "originProjectedYM": 95000.0,
+    "originElevationM": 1010.0,
+    "source": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/DM2/DM2_final_adj_5mpp_surf.tif"
+  },
+  "rayCastProbes": {
+    "site": {
+      "hit": true,
+      "blenderXYZ": [
+        0.4519651532173157,
+        0.25340116024017334,
+        -0.348846435546875
+      ],
+      "elevationM": 1009.6511535644531,
+      "sourceBilinearElevationM": 1009.6715787481011,
+      "differenceM": -0.020425183647944323
+    },
+    "ridge-reference": {
+      "hit": true,
+      "blenderXYZ": [
+        -2397.5,
+        -2797.5,
+        455.3916015625
+      ],
+      "elevationM": 1465.3916015625,
+      "sourceBilinearElevationM": 1465.391601562482,
+      "differenceM": 1.7962520360015333e-11
+    },
+    "southeast-slope": {
+      "hit": true,
+      "blenderXYZ": [
+        2123.39990234375,
+        -2123.5,
+        -291.156005859375
+      ],
+      "elevationM": 718.843994140625,
+      "sourceBilinearElevationM": 719.2759531250282,
+      "differenceM": -0.43195898440319525
+    }
+  }
+}

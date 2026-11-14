@@ -4,6 +4,12 @@ Builds a georeferenced terrain mesh around a lunar site from a polar-stereograph
 
 First output: `nobile-rim-1/` (NASA PGDA product 78, Site06, 5 m/pixel).
 
+Budgeted adaptive output: [Nobile Rim 2](nobile-rim-2/README.md), using DM2,
+50,000 vertices, 99,198 triangles and a 1,796,720-byte uncompressed GLB.
+Its separate adaptive scripts reuse this generator's coordinate contract and
+scene construction. The shared exporter now restricts export to the active
+scene; marker collections are newly created to isolate repeated builds.
+
 ## Files
 
 | File | Role |

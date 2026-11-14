@@ -1,0 +1,66 @@
+{
+  "siteId": "nobile-rim-2",
+  "siteName": "Nobile Rim 2",
+  "latitudeDeg": -83.954,
+  "longitudeEastDeg": 58.82206,
+  "siteSource": "shared/sites.ts, from NASA Lunar Surface Data Book (M2M-30044) table A2.1-1. Center of an original candidate-region polygon; not an approved landing site.",
+  "raster": {
+    "product": "NASA GSFC PGDA product 78, adjusted local LOLA 5 m/pixel elevation (DM2 = Nobile rim 2)",
+    "productUrl": "https://pgda.gsfc.nasa.gov/products/78",
+    "sourceUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/DM2/DM2_final_adj_5mpp_surf.tif",
+    "readmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+    "frame": "MOON_ME reference frame of ephemeris DE421 (stated by the provider README; not encoded in the GeoTIFF CRS)",
+    "valueMeaning": "Surface height Z in meters above a 1,737,400 m reference sphere; interpolation fills pixels without LOLA returns",
+    "citation": "Barker et al. (2021), Planetary and Space Science 203, 105119, https://doi.org/10.1016/j.pss.2020.105119"
+  },
+  "crop": {
+    "halfSizeM": 5000
+  },
+  "mesh": {
+    "stepPixels": 10,
+    "analyzeStepsPixels": [
+      5,
+      10
+    ],
+    "targetVertices": 50000,
+    "featurePriorityRadiusM": 1000,
+    "featurePriorityMultiplier": 4
+  },
+  "referencePoints": [
+    {
+      "id": "ridge-reference",
+      "name": "Southwest broad crest",
+      "latitudeDeg": -84.0689860676775,
+      "longitudeEastDeg": 59.18881423184684,
+      "source": "Selected by visual inspection of numeric DM2 elevation and illustrative hillshade within the 10 km crop; descriptive label, not an IAU feature name. Crest approximately 400 m above the reference site."
+    }
+  ],
+  "checkPoints": [
+    {
+      "id": "site",
+      "use": "site"
+    },
+    {
+      "id": "ridge-reference",
+      "use": "referencePoint"
+    },
+    {
+      "id": "southeast-slope",
+      "name": "Southeast descending slope",
+      "latitudeDeg": -83.92966672212242,
+      "longitudeEastDeg": 59.7289188845076,
+      "source": "Off-grid coordinate selected for an independent surface check, no mission significance."
+    }
+  ],
+  "silhouette": {
+    "observerHeightM": 2.0,
+    "targetPoint": "ridge-reference",
+    "azimuthHalfWidthDeg": 20,
+    "azimuthStepDeg": 0.5,
+    "radialStepM": 1.25
+  },
+  "groundCamera": {
+    "heightAboveSurfaceM": 2.0,
+    "lookAtPoint": "ridge-reference"
+  }
+}

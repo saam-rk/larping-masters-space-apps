@@ -1,0 +1,38 @@
+{
+  "allPassed": true,
+  "loader": "Three.js GLTFLoader",
+  "meshCount": 1,
+  "manualCoordinatesChecked": 100,
+  "invalidAndOutsideReturnNull": true,
+  "transformedMeshChecked": true,
+  "pointComparisons": [
+    {
+      "id": "site",
+      "differenceM": -1.1368683772161603e-13,
+      "localWith2mOffset": [
+        0.45196514757117257,
+        1.6511412286593554,
+        -0.25340115098515525
+      ]
+    },
+    {
+      "id": "ridge-reference",
+      "differenceM": 3.296918293926865e-11,
+      "localWith2mOffset": [
+        -2397.5000000004075,
+        457.3916015624792,
+        2797.500000000233
+      ]
+    },
+    {
+      "id": "southeast-slope",
+      "differenceM": 0,
+      "localWith2mOffset": [
+        2123.400000000518,
+        -289.1560395507347,
+        2123.499999999709
+      ]
+    }
+  ],
+  "performance": "Node parsing and geometry checks only; no browser, network or mobile FPS measurement"
+}

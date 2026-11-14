@@ -1,0 +1,26 @@
+{
+  "allPassed": true,
+  "checks": {
+    "deliveredSceneActive": true,
+    "onlyDeliveredScene": true,
+    "terrainGeometry": true,
+    "meterUnits": true,
+    "overviewActive": true,
+    "bothCameras": true,
+    "twoMeterGroundCamera": true,
+    "siteAndCrestMarkers": true
+  },
+  "groundCameraClearanceM": 2.0,
+  "sceneObjects": [
+    "Terrain_nobile-rim-2",
+    "Camera_ground_to_ridge",
+    "Camera_overview",
+    "Sun_illustrative_grazing",
+    "Fill_illustrative",
+    "Marker_nobile-rim-2",
+    "Marker_nobile-rim-2_pole",
+    "Marker_ridge-reference",
+    "Marker_ridge-reference_pole"
+  ],
+  "blenderVersion": "5.3.0"
+}
