@@ -1,0 +1,105 @@
+{
+  "status": "passed",
+  "glb": {
+    "bytes": 1798344,
+    "mib": 1.7150344848632812,
+    "budgetBytes": 2097152,
+    "remainingBytes": 298808,
+    "vertices": 50000,
+    "triangles": 99533,
+    "attributes": [
+      "POSITION",
+      "NORMAL"
+    ],
+    "indexComponentType": 5123,
+    "extensionsRequired": [],
+    "sha256": "a6f4587fa3d6059c5a40578cd10753d8388174169073311253aaadf0a8913c0c",
+    "boundsM": [
+      [
+        -5057.5,
+        -2067.615966796875,
+        -6867.5
+      ],
+      [
+        4937.5,
+        899.92822265625,
+        3127.5
+      ]
+    ]
+  },
+  "topology": {
+    "boundaryEdges": 465,
+    "nonManifoldEdges": 0,
+    "eulerCharacteristic": 1,
+    "allFaceNormalsUp": true,
+    "projectedAreaM2": 99900025.0
+  },
+  "sourceChecks": {
+    "sha256": "cca17e8067601dd659b583f889204db6bce685bc30c60a9e62427a8bce36b03d",
+    "allVerticesAtSourcePixelCenters": true,
+    "maxVertexHeightResidualM": 0.0,
+    "allTrianglesNodataSafe": true,
+    "outsidePointRejected": true
+  },
+  "comparisonMethods": {
+    "raster": "float64 bilinear interpolation of four surrounding 5 m pixel centers",
+    "glb": "float64 barycentric vertical intersection with actual exported triangle/index buffers; restore origin height",
+    "delta": "GLB minus raster, meters; mesh approximation difference, NOT scientific accuracy"
+  },
+  "controls": [
+    {
+      "name": "site",
+      "latitudeDeg": -85.4381,
+      "longitudeEastDeg": 37.36667,
+      "projectedM": [
+        84000.01002578877,
+        110000.01079172149
+      ],
+      "rasterBilinearM": 5946.899465547405,
+      "glbBarycentricM": 5946.894584315399,
+      "glbMinusRasterM": -0.004881232006482605
+    },
+    {
+      "name": "ridge",
+      "latitudeDeg": -85.34185,
+      "longitudeEastDeg": 36.40708,
+      "projectedM": [
+        83881.09756627696,
+        113744.1237488099
+      ],
+      "rasterBilinearM": 6384.412975779015,
+      "glbBarycentricM": 6384.386111934216,
+      "glbMinusRasterM": -0.026863844798754144
+    },
+    {
+      "name": "third",
+      "latitudeDeg": -85.47,
+      "longitudeEastDeg": 38.0,
+      "projectedM": [
+        84614.2832747164,
+        108301.34384148802
+      ],
+      "rasterBilinearM": 5830.303607621837,
+      "glbBarycentricM": 5830.279720516553,
+      "glbMinusRasterM": -0.023887105283392884
+    }
+  ],
+  "holdoutGrid": {
+    "count": 625,
+    "missing": 0,
+    "maxAbsDifferenceM": 2.3463345776899587,
+    "rmsDifferenceM": 0.4598029427600174,
+    "p95AbsDifferenceM": 0.9087717587137375,
+    "note": "625 interior points, not exhaustive. Site/ridge supports are protected; third control is not."
+  },
+  "mobilePerformance": {
+    "coldLoadTargetSeconds": 2,
+    "orbitTargetFps": 60,
+    "orbitMinimumFps": 50,
+    "status": "pending",
+    "device": null,
+    "browser": null,
+    "network": null,
+    "reason": "No mobile device/network performance test performed; asset size is not latency/FPS evidence."
+  }
+}

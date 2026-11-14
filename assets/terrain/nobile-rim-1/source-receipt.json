@@ -1,0 +1,16 @@
+{
+  "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site06/Site06_final_adj_5mpp_surf.tif",
+  "httpResponseDate": "Sat, 14 Nov 2026 16:32:33 GMT",
+  "lastModified": "Fri, 12 Feb 2021 13:33:34 GMT",
+  "etag": "W/\"3d0f403-17796725fb0\"",
+  "contentType": "image/tiff",
+  "bytes": 64025603,
+  "sha256": "cca17e8067601dd659b583f889204db6bce685bc30c60a9e62427a8bce36b03d",
+  "transport": "Python urllib.request HTTPS with default TLS verification; full successful response",
+  "localCache": "C:/Users/crown/AppData/Local/Temp/nobile-rim-1-model-source/Site06_final_adj_5mpp_surf.tif",
+  "cachePolicy": "Outside the repository; may be deleted by the OS. Download again and check SHA-256 to reproduce.",
+  "historicalWindow": "docs/research/polar-terrain-validation/Site06-surf.tif",
+  "historicalWindowStatus": "Retained unchanged. Only 5 x 5 pixels; all 25 values match the full source exactly.",
+  "readmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+  "retainedReadme": "source-README.txt"
+}
