@@ -2,7 +2,7 @@
  * Simple 3D view of the local horizon with the Sun and Earth directions.
  * Placeholder visuals for the interface owner to refine; positions come only
  * from the azimuth/elevation in `data`, the same values as the results panel.
- * Disk sizes are not to scale.
+ * Disk sizes are not to scale. The canvas fills whatever height its box gets.
  */
 
 import { Html, Line, OrbitControls } from '@react-three/drei';
@@ -14,8 +14,8 @@ import { horizontalToPosition, type Vector3Tuple } from './geometry';
 const SKY_RADIUS = 10;
 
 const BODY_STYLE: Readonly<Record<BodyId, { color: string; radius: number }>> = {
-  sun: { color: '#ffd166', radius: 0.6 },
-  earth: { color: '#4cc9f0', radius: 0.45 },
+  sun: { color: '#ffc233', radius: 0.6 },
+  earth: { color: '#3ee8ff', radius: 0.45 },
 };
 
 interface PlacedBody {
@@ -52,21 +52,22 @@ export default function SkyScene({ data }: { data: EphemerisResponse }) {
 
   return (
     <div className="scene">
-      <Canvas camera={{ position: [0, 9, 16], fov: 50 }}>
+      {/* Renders on demand (controls invalidate on change) instead of every frame. */}
+      <Canvas camera={{ position: [0, 9, 16], fov: 50 }} frameloop="demand" dpr={[1, 1.5]}>
         <ambientLight intensity={0.6} />
         <directionalLight position={[5, 10, 5]} intensity={0.8} />
 
         {/* Horizontal reference plane (not terrain). */}
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
           <circleGeometry args={[SKY_RADIUS, 64]} />
-          <meshStandardMaterial color="#3a3f4b" transparent opacity={0.85} />
+          <meshStandardMaterial color="#061a0d" transparent opacity={0.8} />
         </mesh>
-        <gridHelper args={[SKY_RADIUS * 2, 20, '#5c6370', '#454b57']} position={[0, 0.01, 0]} />
+        <gridHelper args={[SKY_RADIUS * 2, 20, '#39ff88', '#14532d']} position={[0, 0.01, 0]} />
 
         {/* Observer. */}
         <mesh position={[0, 0.25, 0]}>
           <coneGeometry args={[0.25, 0.5, 16]} />
-          <meshStandardMaterial color="#e5e7eb" />
+          <meshStandardMaterial color="#d8f5d0" emissive="#39ff88" emissiveIntensity={0.25} />
         </mesh>
 
         {compass.map(({ label, position }) => (
@@ -95,12 +96,15 @@ export default function SkyScene({ data }: { data: EphemerisResponse }) {
         <OrbitControls enablePan={false} minDistance={6} maxDistance={30} />
       </Canvas>
 
-      <p className="scene__note">{messages.scene.notToScale}</p>
-      {missing.map((body) => (
-        <p key={body} className="scene__note scene__note--warning">
-          {messages.scene.missing(messages.bodies[body])}
-        </p>
-      ))}
+      {/* Overlaid on the canvas so the view keeps its full height. */}
+      <div className="scene__notes">
+        <p className="scene__note">{messages.scene.notToScale}</p>
+        {missing.map((body) => (
+          <p key={body} className="scene__note scene__note--warning">
+            {messages.scene.missing(messages.bodies[body])}
+          </p>
+        ))}
+      </div>
     </div>
   );
 }

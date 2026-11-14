@@ -1,31 +1,18 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, type ReactNode } from 'react';
+import { usePreferences } from '../preferences/context';
 import { I18nContext } from './context';
-import { DEFAULT_LOCALE, isLocale, MESSAGES, type Locale } from './messages';
+import { MESSAGES, type Locale } from './messages';
 
-const STORAGE_KEY = 'clps.locale';
-
-function readStoredLocale(): Locale {
-  try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    return isLocale(stored) ? stored : DEFAULT_LOCALE;
-  } catch {
-    // Storage can be unavailable (privacy mode); fall back to the default.
-    return DEFAULT_LOCALE;
-  }
-}
-
+/** Locale lives in the display preferences (cookie), alongside effects and font. */
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocale] = useState<Locale>(readStoredLocale);
+  const { preferences, update } = usePreferences();
+  const { locale } = preferences;
 
   useEffect(() => {
     document.documentElement.lang = locale;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, locale);
-    } catch {
-      // Not persisting the choice is acceptable.
-    }
   }, [locale]);
 
-  const value = useMemo(() => ({ locale, messages: MESSAGES[locale], setLocale }), [locale]);
+  const setLocale = useCallback((next: Locale) => update({ locale: next }), [update]);
+  const value = useMemo(() => ({ locale, messages: MESSAGES[locale], setLocale }), [locale, setLocale]);
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
