@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_SITE_ID, findSite } from '../../../shared/sites';
 import { MESSAGES } from '../../i18n/messages';
 import { ConfigPanel } from './ConfigPanel';
+import { utcToFields } from './timeZone';
 
 vi.mock('../../i18n/context', () => ({
   useI18n: () => ({ locale: 'en', messages: MESSAGES.en }),
@@ -48,7 +49,7 @@ function mountPanel() {
     document.querySelector<HTMLElement>(`[role="spinbutton"][aria-labelledby="${labelButton(name).id}"]`)!;
   const picker = () => container.querySelector<HTMLElement>('.datetime-picker');
   const pickerTitle = () => picker()?.querySelector('.box__title')?.textContent;
-  const options = () => [...container.querySelectorAll<HTMLElement>('[role="option"]')];
+  const options = () => [...container.querySelectorAll<HTMLElement>('.datetime-picker [role="option"]')];
   return { onUtcChange, labelButton, wheel, picker, pickerTitle, options };
 }
 
@@ -102,6 +103,27 @@ describe('ConfigPanel exact date and time pickers', () => {
     expect(options()).toHaveLength(28);
   });
 
+  it('keeps exact date pickers compatible with named time zone wheels', () => {
+    const { labelButton, wheel, picker, onUtcChange } = mountPanel();
+    const zone = container.querySelector<HTMLElement>('.datetime__wheels--zone [role="spinbutton"]')!;
+    expect(zone.getAttribute('aria-valuetext')).toBe(MESSAGES.en.config.zoneUtc);
+    act(() => labelButton('Day').click());
+    expect(picker()).not.toBeNull();
+    act(() => { zone.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'ArrowUp' })); });
+    expect(picker()).toBeNull();
+    expect(zone.getAttribute('aria-valuenow')).toBe('1');
+    expect(zone.getAttribute('aria-valuetext')).toContain('Local');
+    const expected = utcToFields('2026-01-12T14:30:00Z', 'local');
+    expect(wheel('Day').getAttribute('aria-valuenow')).toBe(String(Number(expected.date.slice(-2))));
+    expect(container.querySelector('.datetime__wheels--time [role="spinbutton"]')?.getAttribute('aria-valuenow'))
+      .toBe(String(Number(expected.time.slice(0, 2))));
+    expect(onUtcChange).not.toHaveBeenCalled();
+    act(() => { zone.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'ArrowDown' })); });
+    expect(zone.getAttribute('aria-valuetext')).toBe(MESSAGES.en.config.zoneUtc);
+    expect(wheel('Day').getAttribute('aria-valuenow')).toBe('12');
+    expect(onUtcChange).not.toHaveBeenCalled();
+  });
+
   it('does not open a picker when the wheel itself is pressed', () => {
     const { wheel, picker } = mountPanel();
     act(() => wheel('Day').click());
@@ -125,8 +147,8 @@ describe('ConfigPanel and instants chosen elsewhere', () => {
       ));
     const values = () => [...container.querySelectorAll('[role="spinbutton"]')].map((wheel) => wheel.getAttribute('aria-valuenow'));
     render('2026-01-12T14:30:00Z');
-    expect(values()).toEqual(['12', '1', '2026', '14', '30']);
+    expect(values()).toEqual(['12', '1', '2026', '14', '30', '0']);
     render('2026-11-16T02:19:35Z');
-    expect(values()).toEqual(['16', '11', '2026', '2', '19']);
+    expect(values()).toEqual(['16', '11', '2026', '2', '19', '0']);
   });
 });

@@ -1,0 +1,54 @@
+import { describe, expect, it } from 'vitest';
+import { findSite, type SiteId } from '../../../../shared/sites';
+import { SITE_TERRAINS, terrainForSite } from './models';
+import { glbToSceneDirection, projectSouthPolar, projectedToGlb } from './siteTerrain';
+
+function normalize([x, y, z]: readonly number[]): number[] {
+  const length = Math.hypot(x ?? 0, y ?? 0, z ?? 0);
+  return [(x ?? 0) / length, (y ?? 0) / length, (z ?? 0) / length];
+}
+
+describe('terrain models', () => {
+  it('has first-person terrain for Nobile Rim 1 and 2 only', () => {
+    expect(SITE_TERRAINS.map((model) => model.siteId).sort()).toEqual(['nobile-rim-1', 'nobile-rim-2']);
+    expect(terrainForSite('shackleton-rim')).toBeNull();
+    expect(terrainForSite('custom')).toBeNull();
+  });
+
+  it.each<[SiteId, number, number]>([
+    // docs/research/site-terrain/nobile-rim-2/README.md: X=157000.451965 m, Y=95000.253401 m.
+    ['nobile-rim-2', 157000.451965, 95000.253401],
+    // assets/terrain/nobile-rim-1/README.md: X=84,000.0100258 m, Y=110,000.0107917 m.
+    ['nobile-rim-1', 84000.0100258, 110000.0107917],
+  ])('projects %s as in its terrain metadata', (siteId, expectedX, expectedY) => {
+    const site = findSite(siteId);
+    const { x, y } = projectSouthPolar(site.latitudeDeg, site.longitudeEastDeg);
+    expect(x).toBeCloseTo(expectedX, 4);
+    expect(y).toBeCloseTo(expectedY, 4);
+  });
+
+  it.each<SiteId>(['nobile-rim-1', 'nobile-rim-2'])('places the %s site near the GLB origin', (siteId) => {
+    const site = findSite(siteId);
+    const terrain = terrainForSite(siteId)!;
+    const { x, y } = projectSouthPolar(site.latitudeDeg, site.longitudeEastDeg);
+    const [gx, , gz] = projectedToGlb(terrain, x, y, terrain.origin.elevationM);
+    expect(Math.hypot(gx, gz)).toBeLessThan(1);
+  });
+
+  it.each([
+    // A small step in latitude (north) or longitude (east) from the site.
+    ['nobile-rim-1', 'north', 0.01, 0, [0, 0, -1]],
+    ['nobile-rim-1', 'east', 0, 0.05, [1, 0, 0]],
+    ['nobile-rim-2', 'north', 0.01, 0, [0, 0, -1]],
+    ['nobile-rim-2', 'east', 0, 0.05, [1, 0, 0]],
+  ] as const)('turns geographic %s %s into the scene axis', (siteId, _label, dLat, dLon, expected) => {
+    const site = findSite(siteId);
+    const terrain = terrainForSite(siteId)!;
+    const from = projectSouthPolar(site.latitudeDeg, site.longitudeEastDeg);
+    const to = projectSouthPolar(site.latitudeDeg + dLat, site.longitudeEastDeg + dLon);
+    const a = projectedToGlb(terrain, from.x, from.y, 0);
+    const b = projectedToGlb(terrain, to.x, to.y, 0);
+    const direction = normalize(glbToSceneDirection(terrain, [b[0] - a[0], 0, b[2] - a[2]]));
+    direction.forEach((value, i) => expect(value).toBeCloseTo(expected[i] ?? NaN, 3));
+  });
+});

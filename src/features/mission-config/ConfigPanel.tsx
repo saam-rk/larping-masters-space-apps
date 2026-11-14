@@ -1,15 +1,16 @@
 /**
  * Site and time selection: the three reference points (a terminal-style
  * radio list with their coordinates), a search box for custom coordinates or
- * a point name (filled in when a reference point is picked), separate date
- * and time fields with a time zone selector (UTC, the time NASA uses for
- * launches, or the browser's local zone) and the update button. Explanations
- * live in each section's help dialog.
+ * a point name (filled in when a reference point is picked), a drop-down of
+ * further reference points (placeholder options for now; choosing one does
+ * not change the calculation), date and time wheels with a time zone wheel
+ * (UTC, the time NASA uses for launches, or the browser's local zone) and the
+ * update button. Explanations live in each section's help dialog.
  *
- * The update button is available for any valid selection while idle,
- * including the saved sample and retries of the same case. Once a complete live
- * result for the current selection is on screen it reads "Updated" (still
- * pressable to query again).
+ * The update button is available for valid selections while idle unless a
+ * complete live result already matches the selected coordinates and UTC instant.
+ * It then reads "Updated" and stays disabled until the point or date/time changes
+ * (D-020). Saved samples, failed requests and partial results remain retryable.
  */
 
 import { useId, useState, type FormEvent } from 'react';
@@ -21,6 +22,7 @@ import { usePreferences } from '../../preferences/context';
 import { prefersReducedMotion } from '../../preferences/preferences';
 import { Box } from '../../ui/Box';
 import { NumberWheel } from '../../ui/NumberWheel';
+import { WheelSelect } from '../../ui/WheelSelect';
 import { formatCoordinateQuery, parseCoordinateQuery, type CoordinateQuery } from './coordinateQuery';
 import { DateTimePartPicker } from './DateTimePartPicker';
 import {
@@ -40,6 +42,7 @@ import {
   formatUtcMinute,
   localOffsetLabel,
   localZoneId,
+  TIME_ZONE_MODES,
   utcToFields,
   type DateTimeFields,
   type TimeZoneMode,
@@ -115,6 +118,9 @@ export function ConfigPanel({
   const timeFieldId = useId();
   const zoneFieldId = useId();
   const timeHintId = useId();
+  const morePointsHintId = useId();
+  // Placeholder drop-down: the choice is only shown, it is not part of the selection.
+  const [morePoint, setMorePoint] = useState<number | null>(null);
   const wheelHintId = useId();
   const wheelIdBase = useId();
   const pickerId = useId();
@@ -143,7 +149,7 @@ export function ConfigPanel({
   const parsedTime = fieldsToUtc(fields, zone, selection.utc);
   const custom = selection.siteId === CUSTOM_SITE_ID;
   const valid = parsedTime.ok && isUsable(query);
-  const canUpdate = valid && !loading;
+  const canUpdate = valid && !loading && !upToDate;
 
   const wheelId = (part: DateTimePart) => `${wheelIdBase}-${part}`;
 
@@ -262,7 +268,7 @@ export function ConfigPanel({
         </span>
       </>
     );
-  } else if (canUpdate && upToDate) {
+  } else if (valid && upToDate) {
     buttonClass += ' button--done';
     buttonLabel = (
       <>
@@ -335,6 +341,19 @@ export function ConfigPanel({
             {searchHint.text}
           </p>
         )}
+
+        <WheelSelect
+          label={config.morePoints.label}
+          placeholder={config.morePoints.placeholder}
+          options={config.morePoints.options}
+          value={morePoint}
+          describedBy={morePointsHintId}
+          onChange={setMorePoint}
+        />
+        {/* Also in the help dialog; read with the drop-down so its placeholder nature is not missed. */}
+        <p id={morePointsHintId} className="visually-hidden">
+          {config.morePoints.hint}
+        </p>
       </Box>
 
       <Box
@@ -401,18 +420,29 @@ export function ConfigPanel({
           )}
         </div>
 
-        <label className="search-field__label" htmlFor={zoneFieldId}>
-          {config.timeZone}
-        </label>
-        <select
-          id={zoneFieldId}
-          className="text-input select-input"
-          value={zone}
-          onChange={(event) => handleZoneChange(event.target.value as TimeZoneMode)}
-        >
-          <option value="utc">{config.zoneUtc}</option>
-          <option value="local">{config.zoneLocal(localZoneId() ?? localOffsetLabel(selection.utc))}</option>
-        </select>
+        <div className="datetime__zone" role="group" aria-labelledby={zoneFieldId}>
+          <span className="search-field__label" id={zoneFieldId}>
+            {config.timeZone}
+          </span>
+          <div className="datetime__wheels datetime__wheels--zone">
+            <NumberWheel
+              label={config.wheels.zone}
+              value={TIME_ZONE_MODES.indexOf(zone)}
+              min={0}
+              max={TIME_ZONE_MODES.length - 1}
+              wrap={false}
+              format={(index) =>
+                TIME_ZONE_MODES[index] === 'local'
+                  ? config.zoneLocal(localZoneId() ?? localOffsetLabel(selection.utc))
+                  : config.zoneUtc
+              }
+              animated={animated}
+              invalid={false}
+              describedBy={timeHintId}
+              onChange={(index) => handleZoneChange(TIME_ZONE_MODES[index] ?? 'utc')}
+            />
+          </div>
+        </div>
         <p id={timeHintId} className={`hint${timeHint.error ? ' hint--error' : ''}`}>
           {timeHint.text}
         </p>

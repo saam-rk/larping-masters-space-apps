@@ -51,14 +51,16 @@ src/                 React application                                 interface
   features/
     mission-config/      site + UTC selection
     scene/               React Three Fiber horizon view (+ geometry.ts):
-                         first person on Nobile Rim 2 terrain, third person
-                         to scale (bodies.ts, terrain/nobileRim2.ts)
+                         first person on Nobile Rim 1/2 terrain, third person
+                         to scale (bodies.ts, terrain/models.ts,
+                         horizonFloor.ts); full-screen switch
     results/             text summary, sources, limits
     sky-search/          inverse search: summary box, search window (form, examples, guide); a match is shown on the horizon
   hooks/useEphemeris.ts  selection state and the displayed result
   api/ephemerisClient.ts typed fetch of /api/ephemeris
   i18n/                  es (default) and en messages
 public/models/       Static 3D assets (copies of docs/research/site-terrain)
+public/terrain/      Nobile Rim 1 terrain/astronaut GLBs (assets/terrain/nobile-rim-1)
 ```
 
 The science owner reviews the Horizons parameters (`server/horizons/query.ts`),

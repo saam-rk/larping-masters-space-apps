@@ -47,7 +47,13 @@ function expectMode(firstPerson: boolean) {
 }
 
 describe('view selection and terrain availability', () => {
-  it('starts in first person at Nobile Rim 2 and preserves a manual choice for the same site', () => {
+  it.each<ObserverSiteId>(['nobile-rim-1', 'nobile-rim-2'])('starts in first person at %s', (siteId) => {
+    render(siteId);
+    expectMode(true);
+    expect(option(0).getAttribute('aria-disabled')).toBe('false');
+  });
+
+  it('preserves a manual choice for the same site', () => {
     render('nobile-rim-2');
     expectMode(true);
     expect(option(0).getAttribute('aria-disabled')).toBe('false');
@@ -59,7 +65,7 @@ describe('view selection and terrain availability', () => {
     expectMode(true);
   });
 
-  it.each<ObserverSiteId>(['nobile-rim-1', 'shackleton-rim', 'custom'])(
+  it.each<ObserverSiteId>(['shackleton-rim', 'custom'])(
     'keeps first person unavailable at %s and explains why',
     (siteId) => {
       render(siteId);
@@ -76,11 +82,14 @@ describe('view selection and terrain availability', () => {
   it('falls back for sites without terrain and resets to first person when returning to Nobile Rim 2', () => {
     render('nobile-rim-2');
     act(() => option(1).click());
-    render('nobile-rim-1');
+    render('shackleton-rim');
     expectMode(false);
     render('custom');
     expectMode(false);
     render('nobile-rim-2');
+    expectMode(true);
+    act(() => option(1).click());
+    render('nobile-rim-1'); // Another site with terrain also starts in first person.
     expectMode(true);
   });
 });

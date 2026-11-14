@@ -57,7 +57,8 @@ describe('createStars', () => {
 describe('hasFirstPersonView', () => {
   it('is only available where a terrain model exists', () => {
     expect(hasFirstPersonView('nobile-rim-2')).toBe(true);
-    expect(hasFirstPersonView('nobile-rim-1')).toBe(false);
+    expect(hasFirstPersonView('nobile-rim-1')).toBe(true);
+    expect(hasFirstPersonView('shackleton-rim')).toBe(false);
     expect(hasFirstPersonView('custom')).toBe(false);
   });
 });
