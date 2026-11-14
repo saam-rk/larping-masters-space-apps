@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { installCurvaturePointer } from './curvaturePointer';
+import { installCurvaturePointer, rangeValueAt, type RangeTrack } from './curvaturePointer';
 
 class TestElement {
   click = vi.fn();
@@ -69,5 +69,27 @@ describe('curvature pointer remapping', () => {
     expect(event.preventDefault).toHaveBeenCalledOnce();
     expect(drawn.click).toHaveBeenCalledOnce();
     stop();
+  });
+});
+
+describe('range value under the drawn pointer', () => {
+  // A vertical zoom slider like `.zoom-control__slider`: 100 px tall, 10 px thumb, minimum at the bottom.
+  const track: RangeTrack = { start: 200, length: 100, thumb: 10, reversed: true, min: 0, max: 1, step: 0.005 };
+
+  it('maps the thumb travel to the value range, minimum at the bottom', () => {
+    expect(rangeValueAt(track, 205)).toBe(1);
+    expect(rangeValueAt(track, 295)).toBe(0);
+    expect(rangeValueAt(track, 250)).toBe(0.5);
+  });
+
+  it('clamps beyond the ends and snaps to the step', () => {
+    expect(rangeValueAt(track, 0)).toBe(1);
+    expect(rangeValueAt(track, 1000)).toBe(0);
+    expect(rangeValueAt(track, 251)).toBeCloseTo(0.49, 10);
+  });
+
+  it('runs from the start for an unreversed slider', () => {
+    expect(rangeValueAt({ ...track, reversed: false, min: 10, max: 20, step: 1 }, 205)).toBe(10);
+    expect(rangeValueAt({ ...track, reversed: false, min: 10, max: 20, step: 1 }, 295)).toBe(20);
   });
 });

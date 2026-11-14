@@ -6,8 +6,10 @@
  * launches, or the browser's local zone) and the update button. Explanations
  * live in each section's help dialog.
  *
- * The update button is available for any valid selection while idle, including
- * the saved sample and retries of the same case after an incomplete result.
+ * The update button is available for any valid selection while idle,
+ * including the saved sample and retries of the same case. Once a complete live
+ * result for the current selection is on screen it reads "Updated" (still
+ * pressable to query again).
  */
 
 import { useId, useState, type FormEvent } from 'react';
@@ -31,6 +33,8 @@ import {
 interface ConfigPanelProps {
   readonly selection: EphemerisSelection;
   readonly loading: boolean;
+  /** A complete live result matching the selection is on screen. */
+  readonly upToDate: boolean;
   readonly onSiteChange: (siteId: SiteId) => void;
   readonly onCoordinatesChange: (latitudeDeg: number, longitudeEastDeg: number) => void;
   readonly onUtcChange: (utc: string) => void;
@@ -47,6 +51,7 @@ function isUsable(query: CoordinateQuery): boolean {
 export function ConfigPanel({
   selection,
   loading,
+  upToDate,
   onSiteChange,
   onCoordinatesChange,
   onUtcChange,
@@ -144,6 +149,14 @@ export function ConfigPanel({
         <span className="blink" aria-hidden="true">
           _
         </span>
+      </>
+    );
+  } else if (canUpdate && upToDate) {
+    buttonClass += ' button--done';
+    buttonLabel = (
+      <>
+        <span aria-hidden="true">✓ </span>
+        {config.upToDate}
       </>
     );
   } else if (canUpdate) {

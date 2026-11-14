@@ -450,6 +450,45 @@ button {
   color: var(--accent);
 }
 
+/* Sources dialog: wider window; the long list scrolls inside `.dialog__body`. */
+.dialog:has(.sources-list) {
+  width: min(46rem, calc(100vw - 2rem));
+}
+
+.dialog__body:has(.sources-list) {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) rgba(10, 30, 18, 0.9);
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+  padding-right: 0.5rem;
+}
+
+.sources__group {
+  margin: 1.1rem 0 0.45rem;
+  font-size: 0.8em;
+  font-weight: normal;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border-bottom: 1px dashed var(--line-dim);
+  padding-bottom: 0.2rem;
+}
+
+.sources-list > .sources__group:first-child {
+  margin-top: 0;
+}
+
+.sources-list > .sources {
+  margin-bottom: 0.65rem;
+}
+
+.sources__reason {
+  display: block;
+  padding-left: 2ch;
+  color: var(--muted);
+  font-size: 0.9em;
+}
+
 /* ───────────────────────── Status tags ───────────────────────── */
 
 .status {
@@ -780,7 +819,8 @@ input[type='time']::-webkit-calendar-picker-indicator {
 /*
  * Update button states:
  *   --go    the selection differs from the view: green, pulsing gently between two greens
- *   --idle  the view already matches the selection (or the input is invalid): grey, disabled
+ *   --done  a complete live result matches the selection: green outline, "Updated", still pressable (retry)
+ *   --idle  the input is invalid: grey, disabled
  *   --busy  a query is running: grey, dashed
  */
 .button--go {
@@ -804,6 +844,13 @@ input[type='time']::-webkit-calendar-picker-indicator {
   background: var(--accent);
 }
 
+.button--done {
+  color: var(--accent);
+  background: rgba(10, 30, 18, 0.9);
+  border-color: var(--accent);
+  box-shadow: none;
+}
+
 .button--idle,
 .button--busy {
   color: var(--muted);
@@ -822,7 +869,7 @@ input[type='time']::-webkit-calendar-picker-indicator {
 }
 
 :where(:root:not([data-curve='on'])) .button:hover:not(:disabled),
-.button[data-hover]:not(:disabled),
+.button[data-hover]:not([aria-disabled='true']),
 .button:focus-visible:not(:disabled) {
   background: var(--accent);
   border-color: var(--accent);
@@ -868,6 +915,8 @@ input[type='time']::-webkit-calendar-picker-indicator {
   position: relative;
   flex: 1;
   min-height: 0;
+  /* Keep 3D labels (HTML overlays) inside the view. */
+  overflow: hidden;
   transition: opacity 0.55s ease;
 }
 
@@ -879,6 +928,12 @@ input[type='time']::-webkit-calendar-picker-indicator {
 
 :root[data-fx='on'] .scene-stage[data-jumping='true'] .scene {
   opacity: 0;
+}
+
+/* First/third-person switch: a shorter jump, so the scene fades out and back faster. */
+.scene-stage[data-warp='switch'] .scene,
+.scene-stage[data-warp='switch'][data-jumping='true'] .scene {
+  transition-duration: 0.18s;
 }
 
 .hyperspace {
@@ -900,6 +955,8 @@ input[type='time']::-webkit-calendar-picker-indicator {
 .scene__notes {
   position: absolute;
   left: 0;
+  /* Wrap before the zoom control at the bottom right. */
+  right: 2.6rem;
   bottom: 0;
   display: flex;
   flex-direction: column;
@@ -922,6 +979,84 @@ input[type='time']::-webkit-calendar-picker-indicator {
   color: var(--text);
 }
 
+.scene__label--small {
+  font-size: 0.8em;
+}
+
+.scene__label--muted {
+  color: var(--muted);
+}
+
+/* First/third-person switch in the title rule of the local horizon box. */
+/* "Compass" show/hide, left of the view switch: filled while the horizon reference is shown. */
+.compass-toggle {
+  flex: none;
+  padding: 0 0.45em;
+  line-height: 1.35;
+  color: var(--cyan);
+  background: var(--panel-solid);
+  border: 1px solid var(--cyan);
+  letter-spacing: var(--title-spacing);
+  text-transform: var(--title-case);
+  cursor: pointer;
+}
+
+.compass-toggle[aria-pressed='true'] {
+  color: #000;
+  background: var(--cyan);
+}
+
+:where(:root:not([data-curve='on'])) .compass-toggle[aria-pressed='false']:hover,
+.compass-toggle[aria-pressed='false'][data-hover],
+.compass-toggle:focus-visible {
+  color: var(--text);
+  background: rgba(62, 232, 255, 0.18);
+}
+
+.view-toggle {
+  flex: none;
+  display: inline-flex;
+  border: 1px solid var(--cyan);
+}
+
+.view-toggle__option {
+  padding: 0 0.45em;
+  line-height: 1.35;
+  color: var(--cyan);
+  background: var(--panel-solid);
+  border: none;
+  letter-spacing: var(--title-spacing);
+  text-transform: var(--title-case);
+  cursor: pointer;
+}
+
+.view-toggle__option + .view-toggle__option {
+  border-left: 1px solid var(--cyan);
+}
+
+.view-toggle__option[aria-pressed='true'] {
+  color: #000;
+  background: var(--cyan);
+}
+
+:where(:root:not([data-curve='on'])) .view-toggle__option[aria-pressed='false']:not([aria-disabled='true']):hover,
+.view-toggle__option[aria-pressed='false'][data-hover]:not([aria-disabled='true']),
+.view-toggle__option:focus-visible {
+  color: var(--text);
+  background: rgba(62, 232, 255, 0.18);
+}
+
+.view-toggle__option[aria-disabled='true'] {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.scene canvas:focus-visible {
+  outline: 1px dashed var(--accent);
+  outline-offset: -2px;
+}
+
 .scene__note {
   margin: 0;
   color: var(--muted);
@@ -930,6 +1065,111 @@ input[type='time']::-webkit-calendar-picker-indicator {
 
 .scene__note--warning {
   color: var(--amber);
+}
+
+/* Map-style controls over the view, bottom right: the zoom. */
+.scene__controls {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+  width: 1.6rem;
+  /* The zoom slider (not the buttons) shrinks when the view is short. */
+  max-height: calc(100% - 1rem);
+}
+
+/* "+", a vertical slider (closest at the top) and "−". */
+.zoom-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 0;
+  border: 1px solid var(--cyan);
+  background: var(--panel-solid);
+}
+
+.zoom-control__button {
+  flex: none;
+  width: 100%;
+  height: 1.5rem;
+  padding: 0;
+  font-family: var(--font-ui);
+  font-size: 1.1em;
+  line-height: 1;
+  color: var(--cyan);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+:where(:root:not([data-curve='on'])) .zoom-control__button:not(:disabled):hover,
+.zoom-control__button[data-hover]:not(:disabled),
+.zoom-control__button:focus-visible {
+  color: #000;
+  background: var(--cyan);
+}
+
+.zoom-control__button:disabled {
+  color: var(--muted);
+  cursor: default;
+  opacity: 0.55;
+}
+
+.zoom-control__slider {
+  /* Vertical range: min at the bottom, max (closest) at the top. */
+  /* Thumb size along the axis; also read by the curved-screen drag (see `curvaturePointer.ts`). */
+  --range-thumb-length: 0.45rem;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  appearance: none;
+  flex: 0 1 8rem;
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0.35rem 0;
+  background: transparent;
+  border-top: 1px solid var(--cyan);
+  border-bottom: 1px solid var(--cyan);
+  cursor: pointer;
+}
+
+.zoom-control__slider:focus-visible {
+  outline: 1px dashed var(--accent);
+  outline-offset: -3px;
+}
+
+.zoom-control__slider::-webkit-slider-runnable-track {
+  width: 2px;
+  background: var(--cyan);
+  opacity: 0.8;
+}
+
+.zoom-control__slider::-moz-range-track {
+  width: 2px;
+  background: var(--cyan);
+  opacity: 0.8;
+}
+
+.zoom-control__slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 0.9rem;
+  height: var(--range-thumb-length);
+  margin-left: calc(1px - 0.45rem);
+  background: var(--cyan);
+  border: none;
+  box-shadow: 0 0 6px rgba(62, 232, 255, 0.6);
+}
+
+.zoom-control__slider::-moz-range-thumb {
+  width: 0.9rem;
+  height: var(--range-thumb-length);
+  background: var(--cyan);
+  border: none;
+  border-radius: 0;
+  box-shadow: 0 0 6px rgba(62, 232, 255, 0.6);
 }
 
 .results {

@@ -17,18 +17,19 @@ const selection = {
   utc: DEFAULT_UTC,
 };
 
-function submitButton(loading: boolean, utc = DEFAULT_UTC): string {
+function submitButton(loading: boolean, utc = DEFAULT_UTC, upToDate = false): string {
   const html = renderToStaticMarkup(
     <ConfigPanel
       selection={{ ...selection, utc }}
       loading={loading}
+      upToDate={upToDate}
       onSiteChange={vi.fn()}
       onCoordinatesChange={vi.fn()}
       onUtcChange={vi.fn()}
       onUpdate={vi.fn()}
     />,
   );
-  return html.match(/<button type="submit"[^>]*>/)![0];
+  return html.match(/<button type="submit".*?<\/button>/)![0];
 }
 
 describe('ConfigPanel update availability', () => {
@@ -38,6 +39,18 @@ describe('ConfigPanel update availability', () => {
 
   it('prevents another query while loading', () => {
     expect(submitButton(true)).toContain('disabled');
+  });
+
+  it('shows Updated, still pressable, once a live result matches the selection', () => {
+    const button = submitButton(false, DEFAULT_UTC, true);
+    expect(button).toContain('Updated');
+    expect(button).toContain('button--done');
+    expect(button).not.toContain('disabled');
+    expect(submitButton(false)).toContain('Update view');
+  });
+
+  it('shows the busy label while loading, even if the view was up to date', () => {
+    expect(submitButton(true, DEFAULT_UTC, true)).toContain('Querying');
   });
 
   it('prevents querying invalid input', () => {

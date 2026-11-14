@@ -44,11 +44,14 @@ src/                 React application                                 interface
   App.tsx              three-panel dashboard
   features/
     mission-config/      site + UTC selection
-    scene/               React Three Fiber horizon view (+ geometry.ts)
+    scene/               React Three Fiber horizon view (+ geometry.ts):
+                         first person on Nobile Rim 2 terrain, third person
+                         to scale (bodies.ts, terrain/nobileRim2.ts)
     results/             text summary, sources, limits
   hooks/useEphemeris.ts  selection state and the displayed result
   api/ephemerisClient.ts typed fetch of /api/ephemeris
   i18n/                  es (default) and en messages
+public/models/       Static 3D assets (copies of docs/research/site-terrain)
 ```
 
 The science owner reviews the Horizons parameters (`server/horizons/query.ts`),
