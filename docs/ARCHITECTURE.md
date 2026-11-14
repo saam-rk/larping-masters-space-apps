@@ -1,0 +1,114 @@
+# Architecture
+
+Technical map of the CLPS Lunar Mission Browser for the team. Agreements live
+in `DECISIONES.md`; the first-demo scope is in `docs/GUIA_PRIMERA_DEMO.md`.
+
+## Run it
+
+Requires Node.js 22 or later.
+
+```bash
+npm install
+npm run dev        # app + /api/ephemeris on http://localhost:5173
+npm run check      # typecheck + lint + tests
+npm run build      # production build into dist/
+```
+
+`npm run dev` serves the API through a Vite middleware that calls the same
+handler as the Vercel function, so `vercel dev` is not needed. The API calls
+the live Horizons service, so it needs internet access. Tests do not: they use
+saved fixtures.
+
+## Layout and owners
+
+```text
+api/                 Vercel Functions (platform adapters only)      backend
+  ephemeris.ts         GET /api/ephemeris
+server/              Backend logic, framework-independent            backend
+  horizons/            Horizons API adapter
+    query.ts             builds the observer-table request
+    client.ts            HTTP call, timeout, error classification
+    parse.ts             reads the JSON payload and CSV table row
+    __fixtures__/        raw saved responses + README with parameters
+  ephemeris/           Sun + Earth for one site and instant
+    service.ts           runs both queries, assembles the response, caches
+    handler.ts           validates the request, maps results to HTTP
+  http.ts              JSON/error response helpers
+shared/              Contract shared by browser and server            backend + science
+  ephemeris.ts         API request/response types and error codes
+  sites.ts             the three reference sites and their source
+  time.ts              UTC input parsing and the supported range
+  presence.ts          meaning of the Horizons sky-presence markers
+  samples/             saved sample derived from the fixtures
+src/                 React application                                 interface
+  App.tsx              three-panel dashboard
+  features/
+    mission-config/      site + UTC selection
+    scene/               React Three Fiber horizon view (+ geometry.ts)
+    results/             text summary, sources, limits
+  hooks/useEphemeris.ts  selection state and the displayed result
+  api/ephemerisClient.ts typed fetch of /api/ephemeris
+  i18n/                  es (default) and en messages
+```
+
+The science owner reviews the Horizons parameters (`server/horizons/query.ts`),
+the marker interpretation (`shared/presence.ts`) and the fixtures before the
+results are presented.
+
+## API contract
+
+`GET /api/ephemeris?site=<site>&utc=<YYYY-MM-DDTHH:mm[:ss]Z>`
+
+- `site`: `nobile-rim-1`, `nobile-rim-2` or `shackleton-rim`.
+- `utc`: UTC instant ending in `Z`, within [2000-01-01, 2100-01-01). The range
+  is an application guard, not a Horizons limit.
+
+| Status | Meaning | Body |
+|---|---|---|
+| 200 | At least one body computed | `EphemerisResponse`; check each `bodies.sun/earth.status` |
+| 400 | Invalid `site` or `utc` | `{ error: { code: "INVALID_REQUEST", detail } }` |
+| 405 | Method other than GET/HEAD | `METHOD_NOT_ALLOWED` |
+| 502 | Horizons failed for both bodies | `UPSTREAM_UNAVAILABLE`, `UPSTREAM_REJECTED` or `UPSTREAM_FORMAT` |
+| 500 | Unexpected server error | `INTERNAL` |
+
+The full types are in `shared/ephemeris.ts`. Key rules:
+
+- Missing values are `null` and failures carry an error code. Nothing is
+  replaced with zero.
+- `provenance` is `live` or `saved-sample`. The app starts by showing the saved
+  sample and labels it as such.
+- `warnings` may contain `PARTIAL_RESULT` (one body failed) or
+  `HORIZONS_API_VERSION_UNVERIFIED` (the API returned a version other than
+  the checked `1.2`).
+- Complete responses are cacheable (`s-maxage=86400`); partial results and
+  errors are `no-store`. Each warm server instance also keeps an in-memory
+  cache for six hours.
+
+## Horizons query
+
+One observer-table request per body (Sun `10`, Earth `399`) from a
+topocentric site on the Moon (`CENTER='coord@301'`, geodetic coordinates,
+altitude 0 km on the Horizons reference sphere). Quantities `4,13,20`,
+`APPARENT='AIRLESS'`, `TIME_TYPE='UT'`, CSV output, one `TLIST` instant. The
+exact parameter list is in `server/horizons/__fixtures__/README.md` and
+pinned by `server/horizons/query.test.ts`.
+
+The browser never calls Horizons directly; JPL's CORS policy requires a server
+route.
+
+## Limits
+
+- Positions are geometric. Terrain (mountains, craters) is not modeled, so a
+  positive elevation does not prove visibility from the ground, solar power,
+  or a communication link.
+- Range and range-rate are returned but not shown in the main summary.
+- The three points are reference points from the NASA Lunar Surface Data
+  Book, not approved landing sites.
+
+## Deployment
+
+Vercel detects Vite and deploys `api/*.ts` as functions using the Web
+`GET(request)` signature. Relative imports in `api/`, `server/` and `shared/`
+use explicit `.js` extensions (enforced by `tsconfig.server.json`, NodeNext)
+so the transpiled files load under Node's ESM loader. Deployment has not been
+performed yet.

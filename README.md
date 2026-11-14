@@ -16,10 +16,24 @@ Para retomar con un agente: “Lee `README.md`, `AGENTS.md`, `ESTADO.md` y `DECI
 
 - [Enunciado del reto — guía en español](ENUNCIADO_RETO.md)
 - [Guía de la primera demo](docs/GUIA_PRIMERA_DEMO.md)
+- [Arquitectura técnica](docs/ARCHITECTURE.md)
 - [Plan del hackathon](PLAN_HACKATHON.md)
 - [Decisiones](DECISIONES.md)
 - [Estado](ESTADO.md)
 - [Instrucciones para agentes](AGENTS.md)
+
+## Desarrollo
+
+Requiere Node.js 22 o posterior.
+
+```bash
+npm install
+npm run dev     # app + /api/ephemeris en http://localhost:5173
+npm run check   # tipos + lint + tests
+npm run build   # build de producción en dist/
+```
+
+Estructura, responsables por carpeta, contrato de la API y límites: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Skills del proyecto
 
