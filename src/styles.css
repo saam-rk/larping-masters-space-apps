@@ -499,7 +499,7 @@ button {
 }
 
 .sidebar__button,
-.sidebar__power {
+.sidebar__settings {
   color: var(--text);
   background: transparent;
   border: var(--border) solid var(--line);
@@ -535,7 +535,7 @@ button {
   color: var(--muted);
 }
 
-.sidebar__power {
+.sidebar__settings {
   margin-top: auto;
   display: grid;
   place-items: center;
@@ -563,9 +563,9 @@ button {
   color: #000;
 }
 
-:where(:root:not([data-curve='on'])) .sidebar__power:hover,
-.sidebar__power[data-hover],
-.sidebar__power:focus-visible {
+:where(:root:not([data-curve='on'])) .sidebar__settings:hover,
+.sidebar__settings[data-hover],
+.sidebar__settings:focus-visible {
   background: var(--magenta);
   color: #000;
 }
@@ -1082,29 +1082,120 @@ input[type='time']::-webkit-calendar-picker-indicator {
   color: var(--red);
 }
 
-/* ───────────────────────── Start screen ───────────────────────── */
+/* ───────────────────────── Landing window ───────────────────────── */
 
+/*
+ * Intro and logo on the left, options on the right; stacked when the window
+ * is narrower than both columns (container query, so it follows the window,
+ * not the viewport). The overlay scrolls on short screens.
+ */
 .setup {
   position: fixed;
   inset: 0;
   z-index: 40;
-  display: grid;
-  place-items: center;
+  display: flex;
   padding: 1rem;
   overflow-y: auto;
   background: rgba(0, 0, 0, 0.82);
 }
 
 .setup__window {
-  width: min(32rem, 100%);
+  container-type: inline-size;
+  width: min(60rem, 100%);
+  margin: auto;
   background: var(--panel-solid);
 }
 
 .setup__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 1.25rem 2rem;
+  padding-top: 0.75rem;
+}
+
+.setup__intro {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  padding-top: 0.75rem;
+  align-items: center;
+  gap: 0.75rem;
+  padding-right: 2rem;
+  border-right: var(--border) dashed var(--line-dim);
+}
+
+.landing-logo {
+  display: block;
+  width: min(100%, 19rem);
+  height: auto;
+  overflow: visible;
+}
+
+.landing-logo__chalk {
+  color: var(--line);
+}
+
+.landing-logo__moon {
+  filter: drop-shadow(0 0 10px rgba(255, 194, 51, 0.35));
+}
+
+.landing-logo__night {
+  fill: #1c1606;
+}
+
+.landing-logo__day {
+  fill: var(--amber);
+}
+
+.landing-logo__crater {
+  fill: #d99a17;
+  stroke: #b97c0c;
+  stroke-width: 1.5;
+}
+
+.landing-logo__rim {
+  fill: none;
+  stroke: var(--amber);
+  stroke-width: 3;
+}
+
+.setup__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.setup__copy p {
+  margin: 0;
+}
+
+.setup__copy p + p {
+  margin-top: 0.5rem;
+}
+
+.setup__tagline {
+  color: var(--accent);
+  font-size: 0.85em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.setup__options {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.1rem;
+}
+
+.setup__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.setup__label {
+  color: var(--muted);
+  font-size: 0.85em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .segmented {
@@ -1137,32 +1228,91 @@ input[type='time']::-webkit-calendar-picker-indicator {
   background: rgba(211, 235, 204, 0.1);
 }
 
-.setup__starts {
+.setup__modes {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
-.button--start {
+.setup__mode {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.2rem;
-  padding: 0.9rem 0.75rem;
-  letter-spacing: 0.12em;
+  gap: 0.15rem;
+  padding: 0.5rem 0.75rem 0.5rem 2.7rem;
+  position: relative;
+  color: var(--text);
+  background: transparent;
+  border: var(--border) solid var(--line-dim);
+  text-align: left;
+  cursor: pointer;
 }
 
-.button__detail {
-  font-size: 0.8em;
-  letter-spacing: 0.03em;
-  text-transform: none;
+/* Radio mark drawn in text: ( ) / (•). */
+.setup__mode::before {
+  content: '( )';
+  position: absolute;
+  left: 0.6rem;
+  top: 0.5rem;
   color: var(--muted);
 }
 
-:where(:root:not([data-curve='on'])) .button:hover .button__detail,
-.button[data-hover] .button__detail,
-.button:focus-visible .button__detail {
-  color: #1d2b1f;
+.setup__mode[aria-pressed='true'] {
+  border-color: var(--accent);
+  box-shadow: 0 0 14px rgba(57, 255, 136, 0.15);
+}
+
+.setup__mode[aria-pressed='true']::before {
+  content: '(•)';
+  color: var(--accent);
+}
+
+.setup__mode-name {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.setup__mode[aria-pressed='true'] .setup__mode-name {
+  color: var(--accent);
+}
+
+.setup__mode-detail {
+  font-size: 0.8em;
+  color: var(--muted);
+}
+
+:where(:root:not([data-curve='on'])) .setup__mode[aria-pressed='false']:hover,
+.setup__mode[aria-pressed='false'][data-hover],
+.setup__mode:focus-visible {
+  border-color: var(--line);
+  background: rgba(211, 235, 204, 0.08);
+}
+
+.setup__save {
+  margin-top: 0.25rem;
+  padding: 0.65rem 1rem;
+  font-size: 1.05em;
+  letter-spacing: 0.14em;
+}
+
+.setup__storage {
+  margin: -0.4rem 0 0;
+  font-size: 0.75em;
+  color: var(--muted);
+}
+
+@container (max-width: 40rem) {
+  .setup__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .setup__intro {
+    padding: 0 0 1.25rem;
+    border-right: none;
+    border-bottom: var(--border) dashed var(--line-dim);
+  }
+
+  .landing-logo {
+    width: min(100%, 14rem);
+  }
 }
 
 /* ───────────────────────── Backdrop (behind the UI) ───────────────────────── */
@@ -1543,7 +1693,7 @@ input[type='time']::-webkit-calendar-picker-indicator {
     width: 4rem;
   }
 
-  .sidebar__power {
+  .sidebar__settings {
     margin: 0 0 0 auto;
     width: 2.3rem;
     height: 2.3rem;
@@ -1602,8 +1752,3 @@ input[type='time']::-webkit-calendar-picker-indicator {
   }
 }
 
-@media (max-width: 420px) {
-  .setup__starts {
-    grid-template-columns: 1fr;
-  }
-}

@@ -55,11 +55,20 @@ export interface Messages {
     /** Accessible label: "<setting>: <current value>. Activate to change." */
     readonly cycle: (setting: string, value: string) => string;
   };
+  /** First-visit landing window (also reopened from the sidebar). */
   readonly setup: {
+    /** Event and challenge line under the title (proper nouns). */
+    readonly tagline: string;
+    /** Short introduction of the purpose and limits of the app. */
+    readonly intro: Paragraphs;
+    readonly options: string;
     readonly language: string;
     readonly effects: string;
-    readonly start: Readonly<Record<EffectMode, string>>;
-    readonly startDetail: Readonly<Record<EffectMode, string>>;
+    readonly effectNames: Readonly<Record<EffectMode, string>>;
+    readonly effectDetails: Readonly<Record<EffectMode, string>>;
+    readonly save: string;
+    /** Where the choice is stored. */
+    readonly storage: string;
   };
   readonly config: {
     readonly site: string;
@@ -163,14 +172,22 @@ const es: Messages = {
     language: 'Idioma',
     languageShort: 'IDIOMA',
     languageNames: { es: 'Español', en: 'English' },
-    setup: 'Pantalla de inicio',
+    setup: 'Preferencias',
     cycle: (setting, value) => `${setting}: ${value}. Pulsa para cambiar.`,
   },
   setup: {
+    tagline: 'NASA Space Apps 2026 · Lunar Landing Site Navigator',
+    intro: [
+      'Explora el cielo desde puntos de referencia del polo sur lunar. Elige un lugar y una fecha y hora UTC, y verás dónde están el Sol y la Tierra respecto al horizonte local, en una vista 3D y en un resumen con unidades y fuentes.',
+      'Las posiciones proceden de JPL Horizons. El relieve no está modelado: es geometría, no una garantía de luz, comunicaciones ni idoneidad de aterrizaje.',
+    ],
+    options: 'Preferencias',
     language: 'Idioma',
     effects: 'Efectos visuales',
-    start: { on: 'Efectos completos', off: 'Bajo rendimiento' },
-    startDetail: { on: 'CRT animado con curvatura', off: 'Estático, fuente de alta visibilidad, menos CPU' },
+    effectNames: { on: 'Efectos completos', off: 'Bajo rendimiento' },
+    effectDetails: { on: 'CRT animado con curvatura', off: 'Estático, fuente de alta visibilidad, menos CPU' },
+    save: 'Guardar preferencias',
+    storage: 'Se guardan en una cookie de este navegador. Puedes cambiarlas desde el botón de ajustes de la barra lateral.',
   },
   config: {
     site: 'Punto de referencia',
@@ -302,14 +319,22 @@ const en: Messages = {
     language: 'Language',
     languageShort: 'LANG',
     languageNames: { es: 'Español', en: 'English' },
-    setup: 'Start screen',
+    setup: 'Preferences',
     cycle: (setting, value) => `${setting}: ${value}. Press to change.`,
   },
   setup: {
+    tagline: 'NASA Space Apps 2026 · Lunar Landing Site Navigator',
+    intro: [
+      'Explore the sky from reference points at the lunar south pole. Pick a site and a UTC date and time to see where the Sun and the Earth are relative to the local horizon, in a 3D view and in a summary with units and sources.',
+      'Positions come from JPL Horizons. Terrain is not modeled: this is geometry, not a guarantee of light, communications or landing suitability.',
+    ],
+    options: 'Preferences',
     language: 'Language',
     effects: 'Visual effects',
-    start: { on: 'Full effects', off: 'Low performance' },
-    startDetail: { on: 'Animated, curved CRT', off: 'Static, high-visibility font, less CPU' },
+    effectNames: { on: 'Full effects', off: 'Low performance' },
+    effectDetails: { on: 'Animated, curved CRT', off: 'Static, high-visibility font, less CPU' },
+    save: 'Save preferences',
+    storage: 'Stored in a cookie in this browser. You can change them from the settings button in the sidebar.',
   },
   config: {
     site: 'Reference point',
