@@ -13,9 +13,9 @@ import { SKETCHES, type SketchDepth } from './sketches';
 const DEPTH_STYLE: Readonly<
   Record<SketchDepth, { parallaxPx: number; blur: number; stroke: number; opacity: number }>
 > = {
-  0: { parallaxPx: 3, blur: 0.45, stroke: 1.5, opacity: 0.2 },
-  1: { parallaxPx: 7, blur: 0.25, stroke: 1.9, opacity: 0.3 },
-  2: { parallaxPx: 14, blur: 3.2, stroke: 3.2, opacity: 0.2 },
+  0: { parallaxPx: 12, blur: 0.45, stroke: 1.5, opacity: 0.2 },
+  1: { parallaxPx: 28, blur: 0.25, stroke: 1.9, opacity: 0.3 },
+  2: { parallaxPx: 58, blur: 3.2, stroke: 3.2, opacity: 0.2 },
 };
 
 const DEPTHS: readonly SketchDepth[] = [0, 1, 2];
@@ -51,11 +51,10 @@ function ChalkFilters() {
   );
 }
 
-export function SketchLayer({ animated }: { animated: boolean }) {
+export function SketchLayer() {
   const itemsRef = useRef<Array<HTMLDivElement | null>>([]);
 
   useEffect(() => {
-    if (!animated) return;
     return subscribeMotion(({ pointerX, pointerY }) => {
       SKETCHES.forEach((sketch, index) => {
         const element = itemsRef.current[index];
@@ -64,7 +63,7 @@ export function SketchLayer({ animated }: { animated: boolean }) {
         element.style.transform = `translate3d(${(-pointerX * shift).toFixed(2)}px, ${(-pointerY * shift).toFixed(2)}px, 0)`;
       });
     });
-  }, [animated]);
+  }, []);
 
   return (
     <div className="backdrop__sketches" aria-hidden="true">

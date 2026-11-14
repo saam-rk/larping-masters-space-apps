@@ -2,7 +2,7 @@
  * Simple 3D view of the local horizon with the Sun and Earth directions.
  * Placeholder visuals for the interface owner to refine; positions come only
  * from the azimuth/elevation in `data`, the same values as the results panel.
- * Disk sizes are not to scale.
+ * Disk sizes are not to scale. The canvas fills whatever height its box gets.
  */
 
 import { Html, Line, OrbitControls } from '@react-three/drei';
@@ -96,12 +96,15 @@ export default function SkyScene({ data }: { data: EphemerisResponse }) {
         <OrbitControls enablePan={false} minDistance={6} maxDistance={30} />
       </Canvas>
 
-      <p className="scene__note">{messages.scene.notToScale}</p>
-      {missing.map((body) => (
-        <p key={body} className="scene__note scene__note--warning">
-          {messages.scene.missing(messages.bodies[body])}
-        </p>
-      ))}
+      {/* Overlaid on the canvas so the view keeps its full height. */}
+      <div className="scene__notes">
+        <p className="scene__note">{messages.scene.notToScale}</p>
+        {missing.map((body) => (
+          <p key={body} className="scene__note scene__note--warning">
+            {messages.scene.missing(messages.bodies[body])}
+          </p>
+        ))}
+      </div>
     </div>
   );
 }

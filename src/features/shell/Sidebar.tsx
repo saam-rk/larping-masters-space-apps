@@ -1,27 +1,22 @@
 /**
- * Narrow settings rail: effects level, font, language, and (bottom, round
- * button) the initial setup screen. Each button cycles through its options.
+ * Narrow settings rail: visual effects switch (which also toggles the
+ * high-legibility mode), language, and (bottom, round button) the start screen.
  */
 
 import { useI18n } from '../../i18n/context';
 import { LOCALES } from '../../i18n/messages';
 import { usePreferences } from '../../preferences/context';
-import { EFFECT_LEVELS, FONT_STYLES } from '../../preferences/preferences';
 
 function nextOf<T>(options: readonly T[], current: T): T {
   const index = options.indexOf(current);
   return options[(index + 1) % options.length] ?? current;
 }
 
-const EFFECT_GLYPH = { full: '▓▓▓', lite: '▓▓░', off: '░░░' } as const;
-
 export function Sidebar() {
   const { messages } = useI18n();
   const { preferences, update, reopenSetup } = usePreferences();
   const { settings } = messages;
-
-  const effectValue = settings.effectLevels[preferences.effects];
-  const fontValue = settings.fonts[preferences.font];
+  const effectsOn = preferences.effects === 'on';
   const languageValue = settings.languageNames[preferences.locale];
 
   return (
@@ -32,24 +27,18 @@ export function Sidebar() {
 
       <button
         type="button"
-        className="sidebar__button"
-        aria-label={settings.cycle(settings.effects, effectValue)}
-        title={settings.cycle(settings.effects, effectValue)}
-        onClick={() => update({ effects: nextOf(EFFECT_LEVELS, preferences.effects) })}
+        className="sidebar__button sidebar__button--switch"
+        aria-pressed={effectsOn}
+        title={settings.cycle(settings.effects, settings.effectStates[preferences.effects])}
+        onClick={() => update({ effects: effectsOn ? 'off' : 'on' })}
       >
-        <span className="sidebar__glyph">{EFFECT_GLYPH[preferences.effects]}</span>
-        <span className="sidebar__label">FX</span>
-      </button>
-
-      <button
-        type="button"
-        className="sidebar__button"
-        aria-label={settings.cycle(settings.font, fontValue)}
-        title={settings.cycle(settings.font, fontValue)}
-        onClick={() => update({ font: nextOf(FONT_STYLES, preferences.font) })}
-      >
-        <span className={`sidebar__glyph sidebar__glyph--font-${preferences.font}`}>Aa</span>
-        <span className="sidebar__label">{preferences.font === 'terminal' ? 'DOS' : 'MONO'}</span>
+        <span className="visually-hidden">{settings.effects}</span>
+        <span className="sidebar__glyph" aria-hidden="true">
+          {effectsOn ? 'ON' : 'OFF'}
+        </span>
+        <span className="sidebar__label" aria-hidden="true">
+          FX
+        </span>
       </button>
 
       <button
@@ -63,13 +52,7 @@ export function Sidebar() {
         <span className="sidebar__label">{settings.languageShort}</span>
       </button>
 
-      <button
-        type="button"
-        className="sidebar__power"
-        aria-label={settings.setup}
-        title={settings.setup}
-        onClick={reopenSetup}
-      >
+      <button type="button" className="sidebar__power" aria-label={settings.setup} title={settings.setup} onClick={reopenSetup}>
         {/* Drawn power symbol: the ⏻ glyph is missing from most fonts. */}
         <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
           <path d="M12 3v9M7 6.4a8 8 0 1 0 10 0" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="square" />

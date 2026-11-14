@@ -2,11 +2,11 @@
  * Site and UTC time selection (agreement D-015): the three reference points
  * (shown as a terminal-style radio list with their coordinates), UTC
  * date/time and an update button. Custom coordinates are out of scope for the
- * first demo. The AI search box is a visible placeholder only (not connected).
+ * first demo. Explanations live in each section's help dialog.
  */
 
 import { useId, useState, type FormEvent } from 'react';
-import { findSite, REFERENCE_SITES } from '../../../shared/sites';
+import { REFERENCE_SITES } from '../../../shared/sites';
 import { parseUtcInstant, SUPPORTED_UTC_RANGE } from '../../../shared/time';
 import type { EphemerisSelection } from '../../api/ephemerisClient';
 import { formatCoordinates } from '../../format';
@@ -16,6 +16,8 @@ import { Box } from '../../ui/Box';
 interface ConfigPanelProps {
   readonly selection: EphemerisSelection;
   readonly loading: boolean;
+  /** The selection differs from the data on screen: highlight the update button. */
+  readonly stale: boolean;
   readonly onSiteChange: (siteId: EphemerisSelection['siteId']) => void;
   readonly onUtcChange: (utc: string) => void;
   readonly onUpdate: () => void;
@@ -29,15 +31,13 @@ function toInputValue(utc: string): string {
 const INPUT_MIN = toInputValue(SUPPORTED_UTC_RANGE.startInclusive);
 const INPUT_MAX = '2099-12-31T23:59';
 
-export function ConfigPanel({ selection, loading, onSiteChange, onUtcChange, onUpdate }: ConfigPanelProps) {
+export function ConfigPanel({ selection, loading, stale, onSiteChange, onUtcChange, onUpdate }: ConfigPanelProps) {
   const { locale, messages } = useI18n();
   const siteTitleId = useId();
   const timeFieldId = useId();
-  const timeHintId = useId();
-  const aiFieldId = useId();
+  const timeErrorId = useId();
   const [timeInput, setTimeInput] = useState(toInputValue(selection.utc));
   const parsedTime = parseUtcInstant(`${timeInput}Z`);
-  const site = findSite(selection.siteId);
 
   function handleTimeChange(value: string) {
     setTimeInput(value);
@@ -52,7 +52,7 @@ export function ConfigPanel({ selection, loading, onSiteChange, onUtcChange, onU
 
   return (
     <form className="config" onSubmit={handleSubmit}>
-      <Box title={messages.config.site} titleAs="h3" titleId={siteTitleId} tag={`[${REFERENCE_SITES.length}]`}>
+      <Box title={messages.config.site} titleAs="h3" titleId={siteTitleId} help={messages.config.siteInfo}>
         <div className="site-list" role="radiogroup" aria-labelledby={siteTitleId}>
           {REFERENCE_SITES.map((option) => (
             <label key={option.id} className="site-option">
@@ -73,15 +73,9 @@ export function ConfigPanel({ selection, loading, onSiteChange, onUtcChange, onU
             </label>
           ))}
         </div>
-        <p className="hint">
-          <span className="hint__label">{messages.config.coordinates}:</span>{' '}
-          {formatCoordinates(site.latitudeDeg, site.longitudeEastDeg, locale, messages.hemisphere)}
-          <br />
-          {messages.config.siteNote}
-        </p>
       </Box>
 
-      <Box title={messages.config.utc} titleAs="h3">
+      <Box title={messages.config.utc} titleAs="h3" help={messages.config.utcInfo}>
         <label className="visually-hidden" htmlFor={timeFieldId}>
           {messages.config.utc}
         </label>
@@ -97,25 +91,23 @@ export function ConfigPanel({ selection, loading, onSiteChange, onUtcChange, onU
             max={INPUT_MAX}
             value={timeInput}
             aria-invalid={!parsedTime.ok}
-            aria-describedby={timeHintId}
+            aria-describedby={parsedTime.ok ? undefined : timeErrorId}
             onChange={(event) => handleTimeChange(event.target.value)}
           />
           <span className="date-field__zone">UTC</span>
         </div>
-        <p id={timeHintId} className={`hint${parsedTime.ok ? '' : ' hint--error'}`}>
-          {parsedTime.ok ? messages.config.utcHint : messages.config.invalidTime}
-        </p>
+        {!parsedTime.ok && (
+          <p id={timeErrorId} className="hint hint--error">
+            {messages.config.invalidTime}
+          </p>
+        )}
       </Box>
 
-      <Box title={messages.config.ai.heading} titleAs="h3" tag={`[${messages.config.ai.tag}]`} tagTone="error" className="box--disabled">
-        <label className="visually-hidden" htmlFor={aiFieldId}>
-          {messages.config.ai.heading}
-        </label>
-        <input id={aiFieldId} type="text" className="ai-input" placeholder={messages.config.ai.placeholder} disabled />
-        <p className="hint">{messages.config.ai.note}</p>
-      </Box>
-
-      <button type="submit" className="button button--primary button--update" disabled={loading || !parsedTime.ok}>
+      <button
+        type="submit"
+        className={`button button--primary button--update${stale && !loading ? ' button--attention' : ''}`}
+        disabled={loading || !parsedTime.ok}
+      >
         {loading ? (
           <>
             {messages.config.updating}

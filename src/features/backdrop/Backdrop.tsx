@@ -3,14 +3,14 @@
  * star layers and schematics behind it, the CRT/VHS overlay in front of it.
  * All of it is `aria-hidden` and ignores the pointer.
  *
- * Effect levels (chosen on the first visit, changeable from the sidebar):
- * - full: parallax, warp, animated noise/tracking/flicker, chromatic fringes.
- * - lite: static stars and sketches, static scanlines and vignette.
- * - off: plain background, no overlay.
+ * Effects on (chosen on the first visit, switchable from the sidebar):
+ * parallax, warp, animated noise/tracking/flicker, chromatic fringes. With
+ * "prefers-reduced-motion" the layers stay but pointer parallax is skipped.
+ * Effects off: plain background, no overlay.
  */
 
 import { useEffect, useState } from 'react';
-import type { EffectLevel } from '../../preferences/preferences';
+import { prefersReducedMotion } from '../../preferences/preferences';
 import { setParallaxEnabled } from './motion';
 import { SketchLayer } from './SketchLayer';
 import { StarField } from './StarField';
@@ -38,36 +38,34 @@ function createNoiseTexture(size = 128): string | null {
   }
 }
 
-function CrtOverlay({ animated }: { animated: boolean }) {
-  const [noise] = useState(() => (animated ? createNoiseTexture() : null));
+function CrtOverlay() {
+  const [noise] = useState(createNoiseTexture);
   return (
     <div className="crt" aria-hidden="true">
       <div className="crt__scanlines" />
-      {animated && noise && <div className="crt__noise" style={{ backgroundImage: `url(${noise})` }} />}
-      {animated && <div className="crt__tracking" />}
+      {noise && <div className="crt__noise" style={{ backgroundImage: `url(${noise})` }} />}
+      <div className="crt__tracking" />
       <div className="crt__glass" />
       <div className="crt__bezel" />
     </div>
   );
 }
 
-export function Backdrop({ level, warping }: { level: EffectLevel; warping: boolean }) {
-  const full = level === 'full';
-
+export function Backdrop({ enabled, warping }: { enabled: boolean; warping: boolean }) {
   useEffect(() => {
-    setParallaxEnabled(full);
+    setParallaxEnabled(enabled && !prefersReducedMotion());
     return () => setParallaxEnabled(false);
-  }, [full]);
+  }, [enabled]);
 
-  if (level === 'off') return null;
+  if (!enabled) return null;
 
   return (
     <>
       <div className="backdrop" data-warping={warping} aria-hidden="true">
-        <StarField mode={full ? 'full' : 'lite'} />
-        <SketchLayer animated={full} />
+        <StarField />
+        <SketchLayer />
       </div>
-      <CrtOverlay key={level} animated={full} />
+      <CrtOverlay />
     </>
   );
 }

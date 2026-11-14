@@ -23,13 +23,14 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<InitialState>(readInitialState);
   const { preferences, configured } = state;
 
-  // Root attributes drive the CSS for fonts and effect layers.
+  // Root attributes drive the CSS:
+  // - data-look: `retro` (terminal font, block headings) or `clear` (high visibility).
+  // - data-fx: decorative layers; kept `off` until the setup screen is confirmed.
   useEffect(() => {
     const root = document.documentElement;
-    root.dataset.font = preferences.font;
-    // Until the setup screen is confirmed, keep the cheapest background.
+    root.dataset.look = preferences.effects === 'on' ? 'retro' : 'clear';
     root.dataset.fx = configured ? preferences.effects : 'off';
-  }, [preferences.font, preferences.effects, configured]);
+  }, [preferences.effects, configured]);
 
   const update = useCallback((change: Partial<Preferences>) => {
     setState((current) => {

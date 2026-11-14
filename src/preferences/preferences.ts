@@ -2,49 +2,47 @@
  * Display preferences chosen on the first visit (or later from the sidebar),
  * persisted in a first-party cookie so the setup screen is not shown again.
  *
- * Cookie format: `clps_prefs=v=1&lang=es&fx=full&font=terminal` (URL-encoded).
+ * A single switch controls the look: with effects `on` the app shows the
+ * retro CRT layers and the pixel terminal font; with effects `off` it switches
+ * to a high-visibility mode (plain background, readable font, plain headings).
+ *
+ * Cookie format: `clps_prefs=v=2&lang=es&fx=on` (URL-encoded).
  * Parsing is defensive: unknown or missing fields fall back to defaults, and
  * an unreadable cookie means "not configured yet".
  */
 
 import { DEFAULT_LOCALE, isLocale, type Locale } from '../i18n/messages';
 
-/** `full`: parallax, warp, CRT animation. `lite`: static layers. `off`: plain background. */
-export const EFFECT_LEVELS = ['full', 'lite', 'off'] as const;
-export type EffectLevel = (typeof EFFECT_LEVELS)[number];
-
-/** `terminal`: pixel MS-DOS style font. `readable`: clearer monospace. */
-export const FONT_STYLES = ['terminal', 'readable'] as const;
-export type FontStyle = (typeof FONT_STYLES)[number];
+export const EFFECT_MODES = ['on', 'off'] as const;
+export type EffectMode = (typeof EFFECT_MODES)[number];
 
 export interface Preferences {
   readonly locale: Locale;
-  readonly effects: EffectLevel;
-  readonly font: FontStyle;
+  readonly effects: EffectMode;
 }
 
 export const COOKIE_NAME = 'clps_prefs';
-const COOKIE_VERSION = '1';
+const COOKIE_VERSION = '2';
+/** Version 1 had three effect levels and a separate font switch. */
+const LEGACY_COOKIE_VERSION = '1';
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 
-export const DEFAULT_PREFERENCES: Preferences = { locale: DEFAULT_LOCALE, effects: 'full', font: 'terminal' };
+export const DEFAULT_PREFERENCES: Preferences = { locale: DEFAULT_LOCALE, effects: 'on' };
 
-export function isEffectLevel(value: unknown): value is EffectLevel {
-  return typeof value === 'string' && (EFFECT_LEVELS as readonly string[]).includes(value);
-}
-
-export function isFontStyle(value: unknown): value is FontStyle {
-  return typeof value === 'string' && (FONT_STYLES as readonly string[]).includes(value);
+export function isEffectMode(value: unknown): value is EffectMode {
+  return typeof value === 'string' && (EFFECT_MODES as readonly string[]).includes(value);
 }
 
 export function serializePreferences(preferences: Preferences): string {
-  const params = new URLSearchParams({
-    v: COOKIE_VERSION,
-    lang: preferences.locale,
-    fx: preferences.effects,
-    font: preferences.font,
-  });
+  const params = new URLSearchParams({ v: COOKIE_VERSION, lang: preferences.locale, fx: preferences.effects });
   return encodeURIComponent(params.toString());
+}
+
+/** Maps a version 1 effects level (`full` | `lite` | `off`) to the on/off switch. */
+function legacyEffects(value: string | null): EffectMode | null {
+  if (value === 'full' || value === 'lite') return 'on';
+  if (value === 'off') return 'off';
+  return null;
 }
 
 /** Reads the preferences cookie from a `document.cookie` string; `null` when absent or unreadable. */
@@ -61,15 +59,16 @@ export function parsePreferencesCookie(cookieHeader: string): Preferences | null
   } catch {
     return null;
   }
-  if (params.get('v') !== COOKIE_VERSION) return null;
+
+  const version = params.get('v');
+  if (version !== COOKIE_VERSION && version !== LEGACY_COOKIE_VERSION) return null;
 
   const locale = params.get('lang');
-  const effects = params.get('fx');
-  const font = params.get('font');
+  const rawEffects = params.get('fx');
+  const effects = version === LEGACY_COOKIE_VERSION ? legacyEffects(rawEffects) : rawEffects;
   return {
     locale: isLocale(locale) ? locale : DEFAULT_PREFERENCES.locale,
-    effects: isEffectLevel(effects) ? effects : DEFAULT_PREFERENCES.effects,
-    font: isFontStyle(font) ? font : DEFAULT_PREFERENCES.font,
+    effects: isEffectMode(effects) ? effects : DEFAULT_PREFERENCES.effects,
   };
 }
 
@@ -99,22 +98,30 @@ export interface DeviceHints {
 }
 
 /**
- * Suggested first-visit choices: lighter effects on modest devices or with
- * reduced motion. The language stays the project default (Spanish).
+ * Suggested first-visit choice: effects off with reduced motion or on modest
+ * devices. The language stays the project default (Spanish).
  */
 export function recommendPreferences(hints: DeviceHints): Preferences {
   const lowEnd =
     (hints.hardwareConcurrency !== undefined && hints.hardwareConcurrency <= 4) ||
     (hints.deviceMemoryGb !== undefined && hints.deviceMemoryGb <= 4);
-  const effects: EffectLevel = hints.prefersReducedMotion || lowEnd ? 'lite' : 'full';
-  return { locale: DEFAULT_LOCALE, effects, font: 'terminal' };
+  const effects: EffectMode = hints.prefersReducedMotion || lowEnd ? 'off' : 'on';
+  return { locale: DEFAULT_LOCALE, effects };
 }
 
 export function readDeviceHints(): DeviceHints {
   const nav = navigator as Navigator & { deviceMemory?: number };
   return {
-    prefersReducedMotion: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false,
+    prefersReducedMotion: prefersReducedMotion(),
     hardwareConcurrency: nav.hardwareConcurrency || undefined,
     deviceMemoryGb: nav.deviceMemory,
   };
+}
+
+export function prefersReducedMotion(): boolean {
+  try {
+    return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  } catch {
+    return false;
+  }
 }
