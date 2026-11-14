@@ -1,0 +1,12 @@
+{
+  "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site04/Site04_final_adj_5mpp_surf.tif",
+  "httpStatus": 200,
+  "responseDate": "Sat, 14 Nov 2026 18:23:14 GMT",
+  "lastModified": "Fri, 05 Jun 2020 18:40:02 GMT",
+  "etag": "W/\"2715146-17285c863d0\"",
+  "bytes": 40980806,
+  "sha256": "38ff70dbdf2f066c2cfa94a646c3a59d653ce7f6b4528b15fc1b43ee397ce758",
+  "scope": "Complete official Site04 elevation GeoTIFF, downloaded outside the repository; not a historical sample-window hash",
+  "readmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+  "readmeCopy": "source-README.txt"
+}

@@ -1,0 +1,26 @@
+{
+  "status": "passed",
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) T3CodeBeta/0.1.9 Chrome/152.0.7977.169 Electron/44.10.1 Safari/537.36",
+  "threeRevision": "187",
+  "deviceClass": "Desktop embedded browser, NOT a physical mobile device",
+  "viewport": [390, 844],
+  "terrainVertices": 40500,
+  "terrainTriangles": 80571,
+  "imageDecode": {"color": [512, 512], "normal": [2048, 2048], "roughness": [256, 256]},
+  "standardPbrChannels": true,
+  "clampToEdge": true,
+  "astronautHeightM": 1.700000085992606,
+  "maxSoleGapM": 6.131489072025431e-8,
+  "controls": [
+    {"name": "site", "heightM": 769.7190868067372},
+    {"name": "ridge", "heightM": 1667.2124633789572},
+    {"name": "third", "heightM": 769.1433105467196}
+  ],
+  "movementCases": 102,
+  "fullBodyFramingFailures": [],
+  "renderedDrawCalls": 14,
+  "renderedTriangles": 81471,
+  "webglError": 0,
+  "mobilePerformance": "Pending: no physical device, throttled-network or FPS claim",
+  "qaNote": "Final portrait frame visually inspected. Movement/framing cases are numerical checks. Exploratory 48- and 56-degree portrait movement policies clipped the body in close-approach cases. Final policy widens to at least 64 degrees beyond 1 m and passes all 102 cases. Camera was reoriented toward retained relief to avoid showing the crop edge as a skyline. This is a standalone Three.js review page, not integration into SkyScene."
+}
