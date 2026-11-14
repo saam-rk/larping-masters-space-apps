@@ -1,0 +1,17 @@
+[
+  {
+    "File": "sun.glb",
+    "Bytes": 103796,
+    "BuildCopyMatches": true
+  },
+  {
+    "File": "earth.glb",
+    "Bytes": 181488,
+    "BuildCopyMatches": true
+  },
+  {
+    "File": "moon.glb",
+    "Bytes": 1180376,
+    "BuildCopyMatches": true
+  }
+]
