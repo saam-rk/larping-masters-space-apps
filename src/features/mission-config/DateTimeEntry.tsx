@@ -91,7 +91,7 @@ export function DateTimeEntry({ id, fields, focusPart, zoneName, onApply, onClos
   }
 
   function handleKeyDown(event: KeyboardEvent) {
-    if (event.key === 'Enter') {
+    if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
       event.preventDefault();
       apply();
     } else if (event.key === 'Escape') {

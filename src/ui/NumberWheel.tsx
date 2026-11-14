@@ -45,7 +45,7 @@ function rowLabel(value: number, offset: number, min: number, max: number, wrap:
 /**
  * Animation state of a roll. It starts when `rollId` changes (adjusting state
  * while rendering, so the first frame already shows the old value) and ends on
- * the target, or as soon as the value changes for another reason.
+ * the target, or as soon as the value changes for another reason or effects are disabled.
  */
 function useRoll(value: number, rollId: number, rollFrom: number | undefined, enabled: boolean) {
   const [seenRollId, setSeenRollId] = useState(rollId);
@@ -57,6 +57,9 @@ function useRoll(value: number, rollId: number, rollFrom: number | undefined, en
     const starts = enabled && rollFrom !== undefined && rollFrom !== value;
     setRoll(starts ? { from: rollFrom, to: value } : null);
     setProgress(starts ? 0 : 1);
+  } else if (!enabled && roll !== null) {
+    // Discard the roll so re-enabling effects cannot resume an obsolete animation.
+    setRoll(null);
   }
 
   useEffect(() => {

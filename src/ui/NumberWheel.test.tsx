@@ -246,6 +246,34 @@ describe('NumberWheel component interactions', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it('cancels an active roll when effects are disabled and does not resume it when re-enabled', () => {
+    const frames = new Map<number, FrameRequestCallback>();
+    let nextId = 0;
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      frames.set(++nextId, callback);
+      return nextId;
+    });
+    const cancel = vi.fn((id: number) => { frames.delete(id); });
+    vi.stubGlobal('cancelAnimationFrame', cancel);
+    const render = (value: number, rollId: number, animated: boolean) => act(() => root.render(
+      <NumberWheel label="Day" value={value} min={1} max={31} animated={animated} invalid={false}
+        describedBy="hint" rollId={rollId} rollFrom={12} onChange={vi.fn()} />,
+    ));
+    render(12, 0, true);
+    render(4, 1, true);
+    expect(container.querySelector('.number-wheel__reel--rolling')).not.toBeNull();
+    expect(frames.size).toBe(1);
+    render(4, 1, false);
+    expect(container.querySelector('.number-wheel__reel--rolling')).toBeNull();
+    expect(container.querySelector('.number-wheel__selected')?.textContent).toBe('04');
+    expect(cancel).toHaveBeenCalledTimes(1);
+    expect(frames.size).toBe(0);
+    render(4, 1, true);
+    expect(container.querySelector('.number-wheel__reel--rolling')).toBeNull();
+    expect(container.querySelector('.number-wheel__selected')?.textContent).toBe('04');
+    expect(frames.size).toBe(0);
+  });
+
   it('rolls unit by unit from the previous value to a value set from outside, then settles', () => {
     const frames: FrameRequestCallback[] = [];
     vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => frames.push(callback));

@@ -87,6 +87,27 @@ describe('DateTimeEntry', () => {
     expect(onApply).toHaveBeenCalledExactlyOnceWith({ date: '2034-05-04', time: '14:30' });
   });
 
+  it.each(['Cancel', 'Close', 'Apply'])('preserves native Enter activation on %s', (name) => {
+    const { input, onApply, onClose } = mountEntry();
+    type(input('Day'), '04');
+    const button = [...container.querySelectorAll<HTMLButtonElement>('button')]
+      .find((element) => (element.getAttribute('aria-label') ?? element.textContent) === name)!;
+    act(() => button.focus());
+    const event = key(button, 'Enter');
+    expect(event.defaultPrevented).toBe(false);
+    expect(onApply).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+    // jsdom does not synthesize a button click from its keyboard default action.
+    if (!event.defaultPrevented) act(() => button.click());
+    if (name === 'Apply') {
+      expect(onApply).toHaveBeenCalledExactlyOnceWith({ date: '2026-01-04', time: '14:30' });
+      expect(onClose).not.toHaveBeenCalled();
+    } else {
+      expect(onClose).toHaveBeenCalledExactlyOnceWith(true);
+      expect(onApply).not.toHaveBeenCalled();
+    }
+  });
+
   it('shows why the values were rejected and keeps the dialog open', () => {
     const { input, onApply } = mountEntry();
     onApply.mockReturnValueOnce('Enter a valid date and time between 2000 and 2099.');
