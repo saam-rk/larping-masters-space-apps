@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { DEFAULT_SITE_ID, findSite, MORE_SITES, type SiteId } from '../../../shared/sites';
+import { DEFAULT_SITE_ID, FEATURED_SITES, findSite, REFERENCE_SITES, type SiteId } from '../../../shared/sites';
 import { DEFAULT_UTC } from '../../../shared/time';
 import { MESSAGES } from '../../i18n/messages';
 import { ConfigPanel } from './ConfigPanel';
@@ -74,26 +74,23 @@ function renderPanel(siteId: SiteId): string {
 }
 
 describe('ConfigPanel reference points', () => {
-  it('lists the four featured points as radios and the others in the drop-down, alphabetically', () => {
+  it('lists every point in one drop-down: the featured ones first, then the others alphabetically', () => {
     const html = renderPanel(DEFAULT_SITE_ID);
-    const radios = [...html.matchAll(/<input[^>]*name="reference-site"[^>]*>/g)].map((match) => /value="([^"]+)"/.exec(match[0])?.[1]);
-    expect(radios).toEqual(['apollo-11', 'nobile-rim-1', 'nobile-rim-2', 'shackleton-rim']);
+    expect(html).not.toContain('type="radio"');
     const options = [...html.matchAll(/role="option"[^>]*>([^<]+)</g)].map((match) => match[1]!.replace(/&#x27;/g, "'"));
-    expect(options).toHaveLength(MORE_SITES.length);
-    expect(options[0]).toBe('Amundsen 1 · NPB');
+    expect(options).toHaveLength(REFERENCE_SITES.length);
+    expect(options.slice(0, 4)).toEqual(['Apollo 11', 'Nobile Rim 1 · R06', 'Nobile Rim 2 · DM2', 'Shackleton Rim · R04']);
+    expect(options[4]).toBe('Amundsen 1 · NPB');
     expect(options).toContain('Haworth');
     expect(options).toContain('Leibnitz Beta Plateau, extended boundaries · Site20v2');
-    const names = options.map((option) => option.split(' · ')[0]!);
+    const names = options.slice(FEATURED_SITES.length).map((option) => option.split(' · ')[0]!);
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' })));
-    expect(html).toContain('Choose another point…');
+    expect(html).toMatch(/class="wheel-select__value">Apollo 11</);
   });
 
-  it('shows a drop-down point as the chosen option and checks no radio', () => {
+  it('shows the selected point as the chosen option', () => {
+    expect(renderPanel('shackleton-rim')).toMatch(/aria-selected="true"[^>]*>Shackleton Rim · R04</);
     const html = renderPanel('malapert-massif');
-    const radios = [...html.matchAll(/<input[^>]*name="reference-site"[^>]*>/g)].map((match) => match[0]);
-    expect(radios).toHaveLength(4);
-    expect(radios.some((radio) => /\bchecked\b/.test(radio))).toBe(false);
-    expect(renderPanel('shackleton-rim')).toMatch(/<input[^>]*checked[^>]*value="shackleton-rim"|<input[^>]*value="shackleton-rim"[^>]*checked/);
     expect(html).toMatch(/class="wheel-select__value">Malapert Massif · R23</);
     expect(html).toMatch(/aria-selected="true"[^>]*>Malapert Massif · R23</);
   });

@@ -10,7 +10,7 @@ function normalize([x, y, z]: readonly number[]): number[] {
 
 describe('terrain models', () => {
   it('has first-person terrain for every reference site and none for custom points', () => {
-    expect(SITE_TERRAINS.map((model) => model.siteId).sort()).toEqual(['apollo-11', 'nobile-rim-1', 'nobile-rim-2', 'shackleton-rim']);
+    expect(SITE_TERRAINS.map((model) => model.siteId).sort()).toEqual(['amundsen-rim', 'apollo-11', 'haworth', 'nobile-rim-1', 'nobile-rim-2', 'shackleton-rim']);
     expect(terrainForSite('custom')).toBeNull();
   });
 
@@ -28,12 +28,36 @@ describe('terrain models', () => {
     expect(y).toBeCloseTo(expectedY, 4);
   });
 
-  it.each<SiteId>(['nobile-rim-1', 'nobile-rim-2', 'shackleton-rim'])('places the %s site near the GLB origin', (siteId) => {
+  it('projects amundsen-rim as in its terrain README (published to the millimeter)', () => {
+    // assets/terrain/amundsen-rim/README.md: X 164001.125 m, Y 61500.405 m.
+    const site = findSite('amundsen-rim');
+    const { x, y } = projectSouthPolar(site.latitudeDeg, site.longitudeEastDeg);
+    expect(x).toBeCloseTo(164001.125, 2);
+    expect(y).toBeCloseTo(61500.405, 2);
+  });
+
+  it('projects haworth as in its terrain README (published to the millimeter)', () => {
+    // assets/terrain/haworth/README.md: X -38000.456 m, Y 90501.190 m.
+    const site = findSite('haworth');
+    const { x, y } = projectSouthPolar(site.latitudeDeg, site.longitudeEastDeg);
+    expect(x).toBeCloseTo(-38000.456, 2);
+    expect(y).toBeCloseTo(90501.19, 2);
+  });
+
+  it('records the larger Haworth crop (metadata bounds -45500..-33500 x 88500..102500 m)', () => {
+    expect(terrainForSite('haworth')!.cropSizeKm).toEqual([12, 14]);
+    for (const model of SITE_TERRAINS.filter((terrain) => terrain.siteId !== 'haworth' && terrain.siteId !== 'apollo-11')) {
+      expect(model.cropSizeKm).toEqual([10, 10]);
+    }
+  });
+
+  it.each<SiteId>(['nobile-rim-1', 'nobile-rim-2', 'shackleton-rim', 'amundsen-rim', 'haworth'])('places the %s site near the GLB origin', (siteId) => {
     const site = findSite(siteId);
     const terrain = terrainForSite(siteId)!;
     const { x, y } = projectSouthPolar(site.latitudeDeg, site.longitudeEastDeg);
     const [gx, , gz] = projectedToGlb(terrain, x, y, terrain.origin.elevationM);
-    expect(Math.hypot(gx, gz)).toBeLessThan(1);
+    // Origins are the saved points rounded (Amundsen Rim: X0 = 164000 m for X = 164001.125 m).
+    expect(Math.hypot(gx, gz)).toBeLessThan(1.5);
   });
 
   it.each([
@@ -45,6 +69,10 @@ describe('terrain models', () => {
     // The chord of a longitude step turns by half the step; keep it small.
     ['shackleton-rim', 'north', 0.01, 0, [0, 0, -1]],
     ['shackleton-rim', 'east', 0, 0.02, [1, 0, 0]],
+    ['amundsen-rim', 'north', 0.01, 0, [0, 0, -1]],
+    ['amundsen-rim', 'east', 0, 0.05, [1, 0, 0]],
+    ['haworth', 'north', 0.01, 0, [0, 0, -1]],
+    ['haworth', 'east', 0, 0.05, [1, 0, 0]],
   ] as const)('turns geographic %s %s into the scene axis', (siteId, _label, dLat, dLon, expected) => {
     const site = findSite(siteId);
     const terrain = terrainForSite(siteId)!;

@@ -1,14 +1,19 @@
 /**
- * First-person local horizon on LROC terrain at Apollo 11 or on LOLA terrain
- * at a supported south pole site. The Sun and Earth use the displayed result.
+ * First-person local horizon on LROC terrain at Apollo 11, or on LOLA terrain
+ * at a site with a terrain model (Nobile Rim 1, Nobile Rim 2, Shackleton Rim,
+ * Amundsen Rim and Haworth, see `terrain/models.ts`). The Sun and Earth are
+ * placed from the same azimuth/elevation as the results panel.
  *
  * Units are meters. Scene frame as in `geometry.ts` (-Z north, +X east,
  * +Y up); the world origin is the site point on the terrain surface.
  *
- * The Apollo camera frames the three characters and Eagle. At the polar sites
- * it stands beside the scale astronaut, which has a decorative contact shadow.
- * Dragging turns the head; the wheel or slider narrows the field of view.
- * Sun and Earth are drawn beyond each terrain crop at their apparent diameter. Beyond the
+ * The Apollo camera frames the three characters and Eagle. At the LOLA sites
+ * the viewer stands still at eye height right beside the 1.70 m astronaut (about
+ * 2.6 m away), facing it with the Sun just to the right; a soft contact shadow
+ * (decorative, not Sun-based) marks where the figure stands. Dragging only turns
+ * the head and the wheel or the zoom slider narrows the field of view (see
+ * `EyeLevelRig`). Sun and Earth are drawn far beyond each terrain crop with
+ * their real apparent angular diameter. Beyond the
  * crop there is no relief data: an invisible floor marks an assumed horizon, a
  * smooth lunar sphere continuing from the crop edge as seen from eye height
  * (see `horizonFloor.ts`). It only writes depth, so it hides the Sun and the
@@ -142,7 +147,8 @@ function astronautInFront(source: Object3D): Object3D {
 /**
  * Small copy of the terrain triangles around `center` (GLB frame), used for
  * cheap downward ray casts instead of testing every triangle of the crop
- * (tens of thousands; Shackleton Rim packs most of them near the viewer).
+ * (tens of thousands; Shackleton Rim, Amundsen Rim and Haworth pack most of
+ * them near the viewer).
  */
 function buildProbe(terrain: Mesh, center: Vector3Tuple): Mesh {
   const source = terrain.geometry;

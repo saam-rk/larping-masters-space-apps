@@ -87,12 +87,12 @@ export interface Messages {
     /** Confirms how custom coordinates were read. */
     readonly searchReading: (coordinates: string) => string;
     /** Drop-down of further reference points; its options are placeholders for now. */
-    readonly morePoints: {
+    readonly siteList: {
       readonly label: string;
-      /** Shown while no option is chosen. */
+      /** Shown while no option is chosen (a custom point). */
       readonly placeholder: string;
-      /** Read with the drop-down: what its points are and how they are computed. */
-      readonly hint: (count: number) => string;
+      /** Read with the drop-down: what its points are, their order and how they are computed. */
+      readonly hint: (count: number, featured: number) => string;
     };
     readonly searchErrors: {
       readonly empty: string;
@@ -197,8 +197,9 @@ export interface Messages {
         readonly exaggeration: (factor: string) => string;
       };
     };
-    readonly firstPersonNote: string;
     readonly apolloReenactmentNote: string;
+    /** `crop`: size of the site's relief crop, already formatted (e.g. `10 × 10`). */
+    readonly firstPersonNote: (crop: string) => string;
     readonly thirdPersonNote: {
       /** `exaggeration`: vertical exaggeration factor of the drawn elevations, or null when drawn true. */
       readonly visual: (exaggeration: string | null) => string;
@@ -381,7 +382,7 @@ const es: Messages = {
     siteInfo: [
       'Elige el punto del polo sur lunar desde el que se calcula el cielo.',
       'Son los centros de regiones candidatas publicadas por NASA (Lunar Surface Data Book, tabla A2.1-1). No son lugares de aterrizaje aprobados.',
-      'Arriba están el Apolo 11 y los tres puntos originales de la demo. El desplegable «Más puntos de referencia» tiene el resto, en orden alfabético. Todos usan el mismo método; la vista con relieve solo está disponible en algunos puntos.',
+      'El desplegable «Lista de puntos» empieza por el Apolo 11 y los tres puntos originales de la demo (Nobile Rim 1, Nobile Rim 2 y Shackleton Rim) y sigue con el resto de puntos documentados, en orden alfabético. Todos se calculan con el mismo método; la vista en primera persona con relieve solo existe para algunos puntos y el resto se muestra en tercera persona.',
       'También puedes escribir unas coordenadas en grados (latitud, longitud; sur y oeste en negativo o con S/O) o buscar un punto por su nombre o código (p. ej. «Haworth», «DM1», «Site20v2»). Un punto personalizado se calcula con el mismo método, a altura 0 km y sin relieve, y no tiene fuente publicada.',
       '«Leibnitz Beta Plateau, extended boundaries» (Site20v2) es una variante del producto de terreno de PGDA con las mismas coordenadas que Leibnitz Beta Plateau (Site20): su cálculo es idéntico.',
     ],
@@ -390,11 +391,11 @@ const es: Messages = {
     search: 'Coordenadas o nombre',
     searchPlaceholder: '-85.4381, 37.36667 · Haworth',
     searchReading: (coordinates) => `Punto personalizado: ${coordinates}`,
-    morePoints: {
-      label: 'Más puntos de referencia',
-      placeholder: 'Elegir otro punto…',
-      hint: (count) =>
-        `${count} puntos más del Lunar Surface Data Book, en orden alfabético. Se calculan con el mismo método y se muestran en tercera persona.`,
+    siteList: {
+      label: 'Lista de puntos',
+      placeholder: 'Elegir un punto de la lista…',
+      hint: (count, featured) =>
+        `${count} puntos del Lunar Surface Data Book: primero los ${featured} principales de la demo y después el resto, en orden alfabético. Todos se calculan con el mismo método.`,
     },
     searchErrors: {
       empty: 'Escribe unas coordenadas o el nombre de un punto.',
@@ -437,9 +438,9 @@ const es: Messages = {
     heading: 'Horizonte local',
     info: {
       'first-person': [
-        'Vista a la altura de los ojos, de pie y quieto en el Apolo 11 o junto al astronauta de un punto del polo sur con relieve disponible. Arrastra para girar la cabeza: en horizontal para mirar alrededor y en vertical para mirar al suelo o al cielo. La rueda, el pellizco o el control de zoom (+, barra y −) acercan o alejan la imagen, como unos prismáticos, sin moverte del sitio. Con la vista seleccionada, también funcionan las flechas y +/−. El botón Brújula, junto a 1ª P y 3ª P, muestra u oculta la línea del horizonte y los puntos cardinales; el botón de las esquinas abre la vista a pantalla completa.',
-        'El relieve es un recorte de 10 × 10 km del modelo LOLA de 5 m/píxel (NASA GSFC PGDA, producto 78). La línea verde es el horizonte geométrico (elevación 0). Más allá del recorte no hay datos de relieve: hay un horizonte supuesto (invisible; bajo él solo se ven las estrellas), el de una Luna lisa de 1737,4 km de radio que sigue a la altura del borde del recorte, visto desde los ojos (1,60 m sobre el suelo). No es terreno real. Donde el terreno baja, ese horizonte queda bajo la línea verde y el Sol o la Tierra pueden verse en parte aunque su centro esté bajo el horizonte geométrico. La parte del Sol o de la Tierra que tapan el relieve o ese horizonte supuesto se dibuja translúcida, para poder localizarla; desde allí no se vería.',
-        'El Sol y la Tierra se dibujan con su posición y su diámetro aparente de JPL Horizons. La iluminación es ilustrativa: el recorte de relieve es plano y la curvatura lunar solo se supone más allá de él. No es un análisis de visibilidad, energía, comunicaciones ni idoneidad de aterrizaje.',
+        'Vista a la altura de los ojos, de pie y quieto en el Apolo 11 o a unos metros de un astronauta de 1,70 m en Nobile Rim 1, Nobile Rim 2, Shackleton Rim, Amundsen Rim o Haworth. Arrastra para girar la cabeza: en horizontal para mirar alrededor y en vertical para mirar al suelo o al cielo. La rueda, el pellizco o el control de zoom (+, barra y −) acercan o alejan la imagen, como unos prismáticos, sin moverte del sitio. Con la vista seleccionada, también funcionan las flechas y +/−. El botón Brújula, junto a 1ª P y 3ª P, muestra u oculta la línea del horizonte y los puntos cardinales; el botón de las esquinas abre la vista a pantalla completa.',
+        'El relieve es un recorte de 10 × 10 km (12 × 14 km en Haworth) del modelo LOLA de 5 m/píxel (NASA GSFC PGDA, producto 78). La línea verde es el horizonte geométrico (elevación 0). Más allá del recorte no hay datos de relieve: hay un horizonte supuesto (invisible; bajo él solo se ven las estrellas), el de una Luna lisa de 1737,4 km de radio que sigue a la altura del borde del recorte, visto desde los ojos (1,60 m sobre el suelo). No es terreno real. Donde el terreno baja, ese horizonte queda bajo la línea verde y el Sol o la Tierra pueden verse en parte aunque su centro esté bajo el horizonte geométrico. La parte del Sol o de la Tierra que tapan el relieve o ese horizonte supuesto se dibuja translúcida, para poder localizarla; desde allí no se vería.',
+        'El Sol y la Tierra se dibujan con su posición y su diámetro aparente de JPL Horizons. La iluminación es ilustrativa: sin sombras proyectadas; el recorte de relieve es plano y la curvatura lunar solo se supone más allá de él. No es un análisis de visibilidad, energía, comunicaciones ni idoneidad de aterrizaje.',
         'El astronauta es una figura de escala ilustrativa. Las estrellas son decorativas y no reproducen el cielo real.',
       ],
       'third-person': [
@@ -453,7 +454,7 @@ const es: Messages = {
       label: 'Vista',
       names: { 'first-person': 'Primera persona', 'third-person': 'Tercera persona' },
       short: { 'first-person': '1ª P', 'third-person': '3ª P' },
-      firstPersonUnavailable: 'Primera persona: disponible en el Apolo 11, Nobile Rim 1, Nobile Rim 2 y Shackleton Rim.',
+      firstPersonUnavailable: 'Primera persona: solo disponible en el Apolo 11, Nobile Rim 1, Nobile Rim 2, Shackleton Rim, Amundsen Rim y Haworth, que tienen modelo de relieve.',
     },
     compassToggle: {
       label: 'Brújula',
@@ -494,7 +495,7 @@ const es: Messages = {
       },
     },
     apolloReenactmentNote: 'Recreación del Apolo 11 sobre relieve LROC · Collins permaneció en órbita.',
-    firstPersonNote: 'Relieve LOLA 10 × 10 km · luz ilustrativa · figura 1,70 m',
+    firstPersonNote: (crop) => `Relieve LOLA ${crop} km · luz ilustrativa · figura 1,70 m`,
     thirdPersonNote: {
       visual: (exaggeration) =>
         exaggeration
@@ -545,9 +546,9 @@ const es: Messages = {
       horizonsApi: 'Calcula azimut, elevación, tamaño angular y distancia del Sol y la Tierra desde el punto lunar elegido.',
       horizonsManual: 'Define las cantidades del observador y los marcadores de presencia que traducimos a los estados del panel.',
       jplApiPolicy: 'Normas de uso y política CORS: por eso la consulta pasa por nuestra ruta de servidor y se guarda en caché.',
-      pgda78: 'Relieve LOLA de 5 m/píxel del que salen las mallas 3D de 10 × 10 km de Nobile Rim 1, Nobile Rim 2 y Shackleton Rim en primera persona; también documenta la variante ampliada Site20v2.',
+      pgda78: 'Relieve LOLA de 5 m/píxel del que salen las mallas 3D de Nobile Rim 1, Nobile Rim 2, Shackleton Rim y Amundsen Rim (10 × 10 km) y de Haworth (12 × 14 km) en primera persona; también documenta la variante ampliada Site20v2.',
       pgda78Readme: 'Unidades, marco MOON_ME/DE421 y proyección estereográfica polar con los que situamos el punto sobre la malla.',
-      barker2021: 'Cita del producto DM2: método de los mapas LOLA mejorados, sus errores y el cálculo de horizontes.',
+      barker2021: 'Cita de los productos DM1, DM2 y Haworth: método de los mapas LOLA mejorados, sus errores y el cálculo de horizontes.',
       spaceAppsChallenge: 'Enunciado del reto que define el alcance del proyecto.',
       pgda90: 'Relieve regional ajustado del polo sur: contexto de los tres puntos y perfiles de horizonte exploratorios.',
       barker2023: 'Describe los productos LOLA regionales y sus capas de error y densidad de observaciones.',
@@ -785,7 +786,7 @@ const en: Messages = {
     siteInfo: [
       'Choose the lunar south-pole point the sky is computed from.',
       'They are the centers of candidate regions published by NASA (Lunar Surface Data Book, table A2.1-1). They are not approved landing sites.',
-      'Apollo 11 and the three original demo points are listed first. The "More reference points" drop-down lists the rest alphabetically. All use the same calculation; first-person terrain is available at some points.',
+      'The "Point list" drop-down starts with Apollo 11 and the three original demo points (Nobile Rim 1, Nobile Rim 2 and Shackleton Rim) and continues with the other documented points, in alphabetical order. All are computed with the same method; the first-person terrain view only exists for some points, and the others are shown in third person.',
       'You can also type coordinates in degrees (latitude, longitude; south and west negative or with S/W) or search a point by name or code (e.g. "Haworth", "DM1", "Site20v2"). A custom point is computed with the same method, at 0 km height and without terrain, and has no published source.',
       '"Leibnitz Beta Plateau, extended boundaries" (Site20v2) is a PGDA terrain-product variant with the same coordinates as Leibnitz Beta Plateau (Site20): its calculation is identical.',
     ],
@@ -794,11 +795,11 @@ const en: Messages = {
     search: 'Coordinates or name',
     searchPlaceholder: '-85.4381, 37.36667 · Haworth',
     searchReading: (coordinates) => `Custom point: ${coordinates}`,
-    morePoints: {
-      label: 'More reference points',
-      placeholder: 'Choose another point…',
-      hint: (count) =>
-        `${count} more points from the Lunar Surface Data Book, in alphabetical order. They are computed with the same method and shown in third person.`,
+    siteList: {
+      label: 'Point list',
+      placeholder: 'Choose a point from the list…',
+      hint: (count, featured) =>
+        `${count} points from the Lunar Surface Data Book: the ${featured} main demo points first, then the others in alphabetical order. All are computed with the same method.`,
     },
     searchErrors: {
       empty: 'Type coordinates or the name of a point.',
@@ -841,9 +842,9 @@ const en: Messages = {
     heading: 'Local horizon',
     info: {
       'first-person': [
-        'Eye-level view, standing still at Apollo 11 or beside an astronaut at a south pole site with terrain. Drag to turn your head: sideways to look around, up or down to look at the ground or the sky. The wheel, a pinch or the zoom control (+, bar and −) zooms the image in or out, like binoculars, without moving you. With the view focused, the arrow keys and +/− also work. The Compass button, next to 1ST and 3RD, shows or hides the horizon line and the cardinal points; the corners button opens the view full screen.',
-        'The relief is a 10 × 10 km crop of the 5 m/pixel LOLA model (NASA GSFC PGDA, product 78). The green line is the geometric horizon (elevation 0). There is no relief data beyond the crop: there is an assumed horizon (invisible; only stars show below it), that of a smooth Moon of 1,737.4 km radius continuing at the height of the crop edge, seen from the eyes (1.60 m above the ground). It is not real terrain. Where the terrain falls away, that horizon lies below the green line, so the Sun or the Earth may show in part even when its center is below the geometric horizon. The part of the Sun or the Earth hidden by the relief or that assumed horizon is drawn translucent so it can be found; it would not be visible from there.',
-        'The Sun and the Earth are drawn with their JPL Horizons position and apparent diameter. Lighting is illustrative: the relief crop is flat and lunar curvature is only assumed beyond it. This is not a visibility, power, communications or landing-suitability analysis.',
+        'Eye-level view, standing still at Apollo 11 or a few meters from a 1.70 m astronaut at Nobile Rim 1, Nobile Rim 2, Shackleton Rim, Amundsen Rim or Haworth. Drag to turn your head: sideways to look around, up or down to look at the ground or the sky. The wheel, a pinch or the zoom control (+, bar and −) zooms the image in or out, like binoculars, without moving you. With the view focused, the arrow keys and +/− also work. The Compass button, next to 1ST and 3RD, shows or hides the horizon line and the cardinal points; the corners button opens the view full screen.',
+        'The relief is a 10 × 10 km crop (12 × 14 km at Haworth) of the 5 m/pixel LOLA model (NASA GSFC PGDA, product 78). The green line is the geometric horizon (elevation 0). There is no relief data beyond the crop: there is an assumed horizon (invisible; only stars show below it), that of a smooth Moon of 1,737.4 km radius continuing at the height of the crop edge, seen from the eyes (1.60 m above the ground). It is not real terrain. Where the terrain falls away, that horizon lies below the green line, so the Sun or the Earth may show in part even when its center is below the geometric horizon. The part of the Sun or the Earth hidden by the relief or that assumed horizon is drawn translucent so it can be found; it would not be visible from there.',
+        'The Sun and the Earth are drawn with their JPL Horizons position and apparent diameter. Lighting is illustrative: no cast shadows; the relief crop is flat and lunar curvature is only assumed beyond it. This is not a visibility, power, communications or landing-suitability analysis.',
         'The astronaut is an illustrative scale figure. The stars are decorative and do not reproduce the real sky.',
       ],
       'third-person': [
@@ -857,7 +858,7 @@ const en: Messages = {
       label: 'View',
       names: { 'first-person': 'First person', 'third-person': 'Third person' },
       short: { 'first-person': '1ST', 'third-person': '3RD' },
-      firstPersonUnavailable: 'First person: available at Apollo 11, Nobile Rim 1, Nobile Rim 2 and Shackleton Rim.',
+      firstPersonUnavailable: 'First person: only available at Apollo 11, Nobile Rim 1, Nobile Rim 2, Shackleton Rim, Amundsen Rim and Haworth, which have a relief model.',
     },
     compassToggle: {
       label: 'Compass',
@@ -898,7 +899,7 @@ const en: Messages = {
       },
     },
     apolloReenactmentNote: 'Apollo 11 reenactment on LROC terrain · Collins remained in orbit.',
-    firstPersonNote: 'LOLA relief 10 × 10 km · illustrative light · 1.70 m figure',
+    firstPersonNote: (crop) => `LOLA relief ${crop} km · illustrative light · 1.70 m figure`,
     thirdPersonNote: {
       visual: (exaggeration) =>
         exaggeration
@@ -949,9 +950,9 @@ const en: Messages = {
       horizonsApi: 'Computes azimuth, elevation, angular size and range of the Sun and the Earth from the chosen lunar point.',
       horizonsManual: 'Defines the observer quantities and the presence markers we turn into the panel states.',
       jplApiPolicy: 'Usage rules and CORS policy: the reason the query goes through our server route and is cached.',
-      pgda78: 'LOLA 5 m/pixel terrain behind the 10 × 10 km 3D meshes of Nobile Rim 1, Nobile Rim 2 and Shackleton Rim in first person; it also documents the extended Site20v2 variant.',
+      pgda78: 'LOLA 5 m/pixel terrain behind the first-person 3D meshes of Nobile Rim 1, Nobile Rim 2, Shackleton Rim and Amundsen Rim (10 × 10 km) and Haworth (12 × 14 km); it also documents the extended Site20v2 variant.',
       pgda78Readme: 'Units, MOON_ME/DE421 frame and polar stereographic projection used to place the point on the mesh.',
-      barker2021: 'Citation for the DM2 product: method of the improved LOLA maps, their errors and horizon computation.',
+      barker2021: 'Citation for the DM1, DM2 and Haworth products: method of the improved LOLA maps, their errors and horizon computation.',
       spaceAppsChallenge: 'Challenge statement that defines the project scope.',
       pgda90: 'Adjusted regional south-pole terrain: context for the three points and exploratory horizon profiles.',
       barker2023: 'Describes the regional LOLA products and their error and observation-density layers.',

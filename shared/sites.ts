@@ -9,7 +9,7 @@
  * exactly as published (see docs/LUNAR_ADDITIONAL_SITES_RESEARCH.md §3).
  *
  * The featured points (`FEATURED_SITE_IDS`) include Apollo 11 and the
- * original demo points (D-015); the others are offered in a drop-down. Every point uses the
+ * original demo points (D-015); the site drop-down lists them first, then the others. Every point uses the
  * same geometric method; only some featured points have a first-person
  * terrain model.
  *
@@ -175,7 +175,7 @@ export const REFERENCE_SITES: readonly ReferenceSite[] = [
   dataBookSite('connecting-ridge-extension', 'Connecting Ridge Extension', -89.0324, -101.999, ['SL3', 'Connencting Ridge Extension']),
 ];
 
-/** Reference sites offered in the drop-down below the featured ones, in catalog order. */
+/** Reference sites listed in the drop-down after the featured ones, in catalog order. */
 export const MORE_SITES: readonly ReferenceSite[] = REFERENCE_SITES.filter(
   (site) => !(FEATURED_SITE_IDS as readonly string[]).includes(site.id),
 );

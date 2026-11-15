@@ -1,0 +1,48 @@
+{
+  "id": "shoemaker-rim-a",
+  "displayName": "Shoemaker Rim A",
+  "sourceUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/LM2/LM2_final_adj_5mpp_surf.tif",
+  "sourceCatalogUrl": "https://pgda.gsfc.nasa.gov/products/78",
+  "sourceReadmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+  "siteSource": "docs/LUNAR_ADDITIONAL_SITES_RESEARCH.md catalog row 4 (Shoemaker Rim A, LM2), NASA Lunar Surface Data Book M2M-30044 Table A2.1-1. PGDA/Data Book reference point; center of an original candidate-region polygon; not an approved landing site.",
+  "frame": "MOON_ME / DE421",
+  "referenceRadiusM": 1737400,
+  "site": {"latitudeDeg": -88.0792, "longitudeEastDeg": 11.88866},
+  "ridge": {"latitudeDeg": -88.26422183190766, "longitudeEastDeg": 8.667337970657842},
+  "third": {"latitudeDeg": -88.08101069413794, "longitudeEastDeg": 14.71315402440454},
+  "cropCenterProjectedM": [10000, 55000],
+  "cropSizeM": [12000, 12000],
+  "originProjectedM": [12000, 57001, -620],
+  "targetVertices": 40400,
+  "baseStridePixels": 20,
+  "candidateStridePixels": 4,
+  "refinementBatchSize": 2500,
+  "ridgePriorityMultiplier": 2.5,
+  "ridgePriorityRadiusM": 1800,
+  "maxGlbBytes": 2097152,
+  "nearDetail": {
+    "centerProjectedM": [11997.5, 57042.5],
+    "seedBandsRadiusMStridePixels": [[35, 1], [150, 2], [500, 4]],
+    "residualPriorityBoost": 10,
+    "residualPriorityRadiusM": 550,
+    "textureSquareSizeM": 50,
+    "textureFullDetailRadiusM": 15,
+    "textureFadeEndRadiusM": 24,
+    "cameraHorizontalDirection": [-0.5, -0.8660254037844386],
+    "cameraHeightAboveMeshM": 1.65,
+    "astronautDistanceAheadM": 5,
+    "astronautSideOffsetM": 0.65,
+    "initialMovementRadiusM": 2
+  },
+  "featureNotes": {
+    "ridge": "Highest source pixel within 250 m of the sampled skyline at grid bearing 220 degrees from the site: a crest grid-southwest of the site, about 6.4 km away and 343 m above it, forming the far skyline of the initial view. Descriptive label from numeric LM2 elevation and illustrative hillshade; not an IAU feature name.",
+    "third": "Off-grid holdout on terrain grid-east-southeast of the site, about 2.9 km away; no mission significance.",
+    "nearDetail": "Gentlest 25 m window (about 4.7 degree plane-fit slope) within 45 m of the saved point, about 42 m grid-north of it. The surroundings slope about 6 to 7 degrees, rising grid-southeast. Selected for scale-figure footing, not landing suitability.",
+    "crop": "12 x 12 km, shifted 2 km grid-west and 2 km grid-south of the saved point so that the crests seen from the initial view (a rise about 3.2-3.4 km away and the ridge 6.1-6.8 km away) lie inside the crop. A planar 24-bearing raster scan from the viewpoint, plus 4-degree steps across the view, found every skyline point at least 2.6 km inside the crop boundary."
+  },
+  "siteLimitations": [
+    "The saved point lies on the outer slope of the Shoemaker rim region, rising grid-southeast; the 12 x 12 km crop includes neither Shoemaker crater nor its interior.",
+    "The crop omits a low rise about 11.6-12 km grid-southwest of the viewpoint, near the LM2 raster edge, which a planar raster scan from the viewpoint places up to about 0.5 degrees above the modeled skyline at grid bearings 232-236 degrees.",
+    "The astronaut stands on a gently sloping triangle selected for footing; no claim of walkability, safe footing or landing suitability."
+  ]
+}

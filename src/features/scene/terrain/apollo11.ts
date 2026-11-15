@@ -14,6 +14,8 @@ export const APOLLO_11_TERRAIN: SiteTerrain = {
     projectedYM: metadata.originProjectedM[1]!,
     elevationM: metadata.originElevationM,
   },
+  // Metadata `coverageLocalM`: -800..800 m on both axes.
+  cropSizeKm: [1.6, 1.6],
   northGridBearingDeg: 0,
 };
 
