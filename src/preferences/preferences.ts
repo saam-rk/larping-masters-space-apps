@@ -8,7 +8,12 @@
  * parallax, fixed scanlines and grain, no curvature filter) and swaps the pixel
  * font for a high-visibility font (`data-font`, see styles.css).
  *
- * Cookie format: `clps_prefs=v=2&lang=es&fx=on` (URL-encoded).
+ * `advanced` keeps the "Advanced mode" section of the control column open
+ * (inverse search, feasibility, scenario comparison); it starts closed so a
+ * first visit shows only the basic site and time controls.
+ *
+ * Cookie format: `clps_prefs=v=2&lang=es&fx=on&adv=0` (URL-encoded). `adv`
+ * was added within version 2: a cookie without it reads as closed.
  * Parsing is defensive: unknown or missing fields fall back to defaults, and
  * an unreadable cookie means "not configured yet".
  */
@@ -21,6 +26,8 @@ export type EffectMode = (typeof EFFECT_MODES)[number];
 export interface Preferences {
   readonly locale: Locale;
   readonly effects: EffectMode;
+  /** Whether the "Advanced mode" section is open. */
+  readonly advanced: boolean;
 }
 
 export const COOKIE_NAME = 'clps_prefs';
@@ -29,14 +36,19 @@ const COOKIE_VERSION = '2';
 const LEGACY_COOKIE_VERSION = '1';
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 
-export const DEFAULT_PREFERENCES: Preferences = { locale: DEFAULT_LOCALE, effects: 'on' };
+export const DEFAULT_PREFERENCES: Preferences = { locale: DEFAULT_LOCALE, effects: 'on', advanced: false };
 
 export function isEffectMode(value: unknown): value is EffectMode {
   return typeof value === 'string' && (EFFECT_MODES as readonly string[]).includes(value);
 }
 
 export function serializePreferences(preferences: Preferences): string {
-  const params = new URLSearchParams({ v: COOKIE_VERSION, lang: preferences.locale, fx: preferences.effects });
+  const params = new URLSearchParams({
+    v: COOKIE_VERSION,
+    lang: preferences.locale,
+    fx: preferences.effects,
+    adv: preferences.advanced ? '1' : '0',
+  });
   return encodeURIComponent(params.toString());
 }
 
@@ -71,6 +83,7 @@ export function parsePreferencesCookie(cookieHeader: string): Preferences | null
   return {
     locale: isLocale(locale) ? locale : DEFAULT_PREFERENCES.locale,
     effects: isEffectMode(effects) ? effects : DEFAULT_PREFERENCES.effects,
+    advanced: params.get('adv') === '1',
   };
 }
 
@@ -101,14 +114,15 @@ export interface DeviceHints {
 
 /**
  * Suggested first-visit choice: effects off with reduced motion or on modest
- * devices. The language stays the project default (Spanish).
+ * devices. The language stays the project default (Spanish) and the
+ * advanced section starts closed.
  */
 export function recommendPreferences(hints: DeviceHints): Preferences {
   const lowEnd =
     (hints.hardwareConcurrency !== undefined && hints.hardwareConcurrency <= 4) ||
     (hints.deviceMemoryGb !== undefined && hints.deviceMemoryGb <= 4);
   const effects: EffectMode = hints.prefersReducedMotion || lowEnd ? 'off' : 'on';
-  return { locale: DEFAULT_LOCALE, effects };
+  return { locale: DEFAULT_LOCALE, effects, advanced: false };
 }
 
 export function readDeviceHints(): DeviceHints {

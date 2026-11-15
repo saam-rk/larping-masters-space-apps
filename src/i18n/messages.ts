@@ -343,6 +343,17 @@ export interface Messages {
     /** Why each project source is listed (one short sentence). */
     readonly sourceReasons: Readonly<Record<SourceId, string>>;
   };
+  /** "Advanced mode" section of the control column: groups the inverse search, the feasibility screening and the scenario comparison. */
+  readonly advanced: {
+    readonly heading: string;
+    readonly info: Paragraphs;
+    /** Shown while the section is collapsed, above the names of the tools inside. */
+    readonly intro: string;
+    readonly show: string;
+    readonly hide: string;
+    /** Object of the show/hide switch, read after the verb by assistive technology only. */
+    readonly toggleTarget: string;
+  };
   /** Inverse search: Sun/Earth azimuth and elevation ranges -> closest matching date. */
   readonly skySearch: {
     readonly heading: string;
@@ -981,6 +992,18 @@ const es: Messages = {
       im1Navigation: 'Posición publicada del alunizaje de Odysseus (2024), más precisa que la del catálogo.',
       blueGhost: 'Alunizaje CLPS de 2025 en Mare Crisium, estable y de pie: conecta con el tema CLPS de la app.',
     },
+  },
+  advanced: {
+    heading: 'Modo avanzado',
+    info: [
+      'Agrupa las herramientas pensadas para quien ya conoce lo básico: la búsqueda inversa, la viabilidad de misión y la comparación de escenarios.',
+      'Para consultar dónde están el Sol y la Tierra en un punto y una fecha no hace falta: basta con «Punto de referencia» y el botón de actualizar.',
+      'Ábrelo o ciérralo cuando quieras; lo que tengas en marcha dentro (condiciones, resultados, escenarios) se conserva. La elección se recuerda en este navegador.',
+    ],
+    intro: 'Herramientas para análisis más detallados:',
+    show: 'Mostrar',
+    hide: 'Ocultar',
+    toggleTarget: 'herramientas del modo avanzado',
   },
   skySearch: {
     heading: 'Búsqueda inversa',
@@ -1750,6 +1773,18 @@ const en: Messages = {
       im1Navigation: 'Published landing position of Odysseus (2024), more precise than the catalogue value.',
       blueGhost: "2025 CLPS landing in Mare Crisium, stable and upright: it links to the app's CLPS theme.",
     },
+  },
+  advanced: {
+    heading: 'Advanced mode',
+    info: [
+      'Groups the tools meant for people who already know the basics: the inverse search, the mission feasibility screening and the scenario comparison.',
+      'You do not need it to see where the Sun and the Earth are for a point and a date: "Reference point" and the update button are enough.',
+      'Open or close it at any time; whatever is in progress inside (conditions, results, scenarios) is kept. The choice is remembered in this browser.',
+    ],
+    intro: 'Tools for more detailed analysis:',
+    show: 'Show',
+    hide: 'Hide',
+    toggleTarget: 'advanced mode tools',
   },
   skySearch: {
     heading: 'Inverse search',

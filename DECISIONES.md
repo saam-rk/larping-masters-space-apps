@@ -109,3 +109,15 @@ Registrar acuerdos con fecha, responsable y evidencia. Propuestas y preguntas no
 - **Consecuencias o límites:**
 - **Revisar si:**
 
+### D-023 — Advanced mode section
+
+- **Date:** 2026-11-15.
+- **Status:** confirmed by the user in the implementation request.
+- **Decision:** group the inverse search, the feasibility screening and the
+  scenario comparison in one "Advanced mode" section of the control column,
+  in the place those boxes already had, so users with different skill levels
+  get a simpler default view without losing the advanced tools.
+- **Implementation choices open to review:** closed by default; open/closed
+  remembered in the preferences cookie; tools stay mounted while closed.
+- **Limits:** presentation only; scientific methods, sources and terrain
+  limitations are unchanged.

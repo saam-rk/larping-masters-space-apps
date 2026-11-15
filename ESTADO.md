@@ -1,5 +1,20 @@
 # Estado del proyecto
 
+## Implementation update — 2026-11-15 (branch `feat/advanced-mode`)
+
+- **Advanced mode** section in the control column, where the inverse search,
+  feasibility and scenario comparison boxes were: one box that groups them
+  below the site and time controls. Closed by default (lists the three tools);
+  a Show/Hide switch in its title rule opens it, and an "i" explains what it
+  holds. The choice is stored in the preferences cookie (`adv=1`; older
+  version 2 cookies read as closed).
+- The tools stay mounted while closed, so their fields, results, compared
+  scenarios and a running search survive closing and reopening.
+- On narrow screens (≤ 560 px) the outer frame keeps only its title rule, so
+  the inner boxes keep the full column width.
+- Built on `feat/scenario-comparison-assessment` (not yet in `main`). No
+  scientific method or source changes. Pending: integrator review.
+
 ## Implementation update — 2026-11-15 (branch `feat/scenario-comparison-assessment`)
 
 - **Compare scenarios** box: up to four scenarios (point + UTC) side by side,

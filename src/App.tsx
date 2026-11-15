@@ -1,7 +1,8 @@
 /**
  * Single-screen dashboard (no page scroll): control column
- * (site and time, the inverse search, the mission feasibility screening and
- * the scenario comparison), the view column (3D horizon above,
+ * (site and time, then the "Advanced mode" section with the inverse search,
+ * the mission feasibility screening and the scenario comparison; closed by
+ * default, see `AdvancedSection`), the view column (3D horizon above,
  * data below) and the update bar. The update button belongs to the site and
  * time form but is drawn in the bar (see `ConfigPanel`): above the view on wide
  * screens and between the view and the controls when they stack, so it stays
@@ -29,6 +30,7 @@ import { useFullscreen } from './features/scene/useFullscreen';
 import { useViewMode } from './features/scene/viewMode';
 import { ViewToggle } from './features/scene/ViewToggle';
 import { SetupScreen } from './features/shell/SetupScreen';
+import { AdvancedSection } from './features/advanced/AdvancedSection';
 import { SkySearchPanel } from './features/sky-search/SkySearchPanel';
 import { AssessmentPanel } from './features/mission/AssessmentPanel';
 import { ComparisonPanel } from './features/mission/ComparisonPanel';
@@ -244,21 +246,23 @@ export function App() {
               onShowUtc={handleShowMatch}
               updateTarget={updateSlot}
             />
-            <SkySearchPanel selection={ephemeris.selection} onShow={handleShowMatch} />
-            <AssessmentPanel
-              data={displayedData}
-              mission={mission}
-              busy={busy}
-              windows={missionWindows.windows}
-              onLoadWindow={(data) => void missionWindows.load([dataSelection(data)])}
-            />
-            <ComparisonPanel
-              selection={ephemeris.selection}
-              mission={mission}
-              windows={missionWindows.windows}
-              onLoadWindows={(selections) => void missionWindows.load(selections)}
-              onShow={handleShowScenario}
-            />
+            <AdvancedSection>
+              <SkySearchPanel selection={ephemeris.selection} onShow={handleShowMatch} />
+              <AssessmentPanel
+                data={displayedData}
+                mission={mission}
+                busy={busy}
+                windows={missionWindows.windows}
+                onLoadWindow={(data) => void missionWindows.load([dataSelection(data)])}
+              />
+              <ComparisonPanel
+                selection={ephemeris.selection}
+                mission={mission}
+                windows={missionWindows.windows}
+                onLoadWindows={(selections) => void missionWindows.load(selections)}
+                onShow={handleShowScenario}
+              />
+            </AdvancedSection>
           </div>
         </main>
       </div>

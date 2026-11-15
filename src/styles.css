@@ -2233,6 +2233,79 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   color: var(--amber);
 }
 
+/* ───────────────────────── Advanced mode ───────────────────────── */
+
+/*
+ * Section of the control column that groups the advanced tools (see
+ * AdvancedSection). Closed: one intro line and the names of the tools inside.
+ * Open: the tools' own boxes, stacked inside a slimmer frame so they keep
+ * most of the column width; their glow is dropped to avoid a double halo.
+ */
+.advanced {
+  --pad: clamp(0.45rem, 1.1vh, 0.7rem);
+}
+
+.advanced__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+}
+
+.advanced__chevron {
+  line-height: 1;
+}
+
+.advanced__intro {
+  margin: 0;
+  color: var(--muted);
+}
+
+.advanced__names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.9rem;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.advanced__names li::before {
+  content: '› ';
+  color: var(--accent);
+}
+
+.advanced__tools:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-gap);
+}
+
+.advanced__tools > .box {
+  flex-shrink: 0;
+  box-shadow: none;
+}
+
+/*
+ * Narrow screens: the outer frame keeps only its title rule and bottom edge,
+ * so the tools' boxes get the full column width and their titles fit.
+ */
+@media (max-width: 560px) {
+  .advanced {
+    --pad: 0rem;
+    border-inline: none;
+    box-shadow: none;
+    background: none;
+  }
+
+  .advanced > .box__head {
+    margin-inline: 0;
+  }
+
+  .advanced > .box__body {
+    padding-bottom: var(--stack-gap);
+  }
+}
+
 /* ───────────────────────── Inverse search ───────────────────────── */
 
 /* Box in the control column: one intro line and one summary line. */
