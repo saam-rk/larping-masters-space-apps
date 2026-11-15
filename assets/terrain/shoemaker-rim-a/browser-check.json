@@ -1,0 +1,51 @@
+{
+  "status": "passed",
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+  "threeRevision": "187",
+  "deviceClass": "Desktop embedded browser, NOT a physical mobile device",
+  "viewport": [
+    390,
+    844
+  ],
+  "siteId": "shoemaker-rim-a",
+  "terrainVertices": 40400,
+  "terrainTriangles": 80299,
+  "imageDecode": {
+    "color": [
+      512,
+      512
+    ],
+    "normal": [
+      2048,
+      2048
+    ],
+    "roughness": [
+      256,
+      256
+    ]
+  },
+  "standardPbrChannels": true,
+  "clampToEdge": true,
+  "astronautHeightM": 1.7000000905183774,
+  "maxSoleGapM": 9.922329535783092e-8,
+  "controls": [
+    {
+      "name": "site",
+      "heightM": -619.5406943766835
+    },
+    {
+      "name": "ridge",
+      "heightM": -276.4780578613403
+    },
+    {
+      "name": "third",
+      "heightM": -748.8482022765668
+    }
+  ],
+  "movementCases": 102,
+  "fullBodyFramingFailures": [],
+  "renderedDrawCalls": 14,
+  "renderedTriangles": 81199,
+  "webglError": 0,
+  "mobilePerformance": "Pending: no physical device, throttled-network or FPS claim"
+}
