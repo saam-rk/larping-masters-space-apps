@@ -200,6 +200,7 @@ export function HorizonPlayback({
   }
 
   async function prepare() {
+    if (riseSearching) return;
     if (!plan) return;
     controller.current?.abort();
     const request = new AbortController();
@@ -243,6 +244,7 @@ export function HorizonPlayback({
   }
 
   const ready = frames.length > 0;
+  const riseSearching = rise !== null && rise.result === null;
   const stepText = formatMinutes(stepMinutes);
   const presetHint =
     preset === 'custom'
@@ -358,7 +360,7 @@ export function HorizonPlayback({
             <p role="status">{text.loading(progress, plan.samples)}</p>
             <progress value={progress} max={plan.samples} aria-label={text.title} />
             <button type="button" className="button" onClick={cancel}>{text.cancel}</button>
-          </> : <button type="submit" className="button button--go" disabled={!plan}>{text.prepare}</button>}
+          </> : <button type="submit" className={`button ${riseSearching ? 'button--busy' : plan ? 'button--go' : 'button--idle'}`} disabled={!plan || riseSearching} aria-busy={riseSearching}>{text.prepare}</button>}
         </form>
       </Modal>
     </>
