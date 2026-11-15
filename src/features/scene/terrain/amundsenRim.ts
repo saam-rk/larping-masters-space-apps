@@ -33,6 +33,8 @@ export const AMUNDSEN_RIM_TERRAIN: SiteTerrain = {
   astronautUrl: '/terrain/astronaut.glb',
   // Metadata `origin`.
   origin: { projectedXM: 164_000, projectedYM: 61_500, elevationM: 399 },
+  // Metadata `coverage.cropPixelOuterBoundsM`: [156500, 56500, 166500, 66500] m.
+  cropSizeKm: [10, 10],
   // Geographic north along the meridian lies at grid bearing = east longitude (shared/sites.ts: 69.44396°).
   northGridBearingDeg: 69.44396,
   // Metadata `astronaut.supportGlbM` (y is re-cast onto the terrain at runtime).

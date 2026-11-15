@@ -1,6 +1,6 @@
 /**
  * First-person local horizon at a site with a terrain model (Nobile Rim 1,
- * Nobile Rim 2, Shackleton Rim and Amundsen Rim, see `terrain/models.ts`): LOLA terrain, the 1.70 m astronaut scale
+ * Nobile Rim 2, Shackleton Rim, Amundsen Rim and Haworth, see `terrain/models.ts`): LOLA terrain, the 1.70 m astronaut scale
  * figure, and the Sun and Earth placed from the same azimuth/elevation as the
  * results panel.
  *
@@ -11,7 +11,7 @@
  * 2.6 m away), facing it with the Sun just to the right; a soft contact shadow
  * (decorative, not Sun-based) marks where the figure stands; dragging only turns the head and
  * the wheel or the zoom slider narrows the field of view (see `EyeLevelRig`). Sun and Earth are drawn far
- * beyond the 10 km crop with their real apparent angular diameter. Beyond the
+ * beyond the 10 to 14 km crop with their real apparent angular diameter. Beyond the
  * crop there is no relief data: an invisible floor marks an assumed horizon, a
  * smooth lunar sphere continuing from the crop edge as seen from eye height
  * (see `horizonFloor.ts`). It only writes depth, so it hides the Sun and the
@@ -142,8 +142,8 @@ function astronautInFront(source: Object3D): Object3D {
 /**
  * Small copy of the terrain triangles around `center` (GLB frame), used for
  * cheap downward ray casts instead of testing every triangle of the crop
- * (tens of thousands; Shackleton Rim and Amundsen Rim pack most of them near
- * the viewer).
+ * (tens of thousands; Shackleton Rim, Amundsen Rim and Haworth pack most of
+ * them near the viewer).
  */
 function buildProbe(terrain: Mesh, center: Vector3Tuple): Mesh {
   const source = terrain.geometry;
