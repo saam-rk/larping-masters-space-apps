@@ -14,7 +14,6 @@
 
 import { lazy, Suspense, useCallback, useRef, useState } from 'react';
 import type { EphemerisResponse } from '../shared/ephemeris';
-import type { EphemerisSelection } from './api/ephemerisClient';
 import { HorizonPlayback } from './features/scene/HorizonPlayback';
 import { APOLLO_11_SITE_ID } from '../shared/sites';
 import { Backdrop } from './features/backdrop/Backdrop';
@@ -71,17 +70,26 @@ export function App() {
   const { messages } = useI18n();
   const { preferences, configured } = usePreferences();
   const ephemeris = useEphemeris();
-  const [preview, setPreview] = useState<{ selection: EphemerisSelection; frame: EphemerisResponse } | null>(null);
-  const [playbackSession, setPlaybackSession] = useState<EphemerisSelection | null>(null);
-  const playbackActive = playbackSession === ephemeris.selection;
-  const previewFrame = preview?.selection === ephemeris.selection ? preview.frame : null;
+  // Match the player's remount key: equivalent selections must retain the same session.
+  const selectionKey = [ephemeris.selection.siteId, ephemeris.selection.latitudeDeg,
+    ephemeris.selection.longitudeEastDeg, ephemeris.selection.utc].join('|');
+  const [preview, setPreview] = useState<{ selection: string; frame: EphemerisResponse } | null>(null);
+  const [playbackSession, setPlaybackSession] = useState<string | null>(null);
+  const [followedSelection, setFollowedSelection] = useState(selectionKey);
+  if (followedSelection !== selectionKey) {
+    setFollowedSelection(selectionKey);
+    setPreview(null);
+    setPlaybackSession(null);
+  }
+  const playbackActive = playbackSession === selectionKey;
+  const previewFrame = preview?.selection === selectionKey ? preview.frame : null;
   const displayedData = previewFrame ?? ephemeris.data;
   const onPlaybackFrame = useCallback((frame: EphemerisResponse | null) => {
-    setPreview(frame ? { selection: ephemeris.selection, frame } : null);
-  }, [ephemeris.selection]);
+    setPreview(frame ? { selection: selectionKey, frame } : null);
+  }, [selectionKey]);
   const onPlaybackActive = useCallback((active: boolean) => {
-    setPlaybackSession(active ? ephemeris.selection : null);
-  }, [ephemeris.selection]);
+    setPlaybackSession(active ? selectionKey : null);
+  }, [selectionKey]);
   const fullEffects = configured && preferences.effects === 'on';
   const streaks = fullEffects && !prefersReducedMotion();
   const transition = useUpdateTransition(ephemeris.loading, streaks);
@@ -152,7 +160,7 @@ export function App() {
                 {streaks && <Hyperspace active={busy || viewSwitch.active} reverse={warp.reverse} tempo={warp.tempo} />}
               </div>
               {!busy && <HorizonPlayback
-                key={[ephemeris.selection.siteId, ephemeris.selection.latitudeDeg, ephemeris.selection.longitudeEastDeg, ephemeris.selection.utc].join('|')}
+                key={selectionKey}
                 selection={ephemeris.selection} onFrame={onPlaybackFrame} onActive={onPlaybackActive}
               />}
             </Box>
