@@ -101,7 +101,10 @@ export async function reviewTerrain(canvas, siteId) {
   camera.updateProjectionMatrix();
   camera.updateMatrixWorld(true);
   const sun = new DirectionalLight(0xffffff, 3);
-  sun.position.set(10, 13, 12).add(target);
+  // Same illustrative light as the Blender scene: Blender travel (x, y, z) comes from GLB (-x, -z, y).
+  // The default travel (-0.5, 0.6, -0.65) gives the original (10, 13, 12).
+  const [tx, ty, tz] = metadata.nearDetail.illustrativeLightTravelDirection ?? [-0.5, 0.6, -0.65];
+  sun.position.set(-tx * 20, -tz * 20, ty * 20).add(target);
   sun.target.position.copy(target);
   scene.add(sun, sun.target, new AmbientLight(0xffffff, 0.15));
   const renderer = new WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });

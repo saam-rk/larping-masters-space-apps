@@ -1,0 +1,50 @@
+{
+  "id": "faustini-rim-a",
+  "displayName": "Faustini Rim A",
+  "sourceUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/LM7/LM7_final_adj_5mpp_surf.tif",
+  "sourceCatalogUrl": "https://pgda.gsfc.nasa.gov/products/78",
+  "sourceReadmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+  "siteSource": "docs/LUNAR_ADDITIONAL_SITES_RESEARCH.md catalog row 9 (Faustini Rim A, LM7), NASA Lunar Surface Data Book M2M-30044 Table A2.1-1. PGDA/Data Book reference point; center of an original candidate-region polygon; not an approved landing site.",
+  "frame": "MOON_ME / DE421",
+  "referenceRadiusM": 1737400,
+  "site": {"latitudeDeg": -87.8897, "longitudeEastDeg": 90},
+  "ridge": {"latitudeDeg": -87.82571921252344, "longitudeEastDeg": 93.48432732532258},
+  "third": {"latitudeDeg": -87.9833249411357, "longitudeEastDeg": 89.11118576795499},
+  "cropCenterProjectedM": [65000, -2000],
+  "cropSizeM": [12000, 12000],
+  "originProjectedM": [63999, 0, 47],
+  "targetVertices": 40400,
+  "baseStridePixels": 20,
+  "candidateStridePixels": 4,
+  "refinementBatchSize": 2500,
+  "ridgePriorityMultiplier": 2.5,
+  "ridgePriorityRadiusM": 1800,
+  "maxGlbBytes": 2097152,
+  "nearDetail": {
+    "centerProjectedM": [63977.5, -37.5],
+    "seedBandsRadiusMStridePixels": [[35, 1], [150, 2], [500, 4]],
+    "residualPriorityBoost": 10,
+    "residualPriorityRadiusM": 550,
+    "textureSquareSizeM": 50,
+    "textureFullDetailRadiusM": 15,
+    "textureFadeEndRadiusM": 24,
+    "cameraHorizontalDirection": [0.42261826174069944, -0.9063077870366499],
+    "cameraHeightAboveMeshM": 1.65,
+    "astronautDistanceAheadM": 5,
+    "astronautSideOffsetM": 0.65,
+    "initialMovementRadiusM": 2,
+    "illustrativeLightTravelDirection": [0.906, 0.423, -0.364]
+  },
+  "featureNotes": {
+    "ridge": "Highest source pixel within 250 m of the sampled skyline at grid bearing 155 degrees from the viewpoint: a crest of the highland grid-south-southeast of the site, about 4.4 km away and 412 m above the viewpoint, forming the far skyline of the initial view. Descriptive label from numeric LM7 elevation and illustrative hillshade; not an IAU feature name.",
+    "third": "Off-grid holdout on terrain grid-west-northwest of the site, about 2.9 km away; no mission significance.",
+    "nearDetail": "Gentlest 25 m window found within 45 m of the saved point (about 2.5 degree plane-fit slope versus 5.1 degrees at the point), about 40 m grid-south-southwest of it. The surroundings slope about 4 to 5 degrees, rising grid-southeast. Selected for scale-figure footing, not landing suitability.",
+    "crop": "12 x 12 km, shifted 1 km grid-east and 2 km grid-south of the saved point so that the highland skyline seen from the initial view (crests 3.3-6.1 km away and 280-480 m above the viewpoint) lies inside the crop. A planar raster scan across the view in 4-degree steps found every skyline point at least 2.9 km inside the crop boundary; a 24-bearing scan from the viewpoint found every skyline point at least 1.6 km inside it.",
+    "light": "Illustrative Blender/QA light from grid bearing about 245 degrees at about 20 degrees elevation, so the view (grid bearing 155 degrees) is side-lit rather than backlit. Not an ephemeris Sun; the application lights terrain with its own Sun direction."
+  },
+  "siteLimitations": [
+    "The saved point lies on the rim region grid-southwest of Faustini crater; terrain falls toward grid-north and grid-northeast into the crater. The 12 x 12 km crop includes neither the Faustini floor nor its far rim, so looking grid-north shows the local rim break with no distant terrain behind it.",
+    "Terrain beyond the LM7 raster (more than about 10 km from the site) was not checked; a higher feature outside the raster could rise above the modeled skyline.",
+    "The astronaut stands on a gently sloping triangle selected for footing; no claim of walkability, safe footing or landing suitability."
+  ]
+}

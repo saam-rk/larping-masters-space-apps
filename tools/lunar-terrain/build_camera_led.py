@@ -285,7 +285,9 @@ def build(prepared, repo, site_id):
     light_data.angle = math.radians(0.53)
     light = bpy.data.objects.new(light_data.name, light_data)
     scene.collection.objects.link(light)
-    light.rotation_euler = Vector((-0.5, 0.6, -0.65)).to_track_quat('-Z', 'Y').to_euler()
+    # Optional per-site travel direction (Blender axes); the default keeps earlier deliveries unchanged.
+    travel = cfg.get('illustrativeLightTravelDirection', (-0.5, 0.6, -0.65))
+    light.rotation_euler = Vector(tuple(travel)).to_track_quat('-Z', 'Y').to_euler()
     # Frame evidence for landscape and portrait; include all real mesh vertices.
     framing = []
     for cam in [initial, shifted]:

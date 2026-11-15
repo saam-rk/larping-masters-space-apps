@@ -1,0 +1,12 @@
+{
+  "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/LM7/LM7_final_adj_5mpp_surf.tif",
+  "httpStatus": 200,
+  "date": "Sun, 15 Nov 2026 01:29:25 GMT",
+  "lastModified": "Sat, 01 May 2021 09:40:36 GMT",
+  "contentLength": 64033675,
+  "etag": "W/\"3d1138b-179274d1e20\"",
+  "downloadedBytes": 64033675,
+  "sha256": "00930f9d110d5477b6d38349eb544ec35d0bb802035113a0894479c317d29023",
+  "readmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+  "note": "Complete source file kept outside the repository."
+}
