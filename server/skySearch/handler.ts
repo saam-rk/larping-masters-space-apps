@@ -4,10 +4,12 @@
  *   GET /api/sky-search?site=<SiteId>|lat=<deg>&lon=<deg east>
  *       &from=<YYYY-MM-DDTHH:mm[:ss]Z>
  *       [&direction=nearest|after|before]
- *       [&sunAz=<min,max>][&sunEl=...][&earthAz=...][&earthEl=...]
+ *       [&sunAz=<min,max>][&sunEl=...][&earthAz=...][&earthEl=...][&sunEarthSep=...]
  *
  * At least one condition is required. Each condition is `min,max` or a single
  * value (exact match at 4 decimals); azimuth `min > max` wraps through north.
+ * `sunEarthSep` (0° to 180°) needs both bodies, so it costs two Horizons
+ * requests per sample.
  * Conditions that the Sun or the Earth can never meet at the site are
  * rejected with 400 before Horizons is queried (`shared/skyFeasibility.ts`).
  *
@@ -121,7 +123,7 @@ export function parseSkySearchQuery(requestUrl: string): SkySearchQueryResult {
   const impossible = impossibleBodies(site.site, conditions);
   if (impossible.length > 0) {
     const params = activeTargets(conditions)
-      .filter((target) => impossible.includes(SKY_TARGET_INFO[target].body))
+      .filter((target) => SKY_TARGET_INFO[target].angle !== 'separation' && impossible.includes(SKY_TARGET_INFO[target].bodies[0]!))
       .map((target) => `"${SKY_TARGET_INFO[target].param}"`)
       .join(' + ');
     return { ok: false, detail: `${params}: the ${impossible.join(' and the ')} never reaches these values at this site` };
@@ -161,7 +163,7 @@ export async function runSkySearch(query: SkySearchQuery, options: SkySearchServ
   const cached = options.cache?.get(cacheKey);
   if (cached) return { ok: true, response: cached, cacheable: true };
 
-  const bodies: BodyId[] = BODY_IDS.filter((body) => activeTargets(conditions).some((target) => SKY_TARGET_INFO[target].body === body));
+  const bodies: BodyId[] = BODY_IDS.filter((body) => activeTargets(conditions).some((target) => SKY_TARGET_INFO[target].bodies.includes(body)));
   const sampler = createHorizonsSampler(
     { latitudeDeg: site.latitudeDeg, longitudeEastDeg: site.longitudeEastDeg, altitudeKm: SITE_ALTITUDE_KM },
     bodies,

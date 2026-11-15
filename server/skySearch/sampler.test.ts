@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FIXTURES, loadFixtureText } from '../horizons/__fixtures__/load.js';
+import { angularSeparationDeg } from '../../shared/skySearch.js';
 import { createHorizonsSampler } from './sampler.js';
 
 describe('Horizons sampler', () => {
@@ -24,5 +25,13 @@ describe('Horizons sampler', () => {
     expect(calls).toHaveLength(2);
     expect(calls.every(url => url.searchParams.has('TLIST') && !url.searchParams.has('STOP_TIME'))).toBe(true);
     expect(sampler.requests()).toBe(2);
+    // With both bodies sampled, the Sun–Earth separation comes from the same values.
+    const [sunAz, sunEl, earthAz, earthEl] = [
+      result.series.values.sunAzimuth![0]!,
+      result.series.values.sunElevation![0]!,
+      result.series.values.earthAzimuth![0]!,
+      result.series.values.earthElevation![0]!,
+    ];
+    expect(result.series.values.sunEarthSeparation).toEqual([angularSeparationDeg(sunAz, sunEl, earthAz, earthEl)]);
   });
 });

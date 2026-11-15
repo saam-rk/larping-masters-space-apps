@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { matchesConditions, type SkyConditions, type SkyTarget } from '../../shared/skySearch.js';
+import { angularSeparationDeg, matchesConditions, type SkyConditions, type SkyTarget } from '../../shared/skySearch.js';
 import type { ObserverStep } from '../horizons/query.js';
-import { findCandidates, searchStages, searchSky, segmentFeasibility, type Sampler, type SearchInput } from './search.js';
+import { findCandidates, searchStages, searchSky, segmentFeasibility, separationFeasibility, type Sampler, type SearchInput } from './search.js';
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -18,6 +18,8 @@ const MODEL: { [K in SkyTarget]: (ms: number) => number } = {
   sunElevation: (ms) => 1.5 * Math.sin((2 * Math.PI * (ms - T0)) / (708 * HOUR)),
   earthAzimuth: (ms) => 320 + 3 * Math.sin((2 * Math.PI * (ms - T0)) / (27.3 * DAY)),
   earthElevation: (ms) => -0.6 + 6 * Math.sin((2 * Math.PI * (ms - T0)) / (27.2 * DAY)),
+  sunEarthSeparation: (ms) =>
+    angularSeparationDeg(MODEL.sunAzimuth(ms), MODEL.sunElevation(ms), MODEL.earthAzimuth(ms), MODEL.earthElevation(ms)),
 };
 
 function modelSampler(targets: readonly SkyTarget[] = ['sunAzimuth', 'sunElevation', 'earthAzimuth', 'earthElevation']) {
@@ -171,6 +173,48 @@ describe('searchSky', () => {
       ok: false,
       error: { code: 'UPSTREAM_UNAVAILABLE', detail: 'down' },
     });
+  });
+});
+
+describe('Sun–Earth separation', () => {
+  /** Separation only, passing a minimum of `minimumDeg` at `centerHours` after T0 at 0.5°/h. */
+  function passSampler(minimumDeg: number, centerHours: number): Sampler {
+    return async (startMs, stopMs, step) => {
+      const count = startMs === stopMs ? 0 : step.kind === 'hours' ? Math.round((stopMs - startMs) / HOUR) : step.count;
+      const times = Array.from({ length: count + 1 }, (_, i) => Math.round(startMs + (count === 0 ? 0 : (i * (stopMs - startMs)) / count)));
+      const values = times.map((time) => Number(Math.hypot(minimumDeg, 0.5 * ((time - T0) / HOUR - centerHours)).toFixed(6)));
+      return { ok: true, series: { times, values: { sunEarthSeparation: values } } };
+    };
+  }
+
+  it('finds the first second below the threshold and certifies it (rate-bound rejections need no verification)', async () => {
+    const conditions = { sunEarthSeparation: { min: 0, max: 1.15 } };
+    const result = await searchSky(input(conditions, 'after'), passSampler(0.6, 100), LIMITS);
+    expect(result.ok && result.outcome).toMatchObject({ status: 'found', complete: true });
+    if (!result.ok || result.outcome.status !== 'found') return;
+    // 0.5 |h − 100| ≤ √(1.15² − 0.6²) -> h ≥ 98.038 h.
+    expect(result.outcome.match.offsetSeconds / 3600).toBeCloseTo(100 - Math.sqrt(1.15 ** 2 - 0.36) / 0.5, 3);
+    // Compared at 4 decimals, like every condition.
+    expect(matchesConditions(conditions, result.outcome.match.values)).toBe(true);
+  });
+
+  it('keeps a grazing minimum between hourly samples that interpolation would miss', async () => {
+    // Minimum 1.14° at 100.5 h: both hourly samples around it read 1.167°.
+    const conditions = { sunEarthSeparation: { min: 0, max: 1.15 } };
+    expect(segmentFeasibility('elevation', conditions.sunEarthSeparation, 1.167, 1.167, 0.002)).toEqual([]);
+    const result = await searchSky(input(conditions, 'after'), passSampler(1.14, 100.5), LIMITS);
+    expect(result.ok && result.outcome).toMatchObject({ status: 'found', complete: true });
+  });
+
+  it('bounds the separation inside an interval by its largest rate', () => {
+    const range = { min: 0, max: 1.15 };
+    // 0.75°/h over 1 h: the lowest possible value is (1.5 + 1.5 − 0.75) / 2 = 1.125°.
+    expect(separationFeasibility(range, 1.5, 1.5, HOUR, 0)).toEqual([[0, 1]]);
+    expect(separationFeasibility(range, 1.6, 1.6, HOUR, 0)).toEqual([]);
+    // Highest possible value (178.6 + 178.6 + 0.75) / 2 = 178.975°; from 178.5° it would only reach 178.875°.
+    expect(separationFeasibility({ min: 178.89, max: 180 }, 178.6, 178.6, HOUR, 0)).toEqual([[0, 1]]);
+    expect(separationFeasibility({ min: 178.89, max: 180 }, 178.5, 178.5, HOUR, 0)).toEqual([]);
+    expect(separationFeasibility(range, null, 1, HOUR, 0)).toEqual([]);
   });
 });
 

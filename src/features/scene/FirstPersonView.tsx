@@ -110,8 +110,11 @@ const BODY_HEIGHT_SEGMENTS = 16;
 const HORIZON_RENDER_ORDER = 10;
 /** Steps per second of the Apollo 11 reenactment animation (renders it asks for). */
 const REENACTMENT_FPS = 30;
-/** Draw order of the astronaut: after the horizon line, so the figure stays in front of it. */
-const ASTRONAUT_RENDER_ORDER = 20;
+/**
+ * Draw order of the foreground models (the astronaut; Eagle, the crew and the
+ * flag at Apollo 11): after the horizon line, so they stay in front of it.
+ */
+const FOREGROUND_RENDER_ORDER = 20;
 
 const DOWN = new Vector3(0, -1, 0);
 
@@ -124,13 +127,37 @@ function firstMesh(root: Object3D): Mesh | null {
 }
 
 /**
- * Copy of the astronaut that is drawn after the horizon line. The line ignores
+ * Makes every mesh under `root` draw after the horizon line. The line ignores
  * depth so that it shows over the relief; three.js draws transparent objects
- * after opaque ones, so the figure's materials are marked transparent (still
+ * after opaque ones, so the meshes' materials are marked transparent (still
  * fully opaque and writing depth) to join that pass with a later render order.
- * Materials are cloned so the cached GLB stays untouched. A placement baked
- * into the figure's root node (Nobile Rim 1) is dropped: the view places the
- * figure itself.
+ * Materials are replaced by clones so a cached GLB stays untouched; the
+ * returned function disposes of those clones.
+ */
+function drawAfterHorizon(root: Object3D): () => void {
+  const clones: Material[] = [];
+  root.traverse((object) => {
+    const mesh = object as Mesh;
+    if (!mesh.isMesh) return;
+    mesh.renderOrder = FOREGROUND_RENDER_ORDER;
+    const inFront = (material: Material) => {
+      const copy = material.clone();
+      copy.transparent = true;
+      copy.depthWrite = true;
+      clones.push(copy);
+      return copy;
+    };
+    mesh.material = Array.isArray(mesh.material) ? mesh.material.map(inFront) : inFront(mesh.material);
+  });
+  return () => {
+    for (const material of clones) material.dispose();
+  };
+}
+
+/**
+ * Copy of the astronaut that is drawn after the horizon line (see
+ * `drawAfterHorizon`). A placement baked into the figure's root node (Nobile
+ * Rim 1) is dropped: the view places the figure itself.
  */
 function astronautInFront(source: Object3D): Object3D {
   const astronaut = source.clone();
@@ -138,18 +165,7 @@ function astronautInFront(source: Object3D): Object3D {
     root.position.set(0, 0, 0);
     root.quaternion.identity();
   }
-  astronaut.traverse((object) => {
-    const mesh = object as Mesh;
-    if (!mesh.isMesh) return;
-    mesh.renderOrder = ASTRONAUT_RENDER_ORDER;
-    const inFront = (material: Material) => {
-      const copy = material.clone();
-      copy.transparent = true;
-      copy.depthWrite = true;
-      return copy;
-    };
-    mesh.material = Array.isArray(mesh.material) ? mesh.material.map(inFront) : inFront(mesh.material);
-  });
+  drawAfterHorizon(astronaut);
   return astronaut;
 }
 
@@ -412,7 +428,7 @@ function ApolloTerrain({
     clone.traverse((object) => { if (object instanceof Mesh) object.receiveShadow = true; });
     return clone;
   }, [terrainGltf.scene]);
-  const { props, stage } = useMemo(() => {
+  const { props, stage, disposeForeground } = useMemo(() => {
     const clone = propsGltf.scene.clone();
     const stage = stageApolloScene(clone, propsGltf.animations);
     clone.traverse((object) => {
@@ -421,9 +437,15 @@ function ApolloTerrain({
         object.receiveShadow = true;
       }
     });
-    return { props: clone, stage };
+    // Eagle, the crew and the flag stand in front of the compass horizon line.
+    // After staging, so the flag's repaired canton material is the one moved.
+    const disposeForeground = drawAfterHorizon(clone);
+    return { props: clone, stage, disposeForeground };
   }, [propsGltf.scene, propsGltf.animations]);
-  useEffect(() => () => stage.dispose(), [stage]);
+  useEffect(() => () => {
+    stage.dispose();
+    disposeForeground();
+  }, [stage, disposeForeground]);
   const clips = stage.clips(phase);
   const moving = controls.animateReenactment && clips.length > 0;
   const mixer = useMemo(() => new AnimationMixer(props), [props]);

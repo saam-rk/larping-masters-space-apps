@@ -10,25 +10,75 @@
  * Failure:  4xx/5xx with `ApiErrorResponse` (see `shared/ephemeris.ts`).
  *
  * Conditions use the same quantities as `/api/ephemeris` (Horizons observer
- * quantity 4, airless apparent azimuth/elevation, degrees). A value matches a
- * range when the value rounded to `SKY_SEARCH_DECIMALS` decimals lies in it.
+ * quantity 4, airless apparent azimuth/elevation, degrees). The Sun–Earth
+ * separation (`sunEarthSep`) is the angle between those two apparent
+ * directions, computed by the server from the Horizons values for the same
+ * instant (see `angularSeparationDeg`). A value matches a range when the value
+ * rounded to `SKY_SEARCH_DECIMALS` decimals lies in it.
  */
 
 import type { BodyId, EphemerisSite } from './ephemeris.js';
 
 export const SKY_SEARCH_ENDPOINT = '/api/sky-search';
 
-export const SKY_TARGETS = ['sunAzimuth', 'sunElevation', 'earthAzimuth', 'earthElevation'] as const;
+export const SKY_TARGETS = ['sunAzimuth', 'sunElevation', 'earthAzimuth', 'earthElevation', 'sunEarthSeparation'] as const;
 export type SkyTarget = (typeof SKY_TARGETS)[number];
 
-export type SkyAngle = 'azimuth' | 'elevation';
+/** `separation`: angle between the Sun and the Earth seen from the site, 0° to 180°. */
+export type SkyAngle = 'azimuth' | 'elevation' | 'separation';
 
-export const SKY_TARGET_INFO: { readonly [K in SkyTarget]: { readonly body: BodyId; readonly angle: SkyAngle; readonly param: string } } = {
-  sunAzimuth: { body: 'sun', angle: 'azimuth', param: 'sunAz' },
-  sunElevation: { body: 'sun', angle: 'elevation', param: 'sunEl' },
-  earthAzimuth: { body: 'earth', angle: 'azimuth', param: 'earthAz' },
-  earthElevation: { body: 'earth', angle: 'elevation', param: 'earthEl' },
+export interface SkyTargetInfo {
+  /** Bodies whose Horizons values the quantity needs (both for the separation). */
+  readonly bodies: readonly BodyId[];
+  readonly angle: SkyAngle;
+  readonly param: string;
+}
+
+export const SKY_TARGET_INFO: { readonly [K in SkyTarget]: SkyTargetInfo } = {
+  sunAzimuth: { bodies: ['sun'], angle: 'azimuth', param: 'sunAz' },
+  sunElevation: { bodies: ['sun'], angle: 'elevation', param: 'sunEl' },
+  earthAzimuth: { bodies: ['earth'], angle: 'azimuth', param: 'earthAz' },
+  earthElevation: { bodies: ['earth'], angle: 'elevation', param: 'earthEl' },
+  sunEarthSeparation: { bodies: ['sun', 'earth'], angle: 'separation', param: 'sunEarthSep' },
 };
+
+/** Limits of each kind of angle, degrees (both included). */
+export const ANGLE_BOUNDS: { readonly [K in SkyAngle]: readonly [number, number] } = {
+  azimuth: [0, 360],
+  elevation: [-90, 90],
+  separation: [0, 180],
+};
+
+/**
+ * Angle between two directions given as azimuth/elevation in the same local
+ * frame, degrees (0 to 180). Vincenty's form of the great-circle distance,
+ * accurate near 0° and near 180°.
+ */
+export function angularSeparationDeg(azimuth1Deg: number, elevation1Deg: number, azimuth2Deg: number, elevation2Deg: number): number {
+  const rad = Math.PI / 180;
+  const h1 = elevation1Deg * rad;
+  const h2 = elevation2Deg * rad;
+  const dA = (azimuth2Deg - azimuth1Deg) * rad;
+  const y = Math.hypot(Math.cos(h2) * Math.sin(dA), Math.cos(h1) * Math.sin(h2) - Math.sin(h1) * Math.cos(h2) * Math.cos(dA));
+  const x = Math.sin(h1) * Math.sin(h2) + Math.cos(h1) * Math.cos(h2) * Math.cos(dA);
+  return (Math.atan2(y, x) * 180) / Math.PI;
+}
+
+/**
+ * Upper bound on how fast the Sun–Earth separation seen from a lunar site can
+ * change, degrees per hour. The separation only depends on the two directions
+ * in an inertial frame (the site's own rotation turns both alike), so its rate
+ * is at most the sum of their angular rates:
+ *   - Earth seen from the Moon: the Moon's geocentric angular motion, at most
+ *     about 15.4°/day near perigee (mean 13.18°/day);
+ *   - Sun seen from the Moon: about 1°/day (Earth's orbital motion), plus the
+ *     ±0.15° wobble of the Moon around the Earth (< 0.04°/day);
+ *   - the site's topocentric shift of the Earth direction (≤ 0.28°) turning
+ *     once per month (< 0.07°/day).
+ * Sum ≈ 16.5°/day ≈ 0.69°/h; 0.75°/h leaves a margin. Used by the server to
+ * rule out whole sampling intervals rigorously (see `server/skySearch/search.ts`).
+ */
+export const SEPARATION_MAX_RATE_DEG_PER_HOUR = 0.75;
 
 /** Conditions are given and compared with at most this many decimals of a degree. */
 export const SKY_SEARCH_DECIMALS = 4;
@@ -68,15 +118,15 @@ export function parseAngleText(text: string): number | null {
 
 export type RangeCheck =
   | { readonly ok: true; readonly range: AngleRange }
-  /** `bounds`: outside [0, 360] (azimuth) or [-90, 90] (elevation); `order`: elevation min above max. */
+  /** `bounds`: outside `ANGLE_BOUNDS`; `order`: min above max (elevation, separation). */
   | { readonly ok: false; readonly reason: 'bounds' | 'order' };
 
 export function checkRange(angle: SkyAngle, min: number, max: number): RangeCheck {
-  const [low, high] = angle === 'azimuth' ? [0, 360] : [-90, 90];
+  const [low, high] = ANGLE_BOUNDS[angle];
   if (![min, max].every((value) => Number.isFinite(value) && value >= low && value <= high)) {
     return { ok: false, reason: 'bounds' };
   }
-  if (angle === 'elevation' && min > max) return { ok: false, reason: 'order' };
+  if (angle !== 'azimuth' && min > max) return { ok: false, reason: 'order' };
   return { ok: true, range: { min, max } };
 }
 
@@ -106,10 +156,8 @@ export function parseRangeParam(angle: SkyAngle, text: string): RangeParamResult
       ok: false,
       detail:
         checked.reason === 'order'
-          ? 'elevation min must not exceed max'
-          : angle === 'azimuth'
-            ? 'azimuth must be within [0, 360]'
-            : 'elevation must be within [-90, 90]',
+          ? `${angle} min must not exceed max`
+          : `${angle} must be within [${ANGLE_BOUNDS[angle].join(', ')}]`,
     };
   }
   return checked;
@@ -128,7 +176,7 @@ export function matchesRange(angle: SkyAngle, range: AngleRange, valueDeg: numbe
   if (valueDeg === null || !Number.isFinite(valueDeg)) return false;
   const low = toUnits(range.min);
   const high = toUnits(range.max);
-  if (angle === 'elevation') {
+  if (angle !== 'azimuth') {
     const value = toUnits(valueDeg);
     return value >= low && value <= high;
   }

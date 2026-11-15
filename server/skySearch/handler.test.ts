@@ -89,6 +89,20 @@ describe('sky-search handler', () => {
     expect(fetch.calls.some((url) => url.includes('COMMAND=%27399%27'))).toBe(true);
   });
 
+  it('queries both bodies for a Sun–Earth separation condition', async () => {
+    const fetch = syntheticHorizons();
+    const handler = createSkySearchHandler({ horizons: { fetch }, cache: null, limits: { maxSamples: 2 } });
+    const response = await handler(new Request(`${BASE}?site=nobile-rim-1&from=2026-11-14T12:00Z&direction=after&sunEarthSep=0,1.15`));
+    expect(response.status).toBe(200);
+    const commands = new Set(fetch.calls.map((url) => new URL(url).searchParams.get('COMMAND')));
+    expect(commands).toEqual(new Set(["'10'", "'399'"]));
+  });
+
+  it('rejects a separation outside 0° to 180°', () => {
+    const query = parseSkySearchQuery(`${BASE}?site=nobile-rim-1&from=2026-11-14T12:00Z&sunEarthSep=170,181`);
+    expect(query).toEqual({ ok: false, detail: '"sunEarthSep": separation must be within [0, 180]' });
+  });
+
   it('returns 502 when Horizons fails', async () => {
     const handler = createSkySearchHandler({ horizons: { fetch: async () => new Response('', { status: 503 }) }, cache: null });
     const response = await handler(new Request(`${BASE}?site=nobile-rim-1&from=2026-11-14T12:00Z&sunEl=0,10`));

@@ -45,6 +45,22 @@ export function formatOffset(totalSeconds: number): string {
   return `${sign}${parts.join(' ')}`;
 }
 
+/**
+ * Unsigned duration with its three largest units, e.g. `1 d 14 h 19 min`,
+ * `3 h 0 min 5 s` or `1 min 5 s` (see `formatOffset` for the full signed form).
+ */
+export function formatDuration(totalSeconds: number): string {
+  let rest = Math.abs(Math.round(totalSeconds));
+  if (rest === 0) return '0 s';
+  const parts: string[] = [];
+  for (const [unit, size] of [['d', 86_400], ['h', 3600], ['min', 60], ['s', 1]] as const) {
+    const amount = Math.floor(rest / size);
+    rest -= amount * size;
+    if ((amount > 0 || parts.length > 0) && parts.length < 3) parts.push(`${amount} ${unit}`);
+  }
+  return parts.join(' ');
+}
+
 /** Angle with one decimal for the 3D angle guides, e.g. `123.4°`; `signed` adds `+`/`−` (differences). */
 export function formatAngle(value: number, locale: Locale, signed = false): string {
   const text = formatDegrees(Math.abs(value), locale, 1)!;
