@@ -50,7 +50,7 @@ export const FIELD_SPECS: Readonly<Record<FieldId, FieldSpec>> = {
   requiredEbN0: { unit: 'dB', min: -20, max: 50 },
   otherLosses: { unit: 'dB', min: 0, max: 200 },
   requiredMargin: { unit: 'dB', min: -50, max: 100 },
-  earthMask: { unit: '°', min: -90, max: 90 },
+  earthMask: { unit: '°', min: 0, max: 90 },
 };
 
 export type AssumptionInputs = Readonly<Record<FieldId, string>> & { readonly orientation: PanelOrientation };

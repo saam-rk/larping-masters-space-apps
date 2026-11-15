@@ -163,22 +163,41 @@ Client-side only; no new API route. `shared/missionAssessment.ts` turns one
 
 - Power: `1361 W/m²` (IAU 2015 Resolution B3 nominal total solar irradiance)
   / (Sun range in au)² × fraction of the solar disk above the reference
-  horizon (uniform disk, from the Horizons elevation and angular diameter) ×
-  incidence factor (vertical panel turned to the Sun: cos el; horizontal:
+  horizon and not occulted by Earth (uniform disk, from both Horizons
+  directions and angular diameters) × incidence factor (vertical panel turned to the Sun: cos el; horizontal:
   sin el; two-axis tracking: 1) × area × efficiency, compared with the demand.
 - Link: free-space loss `20 log10(4π d f / c)` (ITU-R P.525) with the Earth
   range (1 au = 149 597 870 700 m, IAU 2012 B2); C/N0 = EIRP − loss − other
   losses + G/T − 10 log10(k); Eb/N0 = C/N0 − 10 log10(Rb); margin against the
-  required Eb/N0. Counts only with the Earth center at or above the mask.
+  required Eb/N0. Counts only with the Earth center at or above the mask;
+  masks are restricted to 0–90° and cannot remove lunar occultation.
 - Window: 100 samples from the scenario instant over about one mean synodic
   month (step 430 min) through `/api/ephemeris-series`; shares are sample
-  counts and gaps are resolved to one step.
+  counts and gaps are resolved to one step. If any sample for a criterion is
+  unknown, its longest gap is unknown too: missing time cannot be compressed
+  into a consecutive outage.
 - Missing values are `unknown`, never zero. The starting assumptions are
   illustrative (not from a real mission or station); users replace them and
   they are kept in `localStorage`.
 - Limits: terrain not modeled; no temperature, dust, degradation, batteries,
   pointing or Earth-station visibility. A "meets" verdict is a geometric
   screening, not a guarantee of power, communications or landing suitability.
+
+Solar occultation uses small-angle planar disks with spherical center
+separation (the existing `shared/skySearch.ts` calculation). Fully risen
+disks use the analytic circle-lens area. At the horizon, horizontal slices of
+the Sun are clipped to both the horizon and the opaque Earth disk, using
+composite Simpson quadrature with 1024 intervals after
+`y = solarRadius × sin(theta)`. Circle geometry: [Wolfram MathWorld,
+Circle-Circle Intersection](https://mathworld.wolfram.com/Circle-CircleIntersection.html)
+(consulted during PR #52 review). It does not multiply independent eclipse
+and horizon fractions. Tests compare partial overlap with the analytic
+equal-disk lens area and cover full occultation and simultaneous horizon
+clipping. No limb darkening, Earth atmosphere or certified error bound is
+modeled. Missing occultation geometry makes power unknown, unless the
+entire solar disk is already below the horizon (known zero direct power).
+Window loads reserve active and queued scenario keys synchronously so both
+panels share one request per key; unmount aborts the entire reserved queue.
 
 The comparison (`src/features/mission/ComparisonPanel.tsx`) holds up to four
 scenarios (point + UTC), added from the current selection as is or shifted

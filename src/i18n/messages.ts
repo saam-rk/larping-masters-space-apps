@@ -1143,10 +1143,10 @@ const es: Messages = {
     dialogTitle: 'Evaluación de viabilidad',
     limitsTitle: 'Método y límites',
     limits: [
-      'Potencia = irradiancia × fracción del disco solar sobre el horizonte × factor de incidencia × área × eficiencia. Irradiancia = 1361 W/m² (irradiancia solar total nominal, Resolución B3 de la IAU 2015) dividida por el cuadrado de la distancia al Sol en ua (JPL Horizons). El disco se trata como uniforme, sin oscurecimiento hacia el borde.',
+      'Potencia = irradiancia × fracción del disco solar sobre el horizonte × factor de incidencia × área × eficiencia. Irradiancia = 1361 W/m² (irradiancia solar total nominal, Resolución B3 de la IAU 2015) dividida por el cuadrado de la distancia al Sol en ua (JPL Horizons). Se descuenta la parte oculta por la Tierra usando las direcciones y diámetros de ambos cuerpos y se recorta conjuntamente con el horizonte (discos planos de ángulo pequeño, integración numérica). El disco es uniforme, sin oscurecimiento hacia el borde ni atmósfera terrestre; si falta geometría, la potencia es desconocida, salvo que todo el Sol esté bajo el horizonte.',
       'Factor de incidencia: panel vertical orientado al azimut del Sol = cos(elevación); panel horizontal = sen(elevación); seguimiento en dos ejes = 1.',
       'Enlace: pérdida en espacio libre 20·log10(4π·d·f/c) (UIT-R P.525) con la distancia a la Tierra de JPL Horizons (1 ua = 149 597 870 700 m, Resolución B2 de la IAU 2012). C/N0 = PIRE − pérdida − otras pérdidas + G/T − 10·log10(k); Eb/N0 = C/N0 − 10·log10(velocidad); margen = Eb/N0 − Eb/N0 requerida. c y k son valores exactos del SI.',
-      'El enlace solo cuenta si el centro de la Tierra está a la elevación de la máscara o por encima. No se modela si una estación terrestre tiene la Luna a la vista (rotación de la Tierra y red de estaciones), ni el apuntamiento, la polarización o la atmósfera terrestre: inclúyelos en «otras pérdidas».',
+      'El enlace solo cuenta si el centro de la Tierra está a la elevación de la máscara o por encima (máscara de 0° a 90°; no elimina la ocultación por la Luna). No se modela si una estación terrestre tiene la Luna a la vista (rotación de la Tierra y red de estaciones), ni el apuntamiento, la polarización o la atmósfera terrestre: inclúyelos en «otras pérdidas».',
       'La potencia no tiene en cuenta temperatura, polvo, degradación, sombras del propio módulo, baterías ni pérdidas de conversión.',
       'El relieve no está modelado: una cresta o la pared de un cráter puede tapar el Sol o la Tierra aunque la geometría los sitúe sobre el horizonte. Los resultados son cotas superiores bajo tus supuestos, no una evaluación de misión.',
       'Ventana: 100 muestras desde el instante mostrado durante unos 29,5 días (mes sinódico medio, NASA GSFC). Los porcentajes cuentan muestras y los huecos se resuelven con la separación entre muestras.',
@@ -1197,7 +1197,7 @@ const es: Messages = {
       requiredEbN0: 'Eb/N0 que exigen la modulación y la codificación, en dB.',
       otherLosses: 'Pérdidas no modeladas: apuntamiento, polarización, atmósfera terrestre, implementación…',
       requiredMargin: 'Margen por encima de la Eb/N0 requerida para dar el enlace por bueno.',
-      earthMask: 'Elevación mínima del centro de la Tierra sobre el horizonte de referencia.',
+      earthMask: 'Elevación mínima del centro de la Tierra sobre el horizonte de referencia, de 0° a 90°.',
     },
     orientation: 'Orientación',
     orientations: {
@@ -1210,7 +1210,7 @@ const es: Messages = {
     screeningTitle: 'Cribado de la misión',
     rows: {
       irradiance: 'Irradiancia solar',
-      diskFraction: 'Disco solar sobre el horizonte',
+      diskFraction: 'Disco solar visible sin ocultación',
       incidence: 'Factor de incidencia',
       power: 'Potencia estimada',
       earthElevation: 'Elevación de la Tierra',
@@ -1233,7 +1233,7 @@ const es: Messages = {
       linkGap: 'Mayor hueco sin enlace',
       meanPower: 'Potencia media',
     },
-    windowUnknown: (samples) => `${samples} muestras sin datos no se cuentan en los porcentajes.`,
+    windowUnknown: (samples) => `${samples} muestras sin datos no se cuentan en los porcentajes. El hueco máximo de un criterio con muestras desconocidas queda sin datos.`,
   },
   compare: {
     heading: 'Comparar escenarios',
@@ -1910,10 +1910,10 @@ const en: Messages = {
     dialogTitle: 'Feasibility assessment',
     limitsTitle: 'Method and limits',
     limits: [
-      'Power = irradiance × fraction of the solar disk above the horizon × incidence factor × area × efficiency. Irradiance = 1361 W/m² (nominal total solar irradiance, IAU 2015 Resolution B3) divided by the square of the Sun distance in au (JPL Horizons). The disk is treated as uniform, without limb darkening.',
+      'Power = irradiance × fraction of the solar disk above the horizon × incidence factor × area × efficiency. Irradiance = 1361 W/m² (nominal total solar irradiance, IAU 2015 Resolution B3) divided by the square of the Sun distance in au (JPL Horizons). The part occulted by Earth is deducted using both directions and diameters, jointly clipped to the horizon (small-angle planar disks, numerical integration). The disk is uniform, without limb darkening or Earth atmosphere; missing geometry makes power unknown unless the entire Sun is below the horizon.',
       'Incidence factor: vertical panel turned to the Sun azimuth = cos(elevation); horizontal panel = sin(elevation); two-axis tracking = 1.',
       'Link: free-space loss 20·log10(4π·d·f/c) (ITU-R P.525) with the Earth distance from JPL Horizons (1 au = 149,597,870,700 m, IAU 2012 Resolution B2). C/N0 = EIRP − loss − other losses + G/T − 10·log10(k); Eb/N0 = C/N0 − 10·log10(rate); margin = Eb/N0 − required Eb/N0. c and k are exact SI values.',
-      'The link only counts when the Earth center is at or above the mask elevation. Whether an Earth station has the Moon in view (Earth rotation, station network), pointing, polarization and Earth atmosphere are not modeled: put them into "other losses".',
+      'The link only counts when the Earth center is at or above the mask elevation (mask 0° to 90°; it cannot remove lunar occultation). Whether an Earth station has the Moon in view (Earth rotation, station network), pointing, polarization and Earth atmosphere are not modeled: put them into "other losses".',
       'Power ignores temperature, dust, degradation, shadows of the lander itself, batteries and conversion losses.',
       'Terrain is not modeled: a ridge or crater wall can hide the Sun or the Earth even when the geometry places them above the horizon. Results are upper bounds under your assumptions, not a mission assessment.',
       'Window: 100 samples from the instant shown over about 29.5 days (mean synodic month, NASA GSFC). Percentages count samples and gaps are resolved to the sample spacing.',
@@ -1964,7 +1964,7 @@ const en: Messages = {
       requiredEbN0: 'Eb/N0 the modulation and coding need, in dB.',
       otherLosses: 'Losses not modeled: pointing, polarization, Earth atmosphere, implementation…',
       requiredMargin: 'Margin above the required Eb/N0 for the link to count.',
-      earthMask: 'Minimum elevation of the Earth center above the reference horizon.',
+      earthMask: 'Minimum elevation of the Earth center above the reference horizon, from 0° to 90°.',
     },
     orientation: 'Orientation',
     orientations: {
@@ -1977,7 +1977,7 @@ const en: Messages = {
     screeningTitle: 'Mission screening',
     rows: {
       irradiance: 'Solar irradiance',
-      diskFraction: 'Solar disk above the horizon',
+      diskFraction: 'Unocculted visible solar disk',
       incidence: 'Incidence factor',
       power: 'Estimated power',
       earthElevation: 'Earth elevation',
@@ -2000,7 +2000,7 @@ const en: Messages = {
       linkGap: 'Longest gap without a link',
       meanPower: 'Mean power',
     },
-    windowUnknown: (samples) => `${samples} samples without data are left out of the percentages.`,
+    windowUnknown: (samples) => `${samples} samples without data are left out of the percentages. The longest gap is unknown for any criterion with missing samples.`,
   },
   compare: {
     heading: 'Compare scenarios',

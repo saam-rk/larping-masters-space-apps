@@ -17,8 +17,19 @@
   method and limits in `docs/ARCHITECTURE.md`. Starting assumptions are
   illustrative, not mission data. Terrain is still not modeled; results are
   a geometric screening, not a feasibility guarantee.
-- Pending: integrator review; science review of the power and link model by
-  Diego.
+- PR #52 review corrections: subtract Earth occultation from the solar disk
+  with joint horizon clipping; keep missing geometry unknown; reject negative
+  link masks and guard the model against old negative-mask callers; deduplicate
+  active and queued window requests across both panels and abort on unmount.
+  Longest gaps remain unknown when missing samples prevent establishing
+  continuity; unknown time is not compressed into an outage.
+  The occultation behavior and correction publication were explicitly approved
+  by the integrator in the review questionnaire.
+- Review validation observed locally: `npm run check` (typecheck, lint,
+  672 tests / 61 files) and `npm run build` passed. The build retains the
+  existing large-chunk warning. Browser behavior was not manually verified.
+- Pending: human diff review; science review of the power and link model by
+  Diego. No physical accuracy certification is claimed.
 
 ## Implementation update — 2026-11-15 (branch `feat/interval-toolbar-guides`)
 

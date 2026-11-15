@@ -58,6 +58,16 @@ Registrar acuerdos con fecha, responsable y evidencia. Propuestas y preguntas no
   scenarios max., time shifts, window length, example values) are open to
   review by the integrator and the science owner.
 
+### PR #52 review clarification — Earth occultation
+
+- **Status:** explicitly confirmed by the integrator in the review questionnaire.
+- **Decision:** deduct the solar disk occulted by Earth using both apparent
+  directions and angular diameters. Missing required geometry must not
+  produce a favorable power verdict. The integrator also authorized an
+  isolated checkout, verified correction commit and push, without merge.
+- **Method and limits:** `docs/ARCHITECTURE.md`; a uniform-disk numerical
+  screening approximation, not radiometry or operational certification.
+
 ## Pendientes
 - [x] Inscripción y acceso de los tres integrantes al repositorio, confirmados por el usuario.
 - [x] Stack base, responsable de backend, idioma predeterminado e inglés seleccionable, alojamiento previsto y tope de DeepSeek acordados.

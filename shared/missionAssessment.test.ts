@@ -11,6 +11,7 @@ import {
   EXAMPLE_ASSUMPTIONS,
   freeSpaceLossDb,
   incidenceFactor,
+  visibleSolarDiskFraction,
   SOLAR_IRRADIANCE_1AU_W_M2,
   WINDOW_SAMPLES,
   WINDOW_STEP_MINUTES,
@@ -83,31 +84,76 @@ describe('incidenceFactor', () => {
 });
 
 describe('estimatePower', () => {
+  const earthAway = body('earth', -80, 0.00257, 6500);
+  const missingEarth: BodyResult = { status: 'error', body: 'earth', error: { code: 'UPSTREAM_UNAVAILABLE', detail: '' } };
+
   it('scales the solar constant by the inverse square of the Sun range', () => {
-    const estimate = estimatePower(body('sun', 10, 2), POWER);
+    const estimate = estimatePower(body('sun', 10, 2), POWER, earthAway);
     expect(estimate.irradianceWM2).toBeCloseTo(SOLAR_IRRADIANCE_1AU_W_M2 / 4, 9);
     expect(estimate.powerW).toBeCloseTo(SOLAR_IRRADIANCE_1AU_W_M2 / 4, 9);
     expect(estimate.status).toBe('met');
   });
 
   it('applies area, efficiency, disk fraction and incidence', () => {
-    const estimate = estimatePower(body('sun', 0, 1), { panelAreaM2: 2, efficiency: 0.25, orientation: 'vertical', demandW: 1000 });
+    const estimate = estimatePower(body('sun', 0, 1), { panelAreaM2: 2, efficiency: 0.25, orientation: 'vertical', demandW: 1000 }, earthAway);
     expect(estimate.diskFraction).toBeCloseTo(0.5, 12);
     expect(estimate.powerW).toBeCloseTo(SOLAR_IRRADIANCE_1AU_W_M2 * 0.5 * 2 * 0.25, 9);
     expect(estimate.status).toBe('not-met');
   });
 
-  it('gives zero power for a Sun fully below the reference horizon, not a missing value', () => {
-    const estimate = estimatePower(body('sun', -2, 1), POWER);
-    expect(estimate.powerW).toBe(0);
-    expect(estimate.status).toBe('not-met');
+  it('gives zero power for a Sun fully below the reference horizon, even without Earth data', () => {
+    expect(estimatePower(body('sun', -2, 1), POWER, missingEarth)).toMatchObject({ powerW: 0, status: 'not-met' });
   });
 
   it('keeps missing inputs as unknown instead of zero', () => {
-    expect(estimatePower(body('sun', null, 1), POWER)).toMatchObject({ powerW: null, status: 'unknown' });
-    expect(estimatePower(body('sun', 5, null), POWER)).toMatchObject({ powerW: null, status: 'unknown' });
-    expect(estimatePower(body('sun', 5, 1, null), POWER)).toMatchObject({ powerW: null, status: 'unknown' });
-    expect(estimatePower({ status: 'error', body: 'sun', error: { code: 'UPSTREAM_UNAVAILABLE', detail: '' } }, POWER).status).toBe('unknown');
+    expect(estimatePower(body('sun', null, 1), POWER, earthAway)).toMatchObject({ powerW: null, status: 'unknown' });
+    expect(estimatePower(body('sun', 5, null), POWER, earthAway)).toMatchObject({ powerW: null, status: 'unknown' });
+    expect(estimatePower(body('sun', 5, 1, null), POWER, earthAway)).toMatchObject({ powerW: null, status: 'unknown' });
+    expect(estimatePower({ status: 'error', body: 'sun', error: { code: 'UPSTREAM_UNAVAILABLE', detail: '' } }, POWER, earthAway).status).toBe('unknown');
+  });
+
+  it('cannot declare power sufficient when eclipse geometry is missing', () => {
+    for (const earth of [missingEarth, body('earth', null, 0.00257), body('earth', 10, 0.00257, null)]) {
+      expect(estimatePower(body('sun', 10, 1), POWER, earth)).toMatchObject({ powerW: null, status: 'unknown' });
+    }
+  });
+
+  it('suppresses power and the overall verdict during total solar occultation', () => {
+    const data = frame(body('sun', 10, 1, 1920), body('earth', 10, 0.00257, 6500));
+    expect(assessInstant(data, EXAMPLE_ASSUMPTIONS)).toMatchObject({ power: { diskFraction: 0, powerW: 0, status: 'not-met' }, overall: 'not-met' });
+    expect(assessWindow([data], 60, EXAMPLE_ASSUMPTIONS).power.fraction).toBe(0);
+  });
+});
+
+describe('visibleSolarDiskFraction', () => {
+  it('leaves a non-overlapping Sun unchanged and handles external tangency', () => {
+    expect(visibleSolarDiskFraction(body('sun', 10, 1, 3600), body('earth', 11, 0.00257, 3600))).toBe(1);
+    expect(visibleSolarDiskFraction(body('sun', 0, 1), body('earth', -80, 0.00257))).toBe(0.5);
+  });
+
+  it('matches the analytic area of two equal disks separated by one radius', () => {
+    // Equal radii r: overlap = r² (2π/3 − √3/2), MathWorld Eq. 17.
+    const expected = 1 - (2 * Math.PI / 3 - Math.sqrt(3) / 2) / Math.PI;
+    expect(visibleSolarDiskFraction(body('sun', 10, 1, 3600), body('earth', 10.5, 0.00257, 3600))).toBeCloseTo(expected, 5);
+  });
+
+  it('handles a smaller opaque disk contained inside the Sun', () => {
+    expect(visibleSolarDiskFraction(body('sun', 10, 1, 3600), body('earth', 10, 0.00257, 1800))).toBeCloseTo(0.75, 4);
+  });
+
+  it('does not subtract occultation below the horizon from the visible upper half', () => {
+    expect(visibleSolarDiskFraction(body('sun', 0, 1, 3600), body('earth', -0.5, 0.00257, 3600))).toBeCloseTo(0.5, 6);
+    expect(visibleSolarDiskFraction(body('sun', 0, 1, 3600), body('earth', 0.5, 0.00257, 3600))).toBeCloseTo(0.5 - (2 * Math.PI / 3 - Math.sqrt(3) / 2) / Math.PI, 4);
+  });
+
+  it('keeps fractions bounded while moving through partial occultation', () => {
+    let previous = 0;
+    for (let offset = 0; offset <= 2; offset += 0.05) {
+      const fraction = visibleSolarDiskFraction(body('sun', 10, 1, 3600), body('earth', 10 + offset, 0.00257, 7200))!;
+      expect(fraction).toBeGreaterThanOrEqual(previous - 1e-6);
+      expect(fraction).toBeLessThanOrEqual(1);
+      previous = fraction;
+    }
   });
 });
 
@@ -146,6 +192,10 @@ describe('estimateLink', () => {
     expect(estimate.marginDb).not.toBeNull();
     expect(estimate.status).toBe('not-met');
     expect(estimateLink(body('earth', 3, 0.00257), { ...LINK, earthElevationMaskDeg: 5 }).status).toBe('not-met');
+  });
+
+  it('cannot remove lunar occultation with a negative mask, even for old callers', () => {
+    expect(estimateLink(body('earth', -80, 0.00257), { ...LINK, earthElevationMaskDeg: -90 })).toMatchObject({ earthAboveMask: false, status: 'not-met' });
   });
 
   it('fails when the margin is below the required one', () => {
@@ -197,8 +247,15 @@ describe('assessWindow', () => {
   it('leaves unknown samples out of the fractions', () => {
     const missing = body('sun', null, 1);
     const result = assessWindow([frame(up, earthUp), frame(missing, earthUp)], 60, assumptions);
-    expect(result.power).toEqual({ fraction: 1, longestGapMinutes: 0, unknownSamples: 1 });
+    expect(result.power).toEqual({ fraction: 1, longestGapMinutes: null, unknownSamples: 1 });
     expect(assessWindow([frame(missing, earthUp)], 60, assumptions).power.fraction).toBeNull();
+  });
+
+  it('does not compress missing time into a supposedly consecutive outage', () => {
+    const result = assessWindow([frame(down, earthUp), frame(body('sun', null, 1), earthUp), frame(down, earthUp)], 60, assumptions);
+    expect(result.power).toEqual({ fraction: 0, longestGapMinutes: null, unknownSamples: 1 });
+    expect(result.link.longestGapMinutes).toBe(0);
+    expect(result.both.longestGapMinutes).toBeNull();
   });
 
   it('spans about one mean synodic month', () => {

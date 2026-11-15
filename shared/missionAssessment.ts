@@ -20,9 +20,9 @@
  *   irradiance  = S0 / r²            S0 = 1361 W/m² at 1 au (IAU 2015 Resolution B3,
  *                                    nominal total solar irradiance), r = Sun range in au
  *   P           = irradiance × f × cos(incidence) × area × efficiency
- *   f           = fraction of the solar disk above the reference horizon, uniform
- *                 disk (no limb darkening), from the Horizons elevation of the
- *                 disk center and its angular diameter
+ *   f           = fraction of the uniform solar disk above the reference horizon
+ *                 and not occulted by the Earth (no limb darkening or atmosphere),
+ *                 from both Horizons directions and angular diameters
  *   incidence   = angle between the Sun's center and the panel normal:
  *                 vertical panel turned to the Sun's azimuth → elevation,
  *                 horizontal panel → 90° − elevation, two-axis tracking → 0°
@@ -42,6 +42,7 @@
  */
 
 import type { BodyResult, EphemerisResponse } from './ephemeris.js';
+import { angularSeparationDeg } from './skySearch.js';
 
 /** IAU 2015 Resolution B3 nominal total solar irradiance at 1 au, W/m². */
 export const SOLAR_IRRADIANCE_1AU_W_M2 = 1361;
@@ -118,7 +119,7 @@ export type CriterionStatus = 'met' | 'not-met' | 'unknown';
 export interface PowerEstimate {
   /** Solar irradiance at the Moon (top of disk, no terrain), W/m². */
   readonly irradianceWM2: number | null;
-  /** Fraction of the solar disk above the reference horizon, 0..1. */
+  /** Fraction of the solar disk above the horizon and not occulted by Earth, 0..1. */
   readonly diskFraction: number | null;
   /** Cosine of the incidence angle on the panel, 0..1. */
   readonly incidenceFactor: number | null;
@@ -169,6 +170,66 @@ export function diskFractionAbove(elevationDeg: number, radiusDeg: number): numb
   return h >= 0 ? 1 - below : below;
 }
 
+/**
+ * Uniform solar-disk area surviving both a straight horizon and the Earth's
+ * opaque disk. Small-angle planar disks, with spherical center separation.
+ * Disk equations / segment areas: Wolfram MathWorld, Circle-Circle Intersection
+ * (https://mathworld.wolfram.com/Circle-CircleIntersection.html).
+ *
+ * Fully risen disks use the analytic circle-lens area. At the horizon the
+ * partial-overlap area is integrated in horizontal slices, clipped to the
+ * horizon, rather than multiplying two unrelated visible fractions. Substitute
+ * y = solarRadius * sin(theta) and use composite Simpson quadrature (1024
+ * intervals). This is a small-angle screening approximation, not radiometry.
+ */
+export function visibleSolarDiskFraction(sun: BodyResult, earth: BodyResult): number | null {
+  const solar = observation(sun);
+  if (!solar || solar.elevationDeg === null || solar.angularDiameterArcsec === null || !(solar.angularDiameterArcsec > 0)) return null;
+  const radius = solar.angularDiameterArcsec / 7200;
+  const horizonFraction = diskFractionAbove(solar.elevationDeg, radius);
+  // A fully hidden Sun has zero direct power even if Earth data is missing.
+  if (horizonFraction === 0) return 0;
+  const terrestrial = observation(earth);
+  if (!terrestrial || solar.azimuthDeg === null || terrestrial.azimuthDeg === null ||
+      terrestrial.elevationDeg === null || terrestrial.angularDiameterArcsec === null || !(terrestrial.angularDiameterArcsec > 0)) return null;
+  const earthRadius = terrestrial.angularDiameterArcsec / 7200;
+  const separation = angularSeparationDeg(solar.azimuthDeg, solar.elevationDeg, terrestrial.azimuthDeg, terrestrial.elevationDeg);
+  if (separation >= radius + earthRadius) return horizonFraction;
+  if (earthRadius >= separation + radius) return 0;
+  if (horizonFraction === 1) {
+    if (separation <= Math.abs(radius - earthRadius)) return 1 - (earthRadius / radius) ** 2;
+    const acos = (value: number) => Math.acos(Math.max(-1, Math.min(1, value)));
+    const solarAngle = acos((separation ** 2 + radius ** 2 - earthRadius ** 2) / (2 * separation * radius));
+    const earthAngle = acos((separation ** 2 + earthRadius ** 2 - radius ** 2) / (2 * separation * earthRadius));
+    const lens = radius ** 2 * solarAngle + earthRadius ** 2 * earthAngle - 0.5 * Math.sqrt(Math.max(0,
+      (-separation + radius + earthRadius) * (separation + radius - earthRadius) *
+      (separation - radius + earthRadius) * (separation + radius + earthRadius)));
+    return Math.max(0, Math.min(1, 1 - lens / (Math.PI * radius ** 2)));
+  }
+
+  // In the small-angle plane the relative vertical offset is the elevation
+  // difference; choose the horizontal offset to preserve spherical separation.
+  const dy = terrestrial.elevationDeg - solar.elevationDeg;
+  const dx = Math.sqrt(Math.max(0, separation * separation - dy * dy));
+  const start = Math.asin(Math.max(-1, -solar.elevationDeg / radius));
+  const intervals = 1024;
+  const step = (Math.PI / 2 - start) / intervals;
+  let area = 0;
+  for (let i = 0; i <= intervals; i++) {
+    const theta = start + i * step;
+    const y = radius * Math.sin(theta);
+    const solarHalfWidth = radius * Math.cos(theta);
+    const earthHalfWidthSquared = earthRadius * earthRadius - (y - dy) ** 2;
+    const earthHalfWidth = Math.sqrt(Math.max(0, earthHalfWidthSquared));
+    const overlap = earthHalfWidthSquared <= 0 ? 0 : Math.max(0,
+      Math.min(solarHalfWidth, dx + earthHalfWidth) - Math.max(-solarHalfWidth, dx - earthHalfWidth));
+    const width = Math.max(0, 2 * solarHalfWidth - overlap);
+    const weight = i === 0 || i === intervals ? 1 : i % 2 === 0 ? 2 : 4;
+    area += weight * width * radius * Math.cos(theta);
+  }
+  return Math.min(horizonFraction, Math.max(0, area * step / (3 * Math.PI * radius * radius)));
+}
+
 export function incidenceFactor(elevationDeg: number, orientation: PanelOrientation): number {
   const elevation = (elevationDeg * Math.PI) / 180;
   if (orientation === 'tracking') return 1;
@@ -176,13 +237,12 @@ export function incidenceFactor(elevationDeg: number, orientation: PanelOrientat
   return Math.max(0, Math.sin(elevation));
 }
 
-export function estimatePower(sun: BodyResult, power: PowerAssumptions): PowerEstimate {
+export function estimatePower(sun: BodyResult, power: PowerAssumptions, earth: BodyResult): PowerEstimate {
   const sunObs = observation(sun);
   const elevation = sunObs?.elevationDeg ?? null;
   const range = sunObs?.rangeAu ?? null;
-  const diameter = sunObs?.angularDiameterArcsec ?? null;
   const irradiance = range !== null && range > 0 ? SOLAR_IRRADIANCE_1AU_W_M2 / (range * range) : null;
-  const fraction = elevation !== null && diameter !== null ? diskFractionAbove(elevation, diameter / 7200) : null;
+  const fraction = visibleSolarDiskFraction(sun, earth);
   const incidence = elevation !== null ? incidenceFactor(elevation, power.orientation) : null;
   const powerW =
     irradiance !== null && fraction !== null && incidence !== null
@@ -200,7 +260,9 @@ export function estimateLink(earth: BodyResult, link: LinkAssumptions): LinkEsti
   const earthObs = observation(earth);
   const elevation = earthObs?.elevationDeg ?? null;
   const range = earthObs?.rangeAu ?? null;
-  const aboveMask = elevation === null ? null : elevation >= link.earthElevationMaskDeg;
+  // A user mask cannot remove occultation by the Moon. Guard the model as
+  // well as the form, including assumptions saved before negative masks were rejected.
+  const aboveMask = elevation === null ? null : elevation >= Math.max(0, link.earthElevationMaskDeg);
   if (range === null || !(range > 0)) {
     return {
       earthElevationDeg: elevation,
@@ -242,7 +304,7 @@ export function combineStatus(statuses: readonly CriterionStatus[]): CriterionSt
 }
 
 export function assessInstant(data: EphemerisResponse, assumptions: MissionAssumptions): InstantAssessment {
-  const power = estimatePower(data.bodies.sun, assumptions.power);
+  const power = estimatePower(data.bodies.sun, assumptions.power, data.bodies.earth);
   const link = estimateLink(data.bodies.earth, assumptions.link);
   return { power, link, overall: combineStatus([power.status, link.status]) };
 }
@@ -251,7 +313,7 @@ export function assessInstant(data: EphemerisResponse, assumptions: MissionAssum
 export interface CriterionWindow {
   /** Samples meeting the criterion / samples with data; `null` when no sample has data. */
   readonly fraction: number | null;
-  /** Longest run of consecutive samples that do not meet it, in minutes (run length × step). `null` without data. */
+  /** Longest run of consecutive failures, in minutes (run length × step). `null` if any sample is unknown. */
   readonly longestGapMinutes: number | null;
   /** Samples without data for this criterion. */
   readonly unknownSamples: number;
@@ -275,7 +337,8 @@ function criterionWindow(statuses: readonly CriterionStatus[], stepMinutes: numb
   let longest = 0;
   for (const status of statuses) {
     if (status === 'unknown') {
-      // An unknown sample neither extends nor breaks a gap: it is simply not counted.
+      // Missing samples may hide either a recovery or a longer outage, so
+      // no longest-gap duration can be reported for this criterion.
       continue;
     }
     known++;
@@ -289,7 +352,7 @@ function criterionWindow(statuses: readonly CriterionStatus[], stepMinutes: numb
   }
   return {
     fraction: known === 0 ? null : met / known,
-    longestGapMinutes: known === 0 ? null : longest * stepMinutes,
+    longestGapMinutes: known !== statuses.length || known === 0 ? null : longest * stepMinutes,
     unknownSamples: statuses.length - known,
   };
 }

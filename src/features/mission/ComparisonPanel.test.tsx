@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { act } from 'react';
+import { act, useEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EphemerisResponse } from '../../../shared/ephemeris';
@@ -114,6 +114,61 @@ describe('ComparisonPanel', () => {
     await act(async () => button(text.remove).click());
     expect(container.querySelectorAll('.compare__scenario')).toHaveLength(0);
     expect(container.textContent).toContain(text.empty);
+  });
+
+  it('does not request an in-flight window again after adding another scenario', async () => {
+    let resolveFirst!: (value: Awaited<ReturnType<typeof fetchEphemerisSeries>>) => void;
+    vi.mocked(fetchEphemerisSeries).mockImplementationOnce(() => new Promise((resolve) => { resolveFirst = resolve; }));
+    await act(async () => button(text.open).click());
+    await act(async () => button(text.add.none).click());
+    await act(async () => button(text.windows).click());
+    expect(fetchEphemerisSeries).toHaveBeenCalledTimes(1);
+    await act(async () => button(text.add.week).click());
+    expect(button(text.windows).disabled).toBe(false);
+    await act(async () => button(text.windows).click());
+    expect(vi.mocked(fetchEphemerisSeries).mock.calls.map(([request]) => request.startUtc)).toEqual([
+      selection.utc, '2026-11-21T12:00:00Z',
+    ]);
+    await act(async () => resolveFirst({ ok: true, frames: [response(selection)] }));
+    expect(fetchEphemerisSeries).toHaveBeenCalledTimes(2);
+  });
+
+  it('reserves queued windows before they start, preventing duplicates from the other panel', async () => {
+    let loader!: ReturnType<typeof useWindowSamples>;
+    function WindowHarness() {
+      const samples = useWindowSamples();
+      useEffect(() => { loader = samples; });
+      return null;
+    }
+    await act(async () => root.render(<WindowHarness />));
+    let resolveFirst!: (value: Awaited<ReturnType<typeof fetchEphemerisSeries>>) => void;
+    vi.mocked(fetchEphemerisSeries).mockImplementationOnce(() => new Promise((resolve) => { resolveFirst = resolve; }));
+    const later = { ...selection, utc: '2026-11-21T12:00:00Z' };
+    let pending!: Promise<void>;
+    await act(async () => {
+      pending = loader.load([selection, later]);
+      await loader.load([selection, later]);
+    });
+    expect(fetchEphemerisSeries).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      resolveFirst({ ok: true, frames: [response(selection)] });
+      await pending;
+      await loader.load([selection, later]);
+    });
+    expect(fetchEphemerisSeries).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not start queued requests after unmount', async () => {
+    let resolveFirst!: (value: Awaited<ReturnType<typeof fetchEphemerisSeries>>) => void;
+    vi.mocked(fetchEphemerisSeries).mockImplementationOnce(() => new Promise((resolve) => { resolveFirst = resolve; }));
+    await act(async () => button(text.add.none).click());
+    await act(async () => button(text.add.week).click());
+    await act(async () => button(text.windows).click());
+    const signal = vi.mocked(fetchEphemerisSeries).mock.calls[0]![1]!;
+    await act(async () => root.render(null));
+    expect(signal.aborted).toBe(true);
+    await act(async () => resolveFirst({ ok: true, frames: [response(selection)] }));
+    expect(fetchEphemerisSeries).toHaveBeenCalledTimes(1);
   });
 
   it('screens the synodic-month window of every scenario on request', async () => {

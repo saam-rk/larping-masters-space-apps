@@ -170,7 +170,7 @@ export function ComparisonPanel({ selection, mission, windows, onLoadWindows, on
             onClick={() =>
               onLoadWindows(
                 scenarios
-                  .filter((scenario) => windowFits(scenario.selection.utc) && windows[scenario.key]?.status !== 'done')
+                  .filter((scenario) => windowFits(scenario.selection.utc) && windows[scenario.key]?.status !== 'done' && windows[scenario.key]?.status !== 'loading')
                   .map((scenario) => scenario.selection),
               )
             }

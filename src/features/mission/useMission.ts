@@ -65,25 +65,38 @@ export type WindowState =
  */
 export function useWindowSamples() {
   const [windows, setWindows] = useState<Readonly<Record<string, WindowState>>>({});
-  const controllers = useRef(new Set<AbortController>());
+  const controllers = useRef(new Map<string, AbortController>());
+  const completed = useRef(new Set<string>());
   useEffect(() => {
     const active = controllers.current;
-    return () => active.forEach((controller) => controller.abort());
+    return () => {
+      active.forEach((controller) => controller.abort());
+      active.clear();
+    };
   }, []);
 
   const load = useCallback(async (selections: readonly EphemerisSelection[]) => {
-    for (const selection of selections) {
+    // Reserve the whole queue synchronously: another panel or click may ask
+    // for a key before React renders its loading state or its turn starts.
+    const queue = selections.flatMap((selection) => {
       const key = selectionKey(selection);
+      if (controllers.current.has(key) || completed.current.has(key)) return [];
       const controller = new AbortController();
-      controllers.current.add(controller);
-      setWindows((current) => ({ ...current, [key]: { status: 'loading' } }));
+      controllers.current.set(key, controller);
+      return [{ selection, key, controller }];
+    });
+    if (queue.length === 0) return;
+    setWindows((current) => ({ ...current, ...Object.fromEntries(queue.map(({ key }) => [key, { status: 'loading' } as const])) }));
+    for (const { selection, key, controller } of queue) {
+      if (controller.signal.aborted) return;
       const result = await fetchEphemerisSeries(
         { selection, startUtc: selection.utc, stepMinutes: WINDOW_STEP_MINUTES, count: WINDOW_SAMPLES },
         controller.signal,
       );
-      controllers.current.delete(controller);
+      controllers.current.delete(key);
       if (controller.signal.aborted) return;
-      if (!result.ok) console.error('[mission-window]', result.error.key, result.error.detail);
+      if (result.ok) completed.current.add(key);
+      else console.error('[mission-window]', result.error.key, result.error.detail);
       setWindows((current) => ({
         ...current,
         [key]: result.ok ? { status: 'done', frames: result.frames } : { status: 'error', error: result.error },

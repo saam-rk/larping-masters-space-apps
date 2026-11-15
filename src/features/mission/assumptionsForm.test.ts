@@ -23,6 +23,10 @@ describe('fieldValue', () => {
     expect(fieldValue('efficiency', '101')).toBeNull();
     expect(fieldValue('demand', '0')).toBe(0);
     expect(fieldValue('earthMask', '-91')).toBeNull();
+    expect(fieldValue('earthMask', '-90')).toBeNull();
+    expect(fieldValue('earthMask', '-0.1')).toBeNull();
+    expect(fieldValue('earthMask', '0')).toBe(0);
+    expect(fieldValue('earthMask', '90')).toBe(90);
     expect(fieldValue('transmitGain', '-3')).toBe(-3);
   });
 });
@@ -34,6 +38,10 @@ describe('readAssumptions', () => {
     expect(reading.assumptions?.power.panelAreaM2).toBe(EXAMPLE_ASSUMPTIONS.power.panelAreaM2);
     expect(reading.assumptions?.power.efficiency).toBeCloseTo(EXAMPLE_ASSUMPTIONS.power.efficiency, 12);
     expect(reading.assumptions?.link).toEqual(EXAMPLE_ASSUMPTIONS.link);
+  });
+
+  it('rejects a negative elevation mask restored from older inputs', () => {
+    expect(readAssumptions({ ...EXAMPLE_INPUTS, earthMask: '-90' })).toEqual({ assumptions: null, invalid: ['earthMask'] });
   });
 
   it('gives no assumptions while any field is invalid, and names the fields', () => {
