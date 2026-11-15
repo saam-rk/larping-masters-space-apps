@@ -62,15 +62,15 @@ afterEach(() => {
 });
 
 describe('first-person loading portal', () => {
-  it('requests the Faustini terrain asset through the shared polar view', () => {
-    // Synthetic selection for routing only; the saved observations are not Faustini data.
-    const data = { ...SAVED_SAMPLE, site: { ...findSite('faustini-rim-a'), altitudeKm: 0 as const } };
+  it.each(['faustini-rim-a', 'cabeus-exterior-wall-1'] as const)('requests the %s terrain asset through the shared polar view', (siteId) => {
+    // Synthetic selection for routing only; these are not observations for the selected site.
+    const data = { ...SAVED_SAMPLE, site: { ...findSite(siteId), altitudeKm: 0 as const } };
     act(() => root.render(
       <FirstPersonView data={data} bodies={{ placed: [], missing: [] }}
         controls={{ zoom: 0, onZoomChange: vi.fn(), showHorizon: true }} />,
     ));
     expect(loading.requestedUrls.length).toBeGreaterThan(0);
-    expect(new Set(loading.requestedUrls)).toEqual(new Set(['/terrain/faustini-rim-a.glb']));
+    expect(new Set(loading.requestedUrls)).toEqual(new Set([`/terrain/${siteId}.glb`]));
     expect(container.textContent).toContain(MESSAGES.en.scene.terrainLoading);
   });
 

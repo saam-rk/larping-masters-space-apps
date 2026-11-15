@@ -10,7 +10,7 @@ function normalize([x, y, z]: readonly number[]): number[] {
 
 describe('terrain models', () => {
   it('has first-person terrain for every reference site and none for custom points', () => {
-    expect(SITE_TERRAINS.map((model) => model.siteId).sort()).toEqual(['amundsen-rim', 'apollo-11', 'faustini-rim-a', 'haworth', 'nobile-rim-1', 'nobile-rim-2', 'shackleton-rim', 'shoemaker-rim-a']);
+    expect(SITE_TERRAINS.map((model) => model.siteId).sort()).toEqual(['amundsen-rim', 'apollo-11', 'cabeus-exterior-wall-1', 'faustini-rim-a', 'haworth', 'nobile-rim-1', 'nobile-rim-2', 'shackleton-rim', 'shoemaker-rim-a']);
     expect(terrainForSite('custom')).toBeNull();
   });
 
@@ -23,6 +23,8 @@ describe('terrain models', () => {
     ['shackleton-rim', -1000.036606, -7000.345565],
     // public/terrain/faustini-rim-a.metadata.json: controlPoints[0].projectedM.
     ['faustini-rim-a', 63998.60146096506, 0],
+    // public/terrain/cabeus-exterior-wall-1.metadata.json: controlPoints[0].projectedM.
+    ['cabeus-exterior-wall-1', -88500.728117849, 29500.158913411356],
   ])('projects %s as in its terrain metadata', (siteId, expectedX, expectedY) => {
     const site = findSite(siteId);
     const { x, y } = projectSouthPolar(site.latitudeDeg, site.longitudeEastDeg);
@@ -54,19 +56,21 @@ describe('terrain models', () => {
     expect(y).toBeCloseTo(57001.06, 2);
   });
 
-  it('records the larger Haworth, Shoemaker Rim A and Faustini Rim A crops', () => {
+  it('records the larger Haworth, Shoemaker Rim A, Faustini Rim A and Cabeus crops', () => {
     // Metadata bounds: Haworth -45500..-33500 x 88500..102500 m; Shoemaker Rim A 4000..16000 x 49000..61000 m.
     expect(terrainForSite('haworth')!.cropSizeKm).toEqual([12, 14]);
     expect(terrainForSite('shoemaker-rim-a')!.cropSizeKm).toEqual([12, 12]);
     // Faustini Rim A metadata bounds: 59000..71000 x -8000..4000 m.
     expect(terrainForSite('faustini-rim-a')!.cropSizeKm).toEqual([12, 12]);
-    const notTenByTen = new Set<SiteId>(['haworth', 'shoemaker-rim-a', 'faustini-rim-a', 'apollo-11']);
+    // Cabeus metadata bounds: -93000..-79000 x 20000..34000 m.
+    expect(terrainForSite('cabeus-exterior-wall-1')!.cropSizeKm).toEqual([14, 14]);
+    const notTenByTen = new Set<SiteId>(['haworth', 'shoemaker-rim-a', 'faustini-rim-a', 'cabeus-exterior-wall-1', 'apollo-11']);
     for (const model of SITE_TERRAINS.filter((terrain) => !notTenByTen.has(terrain.siteId))) {
       expect(model.cropSizeKm).toEqual([10, 10]);
     }
   });
 
-  it.each<SiteId>(['nobile-rim-1', 'nobile-rim-2', 'shackleton-rim', 'amundsen-rim', 'haworth', 'shoemaker-rim-a', 'faustini-rim-a'])('places the %s site near the GLB origin', (siteId) => {
+  it.each<SiteId>(['nobile-rim-1', 'nobile-rim-2', 'shackleton-rim', 'amundsen-rim', 'haworth', 'shoemaker-rim-a', 'faustini-rim-a', 'cabeus-exterior-wall-1'])('places the %s site near the GLB origin', (siteId) => {
     const site = findSite(siteId);
     const terrain = terrainForSite(siteId)!;
     const { x, y } = projectSouthPolar(site.latitudeDeg, site.longitudeEastDeg);
@@ -92,6 +96,8 @@ describe('terrain models', () => {
     ['shoemaker-rim-a', 'east', 0, 0.05, [1, 0, 0]],
     ['faustini-rim-a', 'north', 0.01, 0, [0, 0, -1]],
     ['faustini-rim-a', 'east', 0, 0.05, [1, 0, 0]],
+    ['cabeus-exterior-wall-1', 'north', 0.01, 0, [0, 0, -1]],
+    ['cabeus-exterior-wall-1', 'east', 0, 0.05, [1, 0, 0]],
   ] as const)('turns geographic %s %s into the scene axis', (siteId, _label, dLat, dLon, expected) => {
     const site = findSite(siteId);
     const terrain = terrainForSite(siteId)!;
