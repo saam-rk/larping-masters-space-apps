@@ -10,7 +10,7 @@ import {
 
 describe('preferences cookie', () => {
   it('round-trips through serialize and parse', () => {
-    const chosen: Preferences = { locale: 'en', effects: 'off' };
+    const chosen: Preferences = { locale: 'en', effects: 'off', advanced: true };
     const header = `other=1; ${COOKIE_NAME}=${serializePreferences(chosen)}; theme=dark`;
     expect(parsePreferencesCookie(header)).toEqual(chosen);
   });
@@ -22,13 +22,18 @@ describe('preferences cookie', () => {
 
   it('maps version 1 effect levels to the on/off switch', () => {
     const legacy = (fx: string) => `${COOKIE_NAME}=${encodeURIComponent(`v=1&lang=en&fx=${fx}&font=readable`)}`;
-    expect(parsePreferencesCookie(legacy('full'))).toEqual({ locale: 'en', effects: 'on' });
-    expect(parsePreferencesCookie(legacy('lite'))).toEqual({ locale: 'en', effects: 'on' });
-    expect(parsePreferencesCookie(legacy('off'))).toEqual({ locale: 'en', effects: 'off' });
+    expect(parsePreferencesCookie(legacy('full'))).toEqual({ locale: 'en', effects: 'on', advanced: false });
+    expect(parsePreferencesCookie(legacy('lite'))).toEqual({ locale: 'en', effects: 'on', advanced: false });
+    expect(parsePreferencesCookie(legacy('off'))).toEqual({ locale: 'en', effects: 'off', advanced: false });
+  });
+
+  it('reads a version 2 cookie saved before the advanced switch as closed', () => {
+    const header = `${COOKIE_NAME}=${encodeURIComponent('v=2&lang=en&fx=off')}`;
+    expect(parsePreferencesCookie(header)).toEqual({ locale: 'en', effects: 'off', advanced: false });
   });
 
   it('falls back to defaults for unknown values', () => {
-    const header = `${COOKIE_NAME}=${encodeURIComponent('v=2&lang=fr&fx=ultra')}`;
+    const header = `${COOKIE_NAME}=${encodeURIComponent('v=2&lang=fr&fx=ultra&adv=yes')}`;
     expect(parsePreferencesCookie(header)).toEqual(DEFAULT_PREFERENCES);
   });
 
@@ -42,6 +47,7 @@ describe('recommendPreferences', () => {
     expect(recommendPreferences({ prefersReducedMotion: false, hardwareConcurrency: 8, deviceMemoryGb: 8 })).toEqual({
       locale: 'es',
       effects: 'on',
+      advanced: false,
     });
   });
 

@@ -101,7 +101,7 @@ export function SetupScreen() {
               ref={saveRef}
               type="button"
               className="button button--primary setup__save"
-              onClick={() => confirm({ locale, effects })}
+              onClick={() => confirm({ locale, effects, advanced: preferences.advanced })}
             >
               <span aria-hidden="true">▶ </span>
               {setup.save}
