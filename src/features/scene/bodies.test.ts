@@ -64,6 +64,7 @@ describe('hasFirstPersonView', () => {
     expect(hasFirstPersonView('nobile-rim-1')).toBe(true);
     expect(hasFirstPersonView('shackleton-rim')).toBe(true);
     expect(hasFirstPersonView('amundsen-rim')).toBe(true);
+    expect(hasFirstPersonView('haworth')).toBe(true);
     expect(hasFirstPersonView('custom')).toBe(false);
   });
 });

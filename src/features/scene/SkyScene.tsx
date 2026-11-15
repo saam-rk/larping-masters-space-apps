@@ -3,9 +3,8 @@
  * (`placeBodies`, from the azimuth/elevation shown in the results panel):
  *
  * - `first-person`: eye level next to a 1.70 m astronaut on the LOLA terrain
- *   of Nobile Rim 1, Nobile Rim 2, Shackleton Rim or Amundsen Rim (only where
- *   a terrain model exists, see
- *   `terrain/models.ts`).
+ *   of Nobile Rim 1, Nobile Rim 2, Shackleton Rim, Amundsen Rim or Haworth
+ *   (only where a terrain model exists, see `terrain/models.ts`).
  * - `third-person`: at visual scale (default), a schematic sky dome with the
  *   true directions and labeled azimuth/elevation guides; at real scale,
  *   Moon, Earth and Sun to scale around the tangent horizon (see
@@ -31,6 +30,7 @@ import { FirstPersonView } from './FirstPersonView';
 import { ScaleToggle } from './ScaleToggle';
 import { DEFAULT_SCENE_SCALE, type SceneScale } from './sceneScale';
 import { StarSphere } from './StarSphere';
+import { terrainForSite } from './terrain/models';
 import { ThirdPersonView } from './ThirdPersonView';
 import type { ViewMode } from './viewMode';
 import { ZoomControl } from './ZoomControl';
@@ -43,6 +43,12 @@ const START_ZOOM_BY_KEY: Readonly<Record<ZoomKey, number>> = {
   'third-person-real': START_ZOOM['third-person'],
   'third-person-visual': START_VISUAL_ZOOM,
 };
+
+/** Size of the site's relief crop, e.g. `10 × 10` (the view only offers first person where a model exists). */
+function cropSizeText(siteId: EphemerisResponse['site']['id'], locale: string): string {
+  const [eastWestKm, northSouthKm] = terrainForSite(siteId)?.cropSizeKm ?? [10, 10];
+  return `${eastWestKm.toLocaleString(locale)} × ${northSouthKm.toLocaleString(locale)}`;
+}
 
 export default function SkyScene({
   data,
@@ -77,7 +83,7 @@ export default function SkyScene({
   const exaggeration = elevationExaggeration(bodies.placed.map((body) => body.elevationDeg));
   const note =
     mode === 'first-person'
-      ? messages.scene.firstPersonNote
+      ? messages.scene.firstPersonNote(cropSizeText(data.site.id, locale))
       : scale === 'visual'
         ? messages.scene.thirdPersonNote.visual(exaggeration > 1 ? String(exaggeration) : null)
         : messages.scene.thirdPersonNote.real;

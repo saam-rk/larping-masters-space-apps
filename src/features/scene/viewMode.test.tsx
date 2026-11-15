@@ -48,7 +48,7 @@ function expectMode(firstPerson: boolean) {
 }
 
 describe('view selection and terrain availability', () => {
-  it.each<ObserverSiteId>(['nobile-rim-1', 'nobile-rim-2', 'shackleton-rim', 'amundsen-rim'])('starts in first person at %s', (siteId) => {
+  it.each<ObserverSiteId>(['nobile-rim-1', 'nobile-rim-2', 'shackleton-rim', 'amundsen-rim', 'haworth'])('starts in first person at %s', (siteId) => {
     render(siteId);
     expectMode(true);
     expect(option(0).getAttribute('aria-disabled')).toBe('false');
@@ -89,8 +89,8 @@ describe('view selection and terrain availability', () => {
     expectMode(true);
   });
 
-  it('offers first person at a drop-down site with a terrain model (Amundsen Rim)', () => {
-    render('amundsen-rim');
+  it.each<ObserverSiteId>(['amundsen-rim', 'haworth'])('offers first person at drop-down site %s, which has a terrain model', (siteId) => {
+    render(siteId);
     expectMode(true);
     expect(option(0).getAttribute('aria-disabled')).toBe('false');
   });

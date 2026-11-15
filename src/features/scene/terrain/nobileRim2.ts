@@ -15,6 +15,8 @@ export const NOBILE_RIM_2_TERRAIN: SiteTerrain = {
   astronautUrl: '/models/nobile-rim-2/astronaut.glb',
   // Metadata `localOrigin`: site projected X/Y and bilinear elevation rounded to whole meters.
   origin: { projectedXM: 157_000, projectedYM: 95_000, elevationM: 1010 },
+  // README: projected surface X 152002.5…162002.5 m, Y 90002.5…100002.5 m (10 x 10 km).
+  cropSizeKm: [10, 10],
   // Metadata `axes.geographicNorthGridBearingAtSiteDeg`.
   northGridBearingDeg: 58.82206,
   // 25 m grid-east of the site marker in the editable scene (`add_scale_astronaut.py`); y from the saved scene.

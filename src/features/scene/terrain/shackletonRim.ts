@@ -30,6 +30,8 @@ export const SHACKLETON_RIM_TERRAIN: SiteTerrain = {
   astronautUrl: '/terrain/astronaut.glb',
   // Metadata `origin`.
   origin: { projectedXM: -1000, projectedYM: -7000, elevationM: 770 },
+  // Metadata `coverage.cropPixelOuterBoundsM`: [-6000, -12000, 4000, -2000] m.
+  cropSizeKm: [10, 10],
   // Geographic north along the meridian lies at grid bearing = east longitude: -171.87° = 188.13°.
   northGridBearingDeg: 188.13,
   // Metadata `astronaut.supportGlbM` (y is re-cast onto the terrain at runtime).

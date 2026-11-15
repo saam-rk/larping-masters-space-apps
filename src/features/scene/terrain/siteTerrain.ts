@@ -2,13 +2,14 @@
  * Terrain models for the first-person view, one per reference site, and the
  * shared projection helpers.
  *
- * Every model is a 10 x 10 km crop of NASA GSFC PGDA product 78 (LRO/LOLA
- * 5 m/pixel adjusted surface), south polar stereographic projection on a
- * 1,737,400 m sphere, MOON_ME/DE421 frame, meters, vertical exaggeration 1:1.
- * Per-site values come from each model's README and metadata (see
- * `nobileRim1.ts`, `nobileRim2.ts`, `shackletonRim.ts` and `amundsenRim.ts`).
- * Mesh density differs by model: Shackleton Rim and Amundsen Rim are densest
- * around the viewer and coarser toward the crop edges.
+ * Every model is a crop of NASA GSFC PGDA product 78 (LRO/LOLA 5 m/pixel
+ * adjusted surface), south polar stereographic projection on a 1,737,400 m
+ * sphere, MOON_ME/DE421 frame, meters, vertical exaggeration 1:1. Crops are
+ * 10 x 10 km, except Haworth (12 x 14 km, see `cropSizeKm`). Per-site values
+ * come from each model's README and metadata (see `nobileRim1.ts`,
+ * `nobileRim2.ts`, `shackletonRim.ts`, `amundsenRim.ts` and `haworth.ts`).
+ * Mesh density differs by model: Shackleton Rim, Amundsen Rim and Haworth are
+ * densest around the viewer and coarser toward the crop edges.
  *
  * GLB axes: x = X - X0 (grid east), y = h - h0 (radial height), z = -(Y - Y0).
  * Projected +Y is grid north, not geographic north: at a site of east
@@ -40,6 +41,8 @@ export interface SiteTerrain {
   readonly astronautUrl: string;
   /** Local origin of the GLB: projected X/Y (m) and radial elevation (m). */
   readonly origin: { readonly projectedXM: number; readonly projectedYM: number; readonly elevationM: number };
+  /** Size of the relief crop, km: [grid east-west, grid north-south]. */
+  readonly cropSizeKm: readonly [number, number];
   /** Grid bearing of geographic north at the site, degrees (equals its east longitude). */
   readonly northGridBearingDeg: number;
   /** Horizontal astronaut position in GLB coordinates (y is re-cast onto the terrain at runtime). */

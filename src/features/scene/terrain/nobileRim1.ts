@@ -20,6 +20,8 @@ export const NOBILE_RIM_1_TERRAIN: SiteTerrain = {
   astronautUrl: '/terrain/nobile-rim-1.astronaut.glb',
   // Metadata `origin`.
   origin: { projectedXM: 84_000, projectedYM: 110_000, elevationM: 5900 },
+  // Metadata `coverage.cropPixelOuterBoundsM`: [78940, 106870, 88940, 116870] m.
+  cropSizeKm: [10, 10],
   // Geographic north along the meridian lies at grid bearing = east longitude (shared/sites.ts: 37.36667°).
   northGridBearingDeg: 37.36667,
   // Metadata `scaleReference.glbPositionM`.
