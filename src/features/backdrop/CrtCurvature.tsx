@@ -5,7 +5,11 @@
  * Implemented as an SVG displacement filter applied with CSS to the app frame
  * (`:root[data-curve='on'] .app__frame`). The displacement map is computed
  * once per viewport size on a small canvas and stretched by the browser; the
- * field is smooth, so bilinear scaling keeps it exact enough.
+ * field is smooth, so bilinear scaling keeps it exact enough. Its resolution
+ * is capped (`MAX_MAP_SIDE`), so zooming out (a larger CSS viewport) does not
+ * make it more expensive, and it is rebuilt on the frame after a resize: the
+ * filter region follows the viewport, and a stale, smaller region would clip
+ * the frame after zooming out.
  *
  * Limits:
  * - The filter only moves pixels, and the browser hit-tests the undistorted
@@ -32,6 +36,8 @@ const CRT_CURVATURE_FILTER_ID = 'crt-curvature';
 
 /** Map resolution relative to the viewport. */
 const MAP_SCALE = 1 / 8;
+/** Largest map side, px (a 1920 px wide viewport already gives ~250). */
+const MAX_MAP_SIDE = 256;
 
 interface CurvatureMap {
   readonly url: string;
@@ -64,8 +70,9 @@ function createMap(width: number, height: number): CurvatureMap | null {
     const pad = Math.ceil(shift) + 2;
     const regionWidth = width + 2 * pad;
     const regionHeight = height + 2 * pad;
-    const mapWidth = Math.max(16, Math.round(regionWidth * MAP_SCALE));
-    const mapHeight = Math.max(16, Math.round(regionHeight * MAP_SCALE));
+    const mapScale = Math.min(MAP_SCALE, MAX_MAP_SIDE / Math.max(regionWidth, regionHeight));
+    const mapWidth = Math.max(16, Math.round(regionWidth * mapScale));
+    const mapHeight = Math.max(16, Math.round(regionHeight * mapScale));
     const canvas = document.createElement('canvas');
     canvas.width = mapWidth;
     canvas.height = mapHeight;
@@ -202,20 +209,24 @@ export function CrtCurvature({ enabled: requested }: { enabled: boolean }) {
 
   useEffect(() => {
     if (!enabled) return;
-    let timer: number | null = null;
+    let frame: number | null = null;
+    let built = { width: 0, height: 0 };
     const build = () => {
+      frame = null;
       const { width, height } = readViewport();
+      if (width === built.width && height === built.height) return;
+      built = { width, height };
       setMap(createMap(width, height));
     };
+    // One rebuild per frame, however many resize events arrive in it.
     const onResize = () => {
-      if (timer !== null) window.clearTimeout(timer);
-      timer = window.setTimeout(build, 150);
+      if (frame === null) frame = requestAnimationFrame(build);
     };
     build();
     window.addEventListener('resize', onResize);
     return () => {
       window.removeEventListener('resize', onResize);
-      if (timer !== null) window.clearTimeout(timer);
+      if (frame !== null) cancelAnimationFrame(frame);
     };
   }, [enabled]);
 

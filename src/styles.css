@@ -218,8 +218,12 @@ button {
  * the screen, the 3D view giving up height first; only the control column
  * scrolls, when its boxes are taller than the screen. Stacked layouts (see the
  * media queries below) keep scrolling the whole workspace.
+ *
+ * It also needs some height: zooming in on a wide screen leaves a wide but
+ * short CSS viewport, where the data and update bar would squeeze the 3D view
+ * to a strip. Short screens stack instead (keep in sync with the stacked query).
  */
-@media (min-width: 1041px) {
+@media (min-width: 1041px) and (min-height: 601px) {
   .workspace {
     grid-template-rows: auto minmax(0, 1fr);
     overflow: hidden;
@@ -1641,6 +1645,16 @@ input[aria-invalid='true'] {
   inset: 0;
   width: auto !important;
   height: auto !important;
+}
+
+/*
+ * R3F sets the canvas size in pixels once its box has stopped resizing (see
+ * `CANVAS_RESIZE` in SkyScene.tsx). Until then the last frame is stretched to
+ * the box, so zooming or resizing never shows a gap or a cropped view.
+ */
+.scene > div:first-child canvas {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .scene__notes {
@@ -3124,8 +3138,11 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
 
 /* ───────────────────────── Stacked layout (tablets, phones and browser zoom) ───────────────────────── */
 
-/* Width-based breakpoints let the layout reflow as browser zoom reduces the CSS viewport. */
-@media (max-width: 1040px) {
+/*
+ * Viewport breakpoints let the layout reflow as browser zoom changes the CSS
+ * viewport: zooming in narrows it (and shortens it) until the columns stack.
+ */
+@media (max-width: 1040px), (max-height: 600px) {
   .workspace {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas: 'view' 'update' 'control';
@@ -3136,7 +3153,8 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
     content: none;
   }
 
-  .scene-box.scene-box--apollo {
+  /* The view sits above the rest and the page scrolls: give it a usable height in every view. */
+  .scene-box {
     min-height: clamp(19rem, 48svh, 32rem);
   }
 
@@ -3206,10 +3224,6 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
 
   .readings__body::before {
     content: none;
-  }
-
-  .scene-box {
-    min-height: 9rem;
   }
 }
 

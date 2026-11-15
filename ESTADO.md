@@ -1,5 +1,26 @@
 # Estado del proyecto
 
+## Implementation update — 2026-11-15 (branch `fix/zoom-resize-performance`)
+
+- **Browser zoom and resizing.** The 3D drawing buffer now follows the device
+  pixel ratio below 1 (zooming out no longer draws 4× the screen pixels at
+  50 %, 9× at 33 %), keeps the 1.5 cap, and stays under a ~2560 × 1440 device
+  pixel budget (large full-screen canvases). See `src/features/scene/renderDpr.ts`.
+- Canvas resizes are coalesced (100 ms) and no longer tracked on scroll; the
+  last frame is stretched to its box meanwhile, so no gap or crop shows.
+- Star backdrop keeps the same stars across resizes and resizes once per
+  frame; CRT curvature map capped at 256 px and rebuilt on the next frame (no
+  clipped frame after zooming out); hyperspace canvas resizes only while it animates.
+- Layout: short viewports (≤ 600 px high, e.g. zooming in on a wide screen)
+  stack the columns instead of squeezing the 3D view to a strip; in stacked
+  layouts every scene (not only Apollo 11) keeps `clamp(19rem, 48svh, 32rem)`.
+- Validation observed locally: `npm run check` (682 tests / 63 files) and
+  `npm run build` passed (existing large-chunk warning). Browser checks with
+  emulated viewports (640×360 to 3840×2160): layout, buffer sizes, curvature
+  and star resizes. Frame timings were not measured (preview pane hidden), and
+  real browser zoom (device pixel ratio change) was only covered by unit tests.
+- No scientific method or source changes. Pending: integrator review.
+
 ## Implementation update — 2026-11-15 (branch `feat/advanced-mode`)
 
 - **Advanced mode** section in the control column, where the inverse search,

@@ -7,7 +7,9 @@
  * distance. `tempo` scales how fast the jump builds up and settles.
  *
  * The canvas has its own animation loop that runs only while the jump is
- * active or slowing down; at rest it is cleared and costs no frames.
+ * active or slowing down; at rest it is cleared and costs no frames. Resizes
+ * (browser zoom, window or box size) are applied on the next animation frame,
+ * so at rest they cost nothing either.
  */
 
 import { useEffect, useRef } from 'react';
@@ -68,6 +70,8 @@ export function Hyperspace({ active, reverse = false, tempo = 1 }: HyperspacePro
     let speed = 0;
     let frameId: number | null = null;
     let lastTime = 0;
+    /** The canvas box changed since the buffer was last sized. */
+    let resized = true;
 
     function scatter(star: Streak, z: number) {
       star.z = z;
@@ -76,6 +80,7 @@ export function Hyperspace({ active, reverse = false, tempo = 1 }: HyperspacePro
     }
 
     function resize() {
+      resized = false;
       if (!canvas || !context) return;
       const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
       width = canvas.clientWidth;
@@ -152,6 +157,7 @@ export function Hyperspace({ active, reverse = false, tempo = 1 }: HyperspacePro
     }
 
     function step(time: number) {
+      if (resized) resize();
       const dt = Math.min(0.05, lastTime ? (time - lastTime) / 1000 : 1 / 60);
       lastTime = time;
       const target = targetRef.current;
@@ -171,8 +177,9 @@ export function Hyperspace({ active, reverse = false, tempo = 1 }: HyperspacePro
       if (frameId === null) frameId = requestAnimationFrame(step);
     };
 
-    resize();
-    const observer = new ResizeObserver(resize);
+    const observer = new ResizeObserver(() => {
+      resized = true;
+    });
     observer.observe(canvas);
     if (targetRef.current > 0) wakeRef.current();
 

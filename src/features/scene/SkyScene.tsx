@@ -32,7 +32,7 @@
  */
 
 import { Canvas } from '@react-three/fiber';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { BodyId } from '../../../shared/ephemeris';
 import type { EphemerisResponse } from '../../../shared/ephemeris';
 import { APOLLO_11_SITE_ID } from '../../../shared/sites';
@@ -42,6 +42,7 @@ import { elevationExaggeration } from './angles';
 import { bodyCourses, placeBodies } from './bodies';
 import { FirstPersonView } from './FirstPersonView';
 import { HorizonCountdown } from './HorizonCountdown';
+import { useRenderDpr } from './renderDpr';
 import { ScaleToggle } from './ScaleToggle';
 import { DEFAULT_SCENE_SCALE, type SceneScale } from './sceneScale';
 import { StarSphere } from './StarSphere';
@@ -60,6 +61,16 @@ const START_ZOOM_BY_KEY: Readonly<Record<ZoomKey, number>> = {
   'third-person-real': START_ZOOM['third-person'],
   'third-person-visual': START_VISUAL_ZOOM,
 };
+
+/**
+ * Canvas size tracking. A new size reallocates the WebGL drawing buffer and
+ * redraws the scene, so a burst of resizes (browser zoom steps, dragging the
+ * window edge, entering full screen) is coalesced into one; meanwhile the
+ * canvas is stretched to its box by CSS (see `.scene > div:first-child canvas`).
+ * Scroll is not tracked: pointer events use offsets within the canvas, and
+ * scrolling the stacked layout must not resize or redraw the scene.
+ */
+const CANVAS_RESIZE = { scroll: false, debounce: { scroll: 100, resize: 100 } } as const;
 
 /** Size of the site's relief crop, e.g. `10 × 10` (the view only offers first person where a model exists). */
 function cropSizeText(siteId: EphemerisResponse['site']['id'], locale: string): string {
@@ -94,6 +105,8 @@ export default function SkyScene({
   course?: readonly EphemerisResponse[] | null;
 }) {
   const { messages, locale } = useI18n();
+  const sceneRef = useRef<HTMLDivElement>(null);
+  const dpr = useRenderDpr(sceneRef);
   const bodies = useMemo(() => placeBodies(data), [data]);
   // Starting camera: from the shown result, held while an interval is prepared or played.
   const [anchor, setAnchor] = useState(bodies);
@@ -137,13 +150,14 @@ export default function SkyScene({
         : messages.scene.thirdPersonNote.real;
 
   return (
-    <div className="scene" data-view={mode}>
+    <div className="scene" data-view={mode} ref={sceneRef}>
       {/*
         One canvas for both views: each view brings its own default camera.
         Renders on demand (controls invalidate on change), not every frame.
         The logarithmic depth buffer covers meters to astronomical distances.
+        The pixel ratio follows browser zoom (see `renderDpr`).
       */}
-      <Canvas frameloop="demand" dpr={[1, 1.5]} shadows={apollo ? 'percentage' : false} gl={{ logarithmicDepthBuffer: true }}>
+      <Canvas frameloop="demand" dpr={dpr} resize={CANVAS_RESIZE} shadows={apollo ? 'percentage' : false} gl={{ logarithmicDepthBuffer: true }}>
         <color attach="background" args={['#000000']} />
         {!apollo && <StarSphere />}
         {mode === 'first-person' ? (
