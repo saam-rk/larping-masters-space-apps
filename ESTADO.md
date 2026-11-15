@@ -1,5 +1,28 @@
 # Estado del proyecto
 
+## Implementation update — 2026-11-15 (branch `fix/mobile-wheels-and-views`)
+
+- Date and time wheels on touch screens: a drag no longer stops after the
+  first move. A touch is implicitly captured by the row it lands on; when the
+  reel took the capture over, that row's `lostpointercapture` bubbled to the
+  reel and cancelled the gesture. The reel now only reacts to its own capture,
+  and takes every touch gesture (`touch-action: none`). Regression test in
+  `NumberWheel.test.tsx`.
+- Local horizon box on stacked layouts (≤ 1040 px): every view and site keeps
+  the height Apollo 11 first person already had (`clamp(19rem, 48svh, 32rem)`),
+  instead of shrinking to 7–9 rem in third person and in first person at the
+  other sites.
+- Overlays over the view: the scale switch and the countdown share one top
+  row and the countdown wraps below the switch when both do not fit; the 3D
+  labels stay under the overlays. On views narrower than 1.4:1 the
+  third-person cameras widen their vertical field of view (up to 70°) so the
+  horizon ring and the bodies near it stay in frame (`fitFov.ts`). Framing
+  only; directions, values and zoom distances are unchanged.
+- Checks observed: `npm run check` (typecheck, lint, 680 tests / 63 files) and
+  `npm run build` passed (existing large-chunk warning). Touch gestures and
+  layouts checked in emulated Chromium (Pixel 7, Galaxy S8, landscape,
+  1440×900); not tested on a physical phone. Pending: integrator review.
+
 ## Implementation update — 2026-11-15 (branch `feat/advanced-mode`)
 
 - **Advanced mode** section in the control column, where the inverse search,

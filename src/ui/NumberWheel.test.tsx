@@ -296,6 +296,21 @@ describe('NumberWheel component interactions', () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 
+  it('keeps a touch drag when the row it landed on loses its implicit capture to the reel', () => {
+    const { control, value, onChange } = mountWheel();
+    // The centered row stays on the reel while it turns half a row.
+    const row = [...control.querySelectorAll('.number-wheel__row')].find((element) => element.textContent === '30')!;
+    pointer(row, 'pointerdown', 40);
+    pointer(row, 'pointermove', 40 - ROW * 0.5);
+    // A touch is captured by the row it landed on; the reel taking the capture over fires this on the row.
+    pointer(row, 'lostpointercapture', 40 - ROW * 0.5);
+    pointer(control, 'pointermove', 40 - ROW * 1.8);
+    expect(centered()).toBe('32');
+    pointer(control, 'pointerup', 40 - ROW * 1.8);
+    expect(value()).toBe(32);
+    expect(onChange).toHaveBeenCalledExactlyOnceWith(32);
+  });
+
   it('ignores non-primary presses and snaps back after a cancelled or abandoned gesture', () => {
     const { control, onChange } = mountWheel();
     pointer(control, 'pointerdown', 30, { button: 2 });
