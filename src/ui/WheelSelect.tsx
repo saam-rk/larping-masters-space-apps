@@ -17,6 +17,7 @@ interface WheelSelectProps {
  * the wheels' illuminated slot, and the open list is the same framed panel
  * with the active row lit. ARIA "select-only combobox" pattern: arrows,
  * Home/End, Enter/Space to choose, Escape to close; a click outside closes.
+ * Long lists scroll, keeping the active row in view.
  */
 export function WheelSelect({ label, placeholder, options, value, describedBy, onChange }: WheelSelectProps) {
   const labelId = useId();
@@ -34,6 +35,12 @@ export function WheelSelect({ label, placeholder, options, value, describedBy, o
     document.addEventListener('pointerdown', close);
     return () => document.removeEventListener('pointerdown', close);
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    // Not implemented by every environment (jsdom).
+    document.getElementById(`${listId}-option-${active}`)?.scrollIntoView?.({ block: 'nearest' });
+  }, [open, active, listId]);
 
   function show() {
     setActive(value ?? 0);

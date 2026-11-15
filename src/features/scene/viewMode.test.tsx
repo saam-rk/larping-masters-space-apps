@@ -3,7 +3,7 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ObserverSiteId } from '../../../shared/sites';
+import { MORE_SITES, type ObserverSiteId } from '../../../shared/sites';
 import { MESSAGES } from '../../i18n/messages';
 import { ViewToggle } from './ViewToggle';
 import { useViewMode } from './viewMode';
@@ -86,5 +86,11 @@ describe('view selection and terrain availability', () => {
     act(() => option(1).click());
     render('shackleton-rim'); // Another site with terrain also starts in first person.
     expectMode(true);
+  });
+
+  it.each(MORE_SITES.map((site) => site.id))('shows %s in third person only (no terrain model yet)', (siteId) => {
+    render(siteId);
+    expectMode(false);
+    expect(option(0).getAttribute('aria-disabled')).toBe('true');
   });
 });

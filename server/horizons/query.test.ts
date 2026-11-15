@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { REFERENCE_SITES } from '../../shared/sites.js';
 import { buildObserverParameters, buildObserverUrl, formatHorizonsCalendarTime, normalizeEastLongitude } from './query.js';
 
 const NOBILE_QUERY = {
@@ -42,6 +43,28 @@ describe('buildObserverParameters', () => {
       buildObserverParameters({ ...NOBILE_QUERY, latitudeDeg: -89.7668, longitudeEastDeg: -171.87 }),
     );
     expect(params.SITE_COORD).toBe("'188.13,-89.7668,0'");
+  });
+
+  it.each(REFERENCE_SITES.map((site) => [site.id, site] as const))(
+    'sends %s as east longitude in [0, 360), latitude, 0 km',
+    (_id, site) => {
+      const params = Object.fromEntries(
+        buildObserverParameters({ ...NOBILE_QUERY, latitudeDeg: site.latitudeDeg, longitudeEastDeg: site.longitudeEastDeg }),
+      );
+      const [lon, lat, alt] = params.SITE_COORD!.slice(1, -1).split(',').map(Number);
+      expect(lat).toBe(site.latitudeDeg);
+      expect(lon).toBeGreaterThanOrEqual(0);
+      expect(lon).toBeLessThan(360);
+      expect(lon).toBeCloseTo(((site.longitudeEastDeg % 360) + 360) % 360, 9);
+      expect(alt).toBe(0);
+    },
+  );
+
+  it('sends Connecting Ridge (137.49° W) as 222.51° E', () => {
+    const params = Object.fromEntries(
+      buildObserverParameters({ ...NOBILE_QUERY, latitudeDeg: -89.4632, longitudeEastDeg: -137.49 }),
+    );
+    expect(params.SITE_COORD).toBe("'222.51,-89.4632,0'");
   });
 });
 

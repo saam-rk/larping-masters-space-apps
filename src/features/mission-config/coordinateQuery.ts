@@ -1,6 +1,9 @@
 /**
  * Reads the reference-point search box: either coordinates in degrees or
- * (part of) the name of a reference site.
+ * (part of) the name or code of a reference site (e.g. "Haworth", "DM1",
+ * "Site20v2"). Name matching ignores case, repeated spaces and apostrophes
+ * ("Idelson" finds "Idel'son"); an exact name or code wins over partial
+ * matches.
  *
  * Accepted coordinate forms (latitude first unless hemisphere letters say
  * otherwise; south and west are negative):
@@ -58,12 +61,18 @@ function parsePair(text: string): CoordinateQuery | null {
   return { kind: 'coordinates', latitudeDeg: checked.latitudeDeg, longitudeEastDeg: checked.longitudeEastDeg };
 }
 
+/** Lower case, single spaces, no apostrophes. */
+function normalizeName(text: string): string {
+  return text.toLocaleLowerCase().replace(/['’`]/g, '').replace(/\s+/g, ' ').trim();
+}
+
 function searchName(text: string, sites: readonly ReferenceSite[]): CoordinateQuery {
-  const query = text.toLocaleLowerCase().replace(/\s+/g, ' ');
+  const query = normalizeName(text);
   if (query.length < MIN_NAME_QUERY) return { kind: 'invalid', reason: 'format' };
-  const matches = sites.filter((site) => site.name.toLocaleLowerCase().includes(query));
-  const exact = matches.find((site) => site.name.toLocaleLowerCase() === query);
+  const labels = (site: ReferenceSite) => [site.name, ...site.codes].map(normalizeName);
+  const exact = sites.find((site) => labels(site).includes(query));
   if (exact) return { kind: 'site', siteId: exact.id };
+  const matches = sites.filter((site) => labels(site).some((label) => label.includes(query)));
   if (matches.length === 1) return { kind: 'site', siteId: matches[0]!.id };
   if (matches.length > 1) return { kind: 'ambiguous', matches };
   return { kind: 'invalid', reason: 'format' };

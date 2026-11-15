@@ -54,3 +54,17 @@ export const START_ZOOM: Readonly<Record<ViewMode, number>> = {
 
 /** Two levels closer than this are the same zoom (avoids feedback loops between the slider and the camera). */
 export const ZOOM_EPSILON = 1e-3;
+
+/**
+ * Third-person visual scale (see `sceneScale.ts`): camera distance limits and
+ * start to the site in scene units, where the sky dome has radius
+ * `VISUAL_DOME_RADIUS`.
+ */
+export const VISUAL_DOME_RADIUS = 10;
+export const MIN_VISUAL_DISTANCE = 6;
+export const MAX_VISUAL_DISTANCE = 90;
+export const START_VISUAL_DISTANCE = 30;
+
+export const visualDistanceForLevel = (level: number) => valueFor(level, MAX_VISUAL_DISTANCE, MIN_VISUAL_DISTANCE);
+export const levelForVisualDistance = (distance: number) => levelFor(distance, MAX_VISUAL_DISTANCE, MIN_VISUAL_DISTANCE);
+export const START_VISUAL_ZOOM = levelForVisualDistance(START_VISUAL_DISTANCE);

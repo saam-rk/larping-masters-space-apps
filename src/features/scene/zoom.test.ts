@@ -3,15 +3,20 @@ import {
   DEFAULT_FOV_DEG,
   MAX_CAMERA_DISTANCE_KM,
   MAX_FOV_DEG,
+  MAX_VISUAL_DISTANCE,
   MIN_CAMERA_DISTANCE_KM,
+  MIN_VISUAL_DISTANCE,
   MIN_FOV_DEG,
   START_CAMERA_DISTANCE_KM,
+  START_VISUAL_DISTANCE,
+  START_VISUAL_ZOOM,
   START_ZOOM,
   clampLevel,
   distanceForLevel,
   fovForLevel,
   levelForDistance,
   levelForFov,
+  visualDistanceForLevel,
 } from './zoom';
 
 describe('zoom levels', () => {
@@ -45,5 +50,13 @@ describe('zoom levels', () => {
   it('starts each view at its default camera', () => {
     expect(fovForLevel(START_ZOOM['first-person'])).toBeCloseTo(DEFAULT_FOV_DEG, 10);
     expect(distanceForLevel(START_ZOOM['third-person'])).toBeCloseTo(START_CAMERA_DISTANCE_KM, 6);
+  });
+});
+
+describe('visual-scale zoom levels', () => {
+  it('maps the slider ends and the start to the visual distances', () => {
+    expect(visualDistanceForLevel(0)).toBeCloseTo(MAX_VISUAL_DISTANCE, 9);
+    expect(visualDistanceForLevel(1)).toBeCloseTo(MIN_VISUAL_DISTANCE, 9);
+    expect(visualDistanceForLevel(START_VISUAL_ZOOM)).toBeCloseTo(START_VISUAL_DISTANCE, 9);
   });
 });

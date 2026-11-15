@@ -69,7 +69,7 @@ export function placeBodies(data: EphemerisResponse): PlacedBodies {
     const rangeKm = positive(observation.rangeAu) ? observation.rangeAu * AU_KM : nominal.rangeKm;
     const angularDiameterDeg = positive(observation.angularDiameterArcsec)
       ? observation.angularDiameterArcsec / 3600
-      : 2 * Math.atan(nominal.radiusKm / rangeKm) * (180 / Math.PI);
+      : 2 * Math.asin(nominal.radiusKm / rangeKm) * (180 / Math.PI);
     placed.push({
       body,
       azimuthDeg: az,
@@ -84,9 +84,15 @@ export function placeBodies(data: EphemerisResponse): PlacedBodies {
   return { placed, missing };
 }
 
-/** Radius of a sphere at `distance` that subtends `angularDiameterDeg` (same units as `distance`). */
+/**
+ * Radius of a sphere whose center is at `distance` and whose disk subtends
+ * `angularDiameterDeg` (same units as `distance`): the lines of sight are
+ * tangent to the sphere, so sin(θ/2) = radius / distance. This inverts the
+ * Horizons angular diameter exactly (it returns the "Target radii" of the
+ * Horizons header for the saved sample); tan(θ/2) would overstate it.
+ */
 export function radiusForAngularDiameter(angularDiameterDeg: number, distance: number): number {
-  return distance * Math.tan(((angularDiameterDeg / 2) * Math.PI) / 180);
+  return distance * Math.sin(((angularDiameterDeg / 2) * Math.PI) / 180);
 }
 
 /** True when the upper limb is above the geometric horizon plane. */

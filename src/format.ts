@@ -44,3 +44,10 @@ export function formatOffset(totalSeconds: number): string {
   }
   return `${sign}${parts.join(' ')}`;
 }
+
+/** Angle with one decimal for the 3D angle guides, e.g. `123.4°`; `signed` adds `+`/`−` (differences). */
+export function formatAngle(value: number, locale: Locale, signed = false): string {
+  const text = formatDegrees(Math.abs(value), locale, 1)!;
+  if (value < 0 && text !== formatDegrees(0, locale, 1)) return `−${text}`;
+  return signed && value > 0 && text !== formatDegrees(0, locale, 1) ? `+${text}` : text;
+}

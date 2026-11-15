@@ -16,7 +16,7 @@
 import type { ReactNode } from 'react';
 import { BODY_IDS, type BodyId, type BodyResult, type EphemerisResponse } from '../../../shared/ephemeris';
 import { presenceOfTarget } from '../../../shared/presence';
-import { CUSTOM_SITE_ID } from '../../../shared/sites';
+import { CUSTOM_SITE_ID, findSite, isSiteId } from '../../../shared/sites';
 import type { ClientError } from '../../api/ephemerisClient';
 import { formatCoordinates, formatDegrees, formatUtc } from '../../format';
 import { useI18n } from '../../i18n/context';
@@ -98,6 +98,8 @@ function Sources({ data }: { data: EphemerisResponse }) {
   const { messages } = useI18n();
   const { results } = messages;
   const retrievedAt = formatUtc(data.source.retrievedAt);
+  const variantOf = isSiteId(data.site.id) ? findSite(data.site.id).variantOf : undefined;
+  const variantBase = variantOf ? findSite(variantOf).name : null;
   return (
     <div className="sources-list">
       <h3 className="sources__group">{results.sourcesCurrent}</h3>
@@ -116,6 +118,7 @@ function Sources({ data }: { data: EphemerisResponse }) {
             results.siteSourceCustom
           )}
         </li>
+        {variantBase && <li>{results.siteVariant(variantBase)}</li>}
         <li>
           {results.positionSource}:{' '}
           <a href="https://ssd.jpl.nasa.gov/horizons/" target="_blank" rel="noreferrer">
