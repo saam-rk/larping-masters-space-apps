@@ -6,12 +6,13 @@
  * adjusted surface), south polar stereographic projection on a 1,737,400 m
  * sphere, MOON_ME/DE421 frame, meters, vertical exaggeration 1:1. Crops are
  * 10 x 10 km, except Haworth (12 x 14 km), Shoemaker Rim A and Faustini Rim A
- * (12 x 12 km), see `cropSizeKm`. Per-site values come from each model's README
- * and metadata (see `nobileRim1.ts`, `nobileRim2.ts`, `shackletonRim.ts`,
- * `amundsenRim.ts`, `haworth.ts`, `shoemakerRimA.ts` and `faustiniRimA.ts`).
+ * (12 x 12 km), and Malapert Crater 1 (20 x 20 km), see `cropSizeKm`.
+ * Per-site values come from each model's README and metadata (see
+ * `nobileRim1.ts`, `nobileRim2.ts`, `shackletonRim.ts`, `amundsenRim.ts`,
+ * `haworth.ts`, `shoemakerRimA.ts`, `faustiniRimA.ts` and `malapertCrater1.ts`).
  * Mesh density differs by model: Shackleton Rim, Amundsen Rim, Haworth,
- * Shoemaker Rim A and Faustini Rim A are densest around the viewer and
- * coarser toward the crop edges.
+ * Shoemaker Rim A, Faustini Rim A and Malapert Crater 1 are densest around
+ * the viewer and coarser toward the crop edges.
  * Apollo 11 instead uses an equirectangular LROC DTM.
  *
  * GLB axes: x = X - X0 (grid east), y = h - h0 (radial height), z = -(Y - Y0).
