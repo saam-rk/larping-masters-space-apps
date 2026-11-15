@@ -1,0 +1,5 @@
+node_modules/
+# Rendered video and raw/encoded recordings (large; regenerate with the steps in README.md)
+out/
+capture/raw/
+public/footage/

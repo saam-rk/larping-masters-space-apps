@@ -1,0 +1,25 @@
+{
+  "name": "clps-presentation-video",
+  "private": true,
+  "version": "0.1.0",
+  "description": "30-second presentation video of the CLPS Lunar Mission Browser, built with Remotion from real app footage.",
+  "type": "module",
+  "scripts": {
+    "capture": "node capture/record.mjs",
+    "encode": "node capture/encode.mjs",
+    "sfx": "node sfx/generate.mjs",
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts Presentation out/clps-presentation.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.543",
+    "playwright-core": "1.56.1",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "remotion": "4.0.543"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.2",
+    "typescript": "5.9.3"
+  }
+}
