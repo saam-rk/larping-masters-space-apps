@@ -516,6 +516,9 @@ export function NumberWheel({
         onPointerUp={handlePointerUp}
         onPointerCancel={cancelGesture}
         onLostPointerCapture={(event) => {
+          // Only the reel's own capture: a touch is implicitly captured by the row it landed on, and
+          // taking the capture over when the drag starts fires `lostpointercapture` on that row, which bubbles here.
+          if (event.target !== event.currentTarget) return;
           if (gesture.current?.dragging && gesture.current.pointerId === event.pointerId) cancelGesture();
         }}
         onPointerLeave={(event) => {

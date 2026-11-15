@@ -1,8 +1,8 @@
 # Horizons API fixtures
 
 Raw responses from the NASA/JPL Horizons API, saved byte-for-byte as returned
-(`format=json`). Tests derive both saved samples (`shared/samples/`) from
-these files. The app opens with the Apollo 11 sample.
+(`format=json`). Tests derive the saved samples (`shared/samples/`) from
+these files. The app opens with the Apollo 11 flag-raising sample.
 
 These are saved responses, not live queries. Do not present them as a current
 or validated landing-site assessment. Terrain is not modeled.
@@ -69,6 +69,15 @@ interfering body EARTH; atmospheric refraction NO (AIRLESS).
 |---|---:|---:|---:|
 | Sun | 88.805495 | 10.703313 | 1889.744 |
 | Earth | 272.195241 | 59.224237 | 6782.737 |
+
+## Apollo 11 flag raising — 1969-07-21 03:41:43 UT
+
+- Files: `apollo-11_1969-07-21T03-41-43Z_sun.json` and
+  `apollo-11_1969-07-21T03-41-43Z_earth.json`; Horizons header time
+  2026-11-15 12:17:33 UTC (04:17:33 in Pasadena).
+- Same Apollo 11 parameters, with `TLIST='1969-07-21 03:41:43'` from the
+  existing flag-raising preset (`shared/time.ts`).
+- API 1.2, DE441, `MEAN_ME (high precision)`, airless.
 
 ## Error case
 

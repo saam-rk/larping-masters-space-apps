@@ -177,6 +177,12 @@ function fullscreenShown(): boolean {
   return Boolean(document.fullscreenElement) || document.querySelector('[data-fullscreen]') !== null;
 }
 
+/** The resize CSS temporarily removes the filter without changing its readiness flag. */
+function curvatureVisible(): boolean {
+  const { curve, resizing } = document.documentElement.dataset;
+  return curve === 'on' && resizing !== 'on';
+}
+
 /**
  * Layout point drawn under a client point: the point itself unless the
  * curved-glass filter is on. Lets a control that reacts to where it was
@@ -184,7 +190,7 @@ function fullscreenShown(): boolean {
  */
 export function drawnPointerPosition(clientX: number, clientY: number): { x: number; y: number } {
   const frame = frameElement();
-  if (document.documentElement.dataset.curve !== 'on' || !frame || fullscreenShown() || document.querySelector('dialog[open]')) {
+  if (!curvatureVisible() || !frame || fullscreenShown() || document.querySelector('dialog[open]')) {
     return { x: clientX, y: clientY };
   }
   return drawnPoint(clientX, clientY, frame);
@@ -192,7 +198,7 @@ export function drawnPointerPosition(clientX: number, clientY: number): { x: num
 
 /** True when the page is not being drawn through the filter at this event. */
 function skip(target: EventTarget | null): boolean {
-  if (document.documentElement.dataset.curve !== 'on') return true;
+  if (!curvatureVisible()) return true;
   if (!(target instanceof Element)) return true;
   // The frame is inert behind a modal dialog, and dialogs are not distorted;
   // neither is the full-screen local horizon box (see `useFullscreen`).
@@ -222,7 +228,7 @@ export function installCurvaturePointer(): () => void {
   const updateHover = () => {
     frameId = 0;
     const frame = frameElement();
-    if (!pending || !frame || root.dataset.curve !== 'on' || document.querySelector('dialog[open]') || fullscreenShown()) {
+    if (!pending || !frame || !curvatureVisible() || document.querySelector('dialog[open]') || fullscreenShown()) {
       clearHover();
       return;
     }
@@ -285,7 +291,7 @@ export function installCurvaturePointer(): () => void {
   const slideTo = (clientX: number, clientY: number) => {
     const frame = frameElement();
     if (!slide || !frame) return;
-    const point = drawnPoint(clientX, clientY, frame);
+    const point = drawnPointerPosition(clientX, clientY);
     const { vertical, track } = measureRange(slide.input);
     setRangeValue(slide.input, rangeValueAt(track, vertical ? point.y : point.x));
   };
@@ -352,6 +358,8 @@ export function installCurvaturePointer(): () => void {
   window.addEventListener('click', onClick, true);
   document.documentElement.addEventListener('pointerleave', onPointerLeave);
   window.addEventListener('blur', onBlur);
+  // Remove stale remapped hover/cursor as soon as the resize CSS drops the filter.
+  window.addEventListener('resize', onPointerLeave);
 
   return () => {
     window.removeEventListener('pointerdown', onPress, true);
@@ -364,6 +372,7 @@ export function installCurvaturePointer(): () => void {
     window.removeEventListener('click', onClick, true);
     document.documentElement.removeEventListener('pointerleave', onPointerLeave);
     window.removeEventListener('blur', onBlur);
+    window.removeEventListener('resize', onPointerLeave);
     if (frameId !== 0) cancelAnimationFrame(frameId);
     clearHover();
   };

@@ -129,7 +129,7 @@ a {
   text-underline-offset: 0.2em;
 }
 
-:where(:root:not([data-curve='on'])) a:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) a:hover,
 a[data-hover] {
   background: var(--cyan);
   color: #000;
@@ -416,10 +416,10 @@ button {
   cursor: pointer;
 }
 
-:where(:root:not([data-curve='on'])) .icon-button:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .icon-button:hover,
 .icon-button[data-hover],
 .icon-button:focus-visible,
-:where(:root:not([data-curve='on'])) .text-button:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .text-button:hover,
 .text-button[data-hover],
 .text-button:focus-visible {
   color: #000;
@@ -672,7 +672,7 @@ button {
   cursor: pointer;
 }
 
-:where(:root:not([data-curve='on'])) .header-options:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .header-options:hover,
 .header-options[data-hover],
 .header-options:focus-visible {
   background: var(--magenta);
@@ -821,7 +821,7 @@ button {
   transition: transform 120ms ease-out;
 }
 
-:where(:root:not([data-curve='on'])) .number-wheel__label--button:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .number-wheel__label--button:hover,
 .number-wheel__label--button[data-hover],
 .number-wheel__label--button:focus-visible,
 .number-wheel__label--button[aria-expanded='true'] {
@@ -840,7 +840,8 @@ button {
   height: calc(3 * var(--wheel-row));
   overflow: hidden;
   cursor: grab;
-  touch-action: pan-x;
+  /* The reel takes every touch gesture: a browser pan (even a sideways one) would cancel the drag. */
+  touch-action: none;
   user-select: none;
   font-variant-numeric: tabular-nums;
 }
@@ -877,7 +878,7 @@ button {
   pointer-events: none;
 }
 
-:where(:root:not([data-curve='on'])) .number-wheel__control:hover::before,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .number-wheel__control:hover::before,
 .number-wheel__control[data-hover]::before,
 .number-wheel__control[data-open='true']::before {
   border-color: var(--accent);
@@ -1105,7 +1106,7 @@ button {
   content: '▶ ';
 }
 
-:where(:root:not([data-curve='on'])) .apollo-moment:not(:disabled):hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .apollo-moment:not(:disabled):hover,
 .apollo-moment:not(:disabled)[data-hover],
 .apollo-moment:focus-visible {
   color: #000;
@@ -1232,7 +1233,7 @@ input[aria-invalid='true'] {
   font-size: 0.7em;
 }
 
-:where(:root:not([data-curve='on'])) .wheel-select__trigger:hover .wheel-select__caret,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .wheel-select__trigger:hover .wheel-select__caret,
 .wheel-select__trigger[data-hover] .wheel-select__caret,
 .wheel-select__trigger[aria-expanded='true'] .wheel-select__caret {
   color: var(--accent);
@@ -1364,7 +1365,7 @@ input[aria-invalid='true'] {
   border-style: dashed;
 }
 
-:where(:root:not([data-curve='on'])) .button:hover:not(:disabled),
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .button:hover:not(:disabled),
 .button[data-hover]:not([aria-disabled='true']),
 .button:focus-visible:not(:disabled) {
   background: var(--accent);
@@ -1373,13 +1374,13 @@ input[aria-invalid='true'] {
   outline-offset: 0.25rem;
 }
 
-:where(:root:not([data-curve='on'])) .button--go:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .button--go:hover,
 .button--go[data-hover],
 .button--go:focus-visible {
   background: #8dffbb !important;
 }
 
-:where(:root:not([data-curve='on'])) .button--go:hover::before,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .button--go:hover::before,
 .button--go[data-hover]::before,
 .button--go:focus-visible::before {
   animation: none;
@@ -1649,9 +1650,14 @@ input[aria-invalid='true'] {
   pointer-events: none;
 }
 
-/* The R3F wrapper sets an inline 100% size; pin it to the flexible box instead. */
+/*
+ * The R3F wrapper sets an inline 100% size; pin it to the flexible box instead.
+ * Its own stacking context keeps the 3D labels (very large inline z-index)
+ * under the overlays drawn over the view (switches, countdown, notes, zoom).
+ */
 .scene > div:first-child {
   position: absolute !important;
+  z-index: 0;
   inset: 0;
   width: auto !important;
   height: auto !important;
@@ -1705,16 +1711,32 @@ input[aria-invalid='true'] {
     0 0 0.5rem #000;
 }
 
-/* Third-person scale switch and, at visual scale, the angle legend: top left over the view. */
-.scene__overlay {
+/*
+ * Top of the view: the third-person scale switch and angle legend on the
+ * left, the set/rise countdown on the right. When both do not fit side by
+ * side (narrow views), the countdown wraps below the switch instead of
+ * covering it.
+ */
+.scene__hud {
   position: absolute;
   top: 0.5rem;
   left: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.4rem;
+  pointer-events: none;
+}
+
+/* Third-person scale switch and, at visual scale, the angle legend. */
+.scene__overlay {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.4rem;
-  max-width: calc(100% - 3.5rem);
+  max-width: 100%;
   pointer-events: none;
 }
 
@@ -1808,7 +1830,7 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   background: var(--cyan);
 }
 
-:where(:root:not([data-curve='on'])) .compass-toggle[aria-pressed='false']:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .compass-toggle[aria-pressed='false']:hover,
 .compass-toggle[aria-pressed='false'][data-hover],
 .compass-toggle:focus-visible {
   color: var(--text);
@@ -1841,7 +1863,7 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   background: var(--cyan);
 }
 
-:where(:root:not([data-curve='on'])) .view-toggle__option[aria-pressed='false']:not([aria-disabled='true']):hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .view-toggle__option[aria-pressed='false']:not([aria-disabled='true']):hover,
 .view-toggle__option[aria-pressed='false'][data-hover]:not([aria-disabled='true']),
 .view-toggle__option:focus-visible {
   color: var(--text);
@@ -1882,7 +1904,7 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   background: var(--cyan);
 }
 
-:where(:root:not([data-curve='on'])) .fullscreen-toggle[aria-pressed='false']:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .fullscreen-toggle[aria-pressed='false']:hover,
 .fullscreen-toggle[aria-pressed='false'][data-hover],
 .fullscreen-toggle:focus-visible {
   color: var(--text);
@@ -1937,20 +1959,26 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   color: var(--amber);
 }
 
-/* Time left until the Sun and the Earth set or rise: top right over the view. */
+/* Time left until the Sun and the Earth set or rise: top right over the view (see `.scene__hud`). */
 .scene__countdown {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
-  max-width: calc(100% - 1rem);
+  max-width: 100%;
+  margin-left: auto;
+  pointer-events: auto;
   padding: 0.3rem 0.5rem;
   font-size: 0.8em;
   background: rgba(0, 0, 0, 0.6);
   border: 1px solid var(--line-dim);
   cursor: help;
+}
+
+/* A narrow view leaves the countdown over the sky dome: no 3D label may show through it. */
+@container scene (max-width: 34rem) {
+  .scene__countdown {
+    background: rgba(0, 0, 0, 0.88);
+  }
 }
 
 .scene__countdown-row {
@@ -2028,7 +2056,7 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   cursor: pointer;
 }
 
-:where(:root:not([data-curve='on'])) .zoom-control__button:not(:disabled):hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .zoom-control__button:not(:disabled):hover,
 .zoom-control__button[data-hover]:not(:disabled),
 .zoom-control__button:focus-visible {
   color: #000;
@@ -2779,7 +2807,7 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   background: var(--text);
 }
 
-:where(:root:not([data-curve='on'])) .segmented__option[aria-pressed='false']:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .segmented__option[aria-pressed='false']:hover,
 .segmented__option[aria-pressed='false'][data-hover] {
   color: var(--text);
   background: rgba(211, 235, 204, 0.1);
@@ -2836,7 +2864,7 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   color: var(--muted);
 }
 
-:where(:root:not([data-curve='on'])) .setup__mode[aria-pressed='false']:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .setup__mode[aria-pressed='false']:hover,
 .setup__mode[aria-pressed='false'][data-hover],
 .setup__mode:focus-visible {
   border-color: var(--line);
@@ -3038,8 +3066,8 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
  * above switch the real :hover off) and the cursor of the element drawn under
  * the pointer is applied to the whole frame.
  */
-:root[data-curve='on'][data-curve-cursor] .app__frame,
-:root[data-curve='on'][data-curve-cursor] .app__frame * {
+:root[data-curve='on']:not([data-resizing='on'])[data-curve-cursor] .app__frame,
+:root[data-curve='on']:not([data-resizing='on'])[data-curve-cursor] .app__frame * {
   cursor: var(--curve-cursor, default) !important;
 }
 
@@ -3179,18 +3207,20 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
     content: none;
   }
 
-  /* The view sits above the rest and the page scrolls: give it a usable height in every view. */
+  /*
+   * The workspace scrolls here, so the view keeps a usable height in every
+   * view mode and site instead of shrinking to what is left of the screen.
+   */
   .scene-box {
     min-height: clamp(19rem, 48svh, 32rem);
   }
 
   /* The zoom moves to the top right here; the countdown sits beside it. */
-  .scene-box--apollo .scene__countdown {
+  .scene__hud {
     right: 2.6rem;
-    max-width: calc(100% - 3.1rem);
   }
 
-  .scene-box--apollo .scene__controls {
+  .scene__controls {
     top: 0.5rem;
     bottom: auto;
     max-height: 7rem;
@@ -3262,7 +3292,7 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   cursor: not-allowed;
 }
 
-:where(:root:not([data-curve='on'])) .text-button:disabled:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .text-button:disabled:hover,
 .text-button:disabled[data-hover] {
   color: var(--line-dim);
   background: var(--panel-solid);

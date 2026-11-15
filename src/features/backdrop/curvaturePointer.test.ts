@@ -100,6 +100,48 @@ describe('curvature pointer remapping', () => {
     stop();
   });
 
+  it('uses native coordinates and activation while resizing, then resumes remapping', () => {
+    const stop = installCurvaturePointer();
+    document.documentElement.dataset.resizing = 'on';
+    expect(drawnPointerPosition(100, 50)).toEqual({ x: 100, y: 50 });
+    const event = clickEvent(1, 100, 50);
+    fire('mousedown', event);
+    fire('click', event);
+    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(event.stopImmediatePropagation).not.toHaveBeenCalled();
+    expect(drawn.click).not.toHaveBeenCalled();
+
+    delete document.documentElement.dataset.resizing;
+    expect(drawnPointerPosition(100, 50)).not.toEqual({ x: 100, y: 50 });
+    fire('click', clickEvent(1, 100, 50));
+    expect(drawn.click).toHaveBeenCalledOnce();
+    stop();
+  });
+
+  it('clears the remapped cursor immediately on resize', () => {
+    const stop = installCurvaturePointer();
+    fire('resize', {} as MouseEvent);
+    expect(document.documentElement.removeAttribute).toHaveBeenCalledWith('data-curve-cursor');
+    stop();
+  });
+
+  it('does not take over a native range press while resizing', () => {
+    const stop = installCurvaturePointer();
+    class TestRange extends TestElement {
+      type = 'range';
+      disabled = false;
+    }
+    vi.stubGlobal('HTMLInputElement', TestRange);
+    drawn = new TestRange();
+    document.documentElement.dataset.resizing = 'on';
+    const event = clickEvent(1, 100, 50, 'pointerdown');
+    fire('pointerdown', event);
+    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(event.stopImmediatePropagation).not.toHaveBeenCalled();
+    expect(drawn.focus).not.toHaveBeenCalled();
+    stop();
+  });
+
   it('keeps correcting drawn coordinates outside full screen and dialogs', () => {
     expect(drawnPointerPosition(100, 50)).not.toEqual({ x: 100, y: 50 });
   });

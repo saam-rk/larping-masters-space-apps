@@ -39,6 +39,7 @@ import { MOON_RADIUS_KM, radiusForAngularDiameter, type BodyCourses, type Placed
 import { CourseLine } from './CourseLine';
 import { CelestialModel } from './CelestialModel';
 import { FollowCamera } from './FollowCamera';
+import { useFittedFov } from './fitFov';
 import { moonOrientation, northAlongLunarAxis } from './celestialOrientation';
 import { horizontalToDirection, horizontalToPosition, type Vector3Tuple } from './geometry';
 import { glowTexture } from './glow';
@@ -234,6 +235,7 @@ function RealScaleView({
 }) {
   const { messages } = useI18n();
   const cameraPosition = useMemo(() => initialCamera(controls.anchor.placed), [controls.anchor.placed]);
+  const fov = useFittedFov(40);
   const sun = bodies.placed.find((body) => body.body === 'sun');
   const { latitudeDeg, longitudeEastDeg } = data.site;
   const moonQuaternion = useMemo(() => moonOrientation(latitudeDeg, longitudeEastDeg), [latitudeDeg, longitudeEastDeg]);
@@ -249,7 +251,7 @@ function RealScaleView({
   return (
     <>
       {/* Reset to the starting view whenever a new result arrives. */}
-      <PerspectiveCamera makeDefault fov={40} near={1} far={2e9} position={cameraPosition} />
+      <PerspectiveCamera makeDefault fov={fov} near={1} far={2e9} position={cameraPosition} />
       {/* Faint illustrative fill so the night side of the spheres stays visible. */}
       <ambientLight intensity={0.14} />
       {sun && <directionalLight position={[sun.direction[0] * 1e6, sun.direction[1] * 1e6, sun.direction[2] * 1e6]} intensity={3} />}

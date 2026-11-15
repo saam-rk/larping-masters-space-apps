@@ -181,14 +181,15 @@ export default function SkyScene({
         ))}
       </div>
 
-      <HorizonCountdown data={data} bodies={bodies} paused={busy} />
-
-      {mode === 'third-person' && (
-        <div className="scene__overlay">
-          <ScaleToggle scale={scale} onChange={setScale} />
-          {visual && showGuides && <AngleLegend bodies={bodies.placed} exaggeration={exaggeration} />}
-        </div>
-      )}
+      <div className="scene__hud">
+        {mode === 'third-person' && (
+          <div className="scene__overlay">
+            <ScaleToggle scale={scale} onChange={setScale} />
+            {visual && showGuides && <AngleLegend bodies={bodies.placed} exaggeration={exaggeration} />}
+          </div>
+        )}
+        <HorizonCountdown data={data} bodies={bodies} paused={busy} />
+      </div>
 
       <div className="scene__controls">
         <ZoomControl level={zoom} valueText={zoomText} onChange={setZoom} />

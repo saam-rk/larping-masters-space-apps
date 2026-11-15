@@ -2,16 +2,15 @@
  * Selection state plus the result currently displayed. The scene and the
  * results panel both read `data`, so they always show the same values.
  *
- * The page starts at the default site (Apollo 11) and the current time, and
- * queries that selection once on load. The saved sample (Apollo 11 at
- * touchdown) stays on screen, labeled as a sample, until the answer arrives
- * or if the query fails.
+ * The page starts at Apollo 11's flag-raising moment and queries it on load.
+ * The saved sample for that instant stays on screen, labeled as a sample,
+ * until the answer arrives or if the query fails.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { EphemerisResponse } from '../../shared/ephemeris';
 import { DEFAULT_SITE_ID, findSite, siteAt, type SiteId } from '../../shared/sites';
-import { currentUtc } from '../../shared/time';
+import { APOLLO_11_FLAG_UTC } from '../../shared/time';
 import { fetchEphemeris, type ClientError, type EphemerisSelection } from '../api/ephemerisClient';
 import { SAVED_SAMPLE } from '../data/savedSample';
 
@@ -42,7 +41,7 @@ export function useEphemeris(): EphemerisState {
     siteId: DEFAULT_SITE.id,
     latitudeDeg: DEFAULT_SITE.latitudeDeg,
     longitudeEastDeg: DEFAULT_SITE.longitudeEastDeg,
-    utc: currentUtc(),
+    utc: APOLLO_11_FLAG_UTC,
   }));
   const [data, setData] = useState<EphemerisResponse>(SAVED_SAMPLE);
   // True from the start: the selection is queried on load.
@@ -73,7 +72,7 @@ export function useEphemeris(): EphemerisState {
 
   const update = useCallback(() => run(selection), [run, selection]);
 
-  // First query: the starting selection (current time), once on load.
+  // Query the starting selection once on load.
   const initial = useRef(selection);
   useEffect(() => {
     run(initial.current);

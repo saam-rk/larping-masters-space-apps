@@ -52,6 +52,7 @@ import { glowTexture } from './glow';
 import { BODY_DOME_RADIUS, BODY_RADIUS, LABELS_APART_DEG } from './visualBodies';
 import { OrbitZoom } from './OrbitZoom';
 import { FollowCamera } from './FollowCamera';
+import { useFittedFov } from './fitFov';
 import type { ThirdPersonControls } from './ThirdPersonView';
 import {
   MAX_VISUAL_DISTANCE,
@@ -292,6 +293,7 @@ export function VisualScaleView({
   const { messages } = useI18n();
   const orientation = useMemo(() => northAlongLunarAxis(latitudeDeg), [latitudeDeg]);
   const cameraPosition = useMemo(() => initialCamera(controls.anchor.placed), [controls.anchor.placed]);
+  const fov = useFittedFov(40);
   const sun = bodies.placed.find((body) => body.body === 'sun');
   const earth = bodies.placed.find((body) => body.body === 'earth');
   const exaggeration = controls.exaggeration;
@@ -307,7 +309,7 @@ export function VisualScaleView({
 
   return (
     <>
-      <PerspectiveCamera makeDefault fov={40} near={0.05} far={5000} position={cameraPosition} />
+      <PerspectiveCamera makeDefault fov={fov} near={0.05} far={5000} position={cameraPosition} />
       <ambientLight intensity={0.45} />
       {sun && <directionalLight position={[sun.direction[0] * 100, sun.direction[1] * 100, sun.direction[2] * 100]} intensity={2.5} />}
 

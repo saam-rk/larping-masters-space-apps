@@ -2,6 +2,18 @@
 
 ## Implementation update — 2026-11-15 (branch `fix/zoom-resize-performance`)
 
+- PR #57 review: integrated `main` at `c855e67`, retaining the mobile wheel,
+  scene HUD and camera framing fixes. Resolved the state-log and CSS conflicts.
+- Fixed pointer remapping while resizing: coordinates, clicks and range presses
+  stay native when the curvature filter is temporarily off; an existing slider
+  drag follows the visible coordinates. Stale remapped hover/cursor is cleared
+  on resize and native CSS hover is enabled during the pause.
+- Review validation observed: `npm run check` (typecheck, lint, 696 tests /
+  65 files) and `npm run build` passed (existing large-chunk warning).
+  Three pointer regression tests were added; two reproduced failures before
+  the fix. Real browser zoom and frame timings were not verified in this review.
+  No scientific method, source or project decision changed.
+
 - **Browser zoom and resizing.** The 3D drawing buffer now follows the device
   pixel ratio below 1 (zooming out no longer draws 4× the screen pixels at
   50 %, 9× at 33 %), keeps the 1.5 cap, and stays under a ~2560 × 1440 device
@@ -44,6 +56,29 @@
   check` passed). Frame timings and real browser zoom were not measured.
   Visible side effect: the curved-glass distortion is absent for ~0.3 s during
   and after a zoom change.
+
+## Implementation update — 2026-11-15 (branch `fix/mobile-wheels-and-views`)
+
+- Date and time wheels on touch screens: a drag no longer stops after the
+  first move. A touch is implicitly captured by the row it lands on; when the
+  reel took the capture over, that row's `lostpointercapture` bubbled to the
+  reel and cancelled the gesture. The reel now only reacts to its own capture,
+  and takes every touch gesture (`touch-action: none`). Regression test in
+  `NumberWheel.test.tsx`.
+- Local horizon box on stacked layouts (≤ 1040 px): every view and site keeps
+  the height Apollo 11 first person already had (`clamp(19rem, 48svh, 32rem)`),
+  instead of shrinking to 7–9 rem in third person and in first person at the
+  other sites.
+- Overlays over the view: the scale switch and the countdown share one top
+  row and the countdown wraps below the switch when both do not fit; the 3D
+  labels stay under the overlays. On views narrower than 1.4:1 the
+  third-person cameras widen their vertical field of view (up to 70°) so the
+  horizon ring and the bodies near it stay in frame (`fitFov.ts`). Framing
+  only; directions, values and zoom distances are unchanged.
+- Checks observed: `npm run check` (typecheck, lint, 680 tests / 63 files) and
+  `npm run build` passed (existing large-chunk warning). Touch gestures and
+  layouts checked in emulated Chromium (Pixel 7, Galaxy S8, landscape,
+  1440×900); not tested on a physical phone. Pending: integrator review.
 
 ## Implementation update — 2026-11-15 (branch `feat/advanced-mode`)
 
