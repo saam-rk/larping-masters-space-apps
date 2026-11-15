@@ -12,7 +12,9 @@
  * effects or low performance (the same look, static).
  */
 
-import { lazy, Suspense, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useRef, useState } from 'react';
+import type { EphemerisResponse } from '../shared/ephemeris';
+import { HorizonPlayback } from './features/scene/HorizonPlayback';
 import { APOLLO_11_SITE_ID } from '../shared/sites';
 import { Backdrop } from './features/backdrop/Backdrop';
 import { CrtCurvature } from './features/backdrop/CrtCurvature';
@@ -68,6 +70,26 @@ export function App() {
   const { messages } = useI18n();
   const { preferences, configured } = usePreferences();
   const ephemeris = useEphemeris();
+  // Match the player's remount key: equivalent selections must retain the same session.
+  const selectionKey = [ephemeris.selection.siteId, ephemeris.selection.latitudeDeg,
+    ephemeris.selection.longitudeEastDeg, ephemeris.selection.utc].join('|');
+  const [preview, setPreview] = useState<{ selection: string; frame: EphemerisResponse } | null>(null);
+  const [playbackSession, setPlaybackSession] = useState<string | null>(null);
+  const [followedSelection, setFollowedSelection] = useState(selectionKey);
+  if (followedSelection !== selectionKey) {
+    setFollowedSelection(selectionKey);
+    setPreview(null);
+    setPlaybackSession(null);
+  }
+  const playbackActive = playbackSession === selectionKey;
+  const previewFrame = preview?.selection === selectionKey ? preview.frame : null;
+  const displayedData = previewFrame ?? ephemeris.data;
+  const onPlaybackFrame = useCallback((frame: EphemerisResponse | null) => {
+    setPreview(frame ? { selection: selectionKey, frame } : null);
+  }, [selectionKey]);
+  const onPlaybackActive = useCallback((active: boolean) => {
+    setPlaybackSession(active ? selectionKey : null);
+  }, [selectionKey]);
   const fullEffects = configured && preferences.effects === 'on';
   const streaks = fullEffects && !prefersReducedMotion();
   const transition = useUpdateTransition(ephemeris.loading, streaks);
@@ -78,8 +100,8 @@ export function App() {
     !ephemeris.error &&
     ephemeris.data.provenance === 'live' &&
     !ephemeris.data.warnings.includes('PARTIAL_RESULT');
-  const view = useViewMode(ephemeris.data.site.id);
-  const apollo = view.mode === 'first-person' && ephemeris.data.site.id === APOLLO_11_SITE_ID;
+  const view = useViewMode(displayedData.site.id);
+  const apollo = view.mode === 'first-person' && displayedData.site.id === APOLLO_11_SITE_ID;
   const viewSwitch = useViewTransition({ mode: view.mode, setMode: view.setMode, streaks, busy });
   const warp = viewSwitch.warp;
   // "Compass" switch: horizon line (first person) and grid (third person), one for both views. On by default.
@@ -91,6 +113,8 @@ export function App() {
   const [updateSlot, setUpdateSlot] = useState<HTMLDivElement | null>(null);
 
   function handleUpdate() {
+    setPreview(null);
+    setPlaybackSession(null);
     viewSwitch.resetWarp();
     transition.start();
     ephemeris.update();
@@ -98,6 +122,8 @@ export function App() {
 
   /** An inverse search match or an Apollo 11 moment: select its instant and show it on the horizon view. */
   function handleShowMatch(utc: string) {
+    setPreview(null);
+    setPlaybackSession(null);
     viewSwitch.resetWarp();
     transition.start();
     ephemeris.showUtc(utc);
@@ -129,16 +155,20 @@ export function App() {
             >
               <div className="scene-stage" data-jumping={busy || viewSwitch.active} data-warp={warp.kind}>
                 <Suspense fallback={<p className="scene__note">{messages.scene.loading}</p>}>
-                  <SkyScene data={ephemeris.data} mode={view.mode} showHorizon={showCompass} animateReenactment={streaks} busy={busy} />
+                  <SkyScene data={displayedData} mode={view.mode} showHorizon={showCompass} animateReenactment={streaks} busy={busy} playback={playbackActive} />
                 </Suspense>
                 {streaks && <Hyperspace active={busy || viewSwitch.active} reverse={warp.reverse} tempo={warp.tempo} />}
               </div>
+              {!busy && <HorizonPlayback
+                key={selectionKey}
+                selection={ephemeris.selection} onFrame={onPlaybackFrame} onActive={onPlaybackActive}
+              />}
             </Box>
             <ResultsPanel
-              data={ephemeris.data}
-              error={ephemeris.error}
+              data={displayedData}
+              error={previewFrame ? null : ephemeris.error}
               busy={busy}
-              status={<DataStatus ephemeris={ephemeris} />}
+              status={previewFrame ? <span className="status status--accent">[{messages.playback.preview}]</span> : <DataStatus ephemeris={ephemeris} />}
             />
           </div>
           <div className="update-bar" ref={setUpdateSlot}>

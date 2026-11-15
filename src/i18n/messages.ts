@@ -29,6 +29,27 @@ export type ClientErrorKey = ApiErrorCode | 'NETWORK' | 'UNEXPECTED_RESPONSE';
 type Paragraphs = readonly string[];
 
 export interface Messages {
+  readonly playback: {
+    readonly title: string;
+    readonly interval: string;
+    readonly start: string;
+    readonly end: string;
+    readonly samples: string;
+    readonly description: string;
+    readonly detail: string;
+    readonly invalid: string;
+    readonly error: string;
+    readonly cancel: string;
+    readonly prepare: string;
+    readonly restart: string;
+    readonly play: string;
+    readonly pause: string;
+    readonly timeline: string;
+    readonly speed: string;
+    readonly exit: string;
+    readonly preview: string;
+    readonly loading: (done: number, total: number) => string;
+  };
   readonly app: { readonly title: string };
   /** Short bracketed status tags shown next to headings. */
   readonly status: {
@@ -375,6 +396,27 @@ const ES_SOLAR_ECLIPSE = String(SOLAR_ECLIPSE_MAX_SEPARATION_DEG).replace('.', '
 const ES_TERRESTRIAL_ECLIPSE = String(TERRESTRIAL_ECLIPSE_MIN_SEPARATION_DEG).replace('.', ',');
 
 const es: Messages = {
+  playback: {
+    title: "Reproductor del horizonte",
+    interval: "Intervalo",
+    start: "Inicio (UTC)",
+    end: "Fin (UTC)",
+    samples: "Número de muestras",
+    description: "Explora el movimiento del Sol y la Tierra desde el lugar lunar seleccionado.",
+    detail: "Se consultan muestras equidistantes de Horizons antes de reproducir. 1× muestra dos instantes por segundo; no se interpolan posiciones. Más muestras requieren más tiempo de carga. No se evalúa la visibilidad sobre el relieve.",
+    invalid: "Introduce fechas válidas entre 1969 y 2099, con el fin posterior al inicio.",
+    error: "No se pudo completar el intervalo con datos de ambos cuerpos. Reintenta o cambia el intervalo; se conserva la secuencia anterior.",
+    cancel: "Cancelar carga",
+    prepare: "Preparar intervalo",
+    restart: "Volver al inicio",
+    play: "Reproducir",
+    pause: "Pausar",
+    timeline: "Instante del intervalo",
+    speed: "Velocidad de reproducción",
+    exit: "Salir del reproductor",
+    preview: "REPRODUCCIÓN",
+    loading: (done, total) => `Preparando ${done}/${total} muestras…`,
+  },
   app: { title: 'CLPS Lunar Mission Browser' },
   status: {
     sample: 'MUESTRA',
@@ -826,6 +868,27 @@ const es: Messages = {
 };
 
 const en: Messages = {
+  playback: {
+    title: "Horizon player",
+    interval: "Interval",
+    start: "Start (UTC)",
+    end: "End (UTC)",
+    samples: "Number of samples",
+    description: "Explore the motion of the Sun and Earth from the selected lunar site.",
+    detail: "Equally spaced Horizons samples are loaded before playback. 1× shows two instants per second; positions are not interpolated. More samples take longer to load. Terrain visibility is not evaluated.",
+    invalid: "Enter valid dates between 1969 and 2099, with the end after the start.",
+    error: "Could not complete the interval with data for both bodies. Retry or change the interval; the previous sequence is retained.",
+    cancel: "Cancel loading",
+    prepare: "Prepare interval",
+    restart: "Back to start",
+    play: "Play",
+    pause: "Pause",
+    timeline: "Interval instant",
+    speed: "Playback speed",
+    exit: "Exit player",
+    preview: "PLAYBACK",
+    loading: (done, total) => `Preparing ${done}/${total} samples…`,
+  },
   app: { title: 'CLPS Lunar Mission Browser' },
   status: {
     sample: 'SAMPLE',
