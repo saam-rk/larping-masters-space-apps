@@ -1971,7 +1971,34 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   font-size: 0.8em;
   background: rgba(0, 0, 0, 0.6);
   border: 1px solid var(--line-dim);
+}
+
+/* Compact title rule and the same information button used by the other boxes. */
+.scene__countdown-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.15rem;
+  color: var(--accent);
+  font-size: 0.9em;
+  font-weight: var(--title-weight);
+  letter-spacing: var(--title-spacing);
+  text-transform: var(--title-case);
+}
+
+.scene__countdown-heading {
+  white-space: nowrap;
   cursor: help;
+}
+
+.scene__countdown-rule {
+  flex: 1;
+  min-width: 0.75rem;
+  border-top: var(--border) solid var(--line-dim);
+}
+
+.scene__countdown-head .icon-button {
+  font-size: 0.9em;
 }
 
 /* A narrow view leaves the countdown over the sky dome: no 3D label may show through it. */
