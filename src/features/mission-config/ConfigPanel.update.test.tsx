@@ -4,6 +4,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { findSite, siteAt, type SiteId } from '../../../shared/sites';
+import { APOLLO_11_FLAG_UTC, APOLLO_11_LANDING_UTC } from '../../../shared/time';
 import { fetchEphemeris } from '../../api/ephemerisClient';
 import { SAVED_SAMPLE } from '../../data/savedSample';
 import { useEphemeris } from '../../hooks/useEphemeris';
@@ -18,13 +19,7 @@ vi.mock('../../i18n/context', () => ({
 let container: HTMLDivElement;
 let root: Root;
 
-/** Clock at page load: the starting selection is this instant, in whole seconds. */
-const NOW = '2026-11-15T09:30:12.456Z';
-const NOW_UTC = '2026-11-15T09:30:12Z';
-
 beforeEach(() => {
-  vi.useFakeTimers({ toFake: ['Date'] });
-  vi.setSystemTime(new Date(NOW));
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   vi.mocked(fetchEphemeris).mockReset();
   vi.mocked(fetchEphemeris).mockImplementation(async (selection) => ({
@@ -46,20 +41,17 @@ afterEach(() => {
   act(() => root.unmount());
   container.remove();
   vi.unstubAllGlobals();
-  vi.useRealTimers();
 });
 
-/**
- * Renders the panel with the real selection state and lets the load-time query
- * (Apollo 11 at the current time) answer. That query is checked by its own
- * test; the call log is then cleared so each test counts only its own queries.
- */
 function ConfigPanelOnLoad() {
   const state = useEphemeris();
   return (
-    <ConfigPanel selection={state.selection} loading={state.loading} upToDate={false}
-      onSiteChange={state.setSiteId} onCoordinatesChange={state.setCoordinates}
-      onUtcChange={state.setUtc} onUpdate={state.update} onShowUtc={state.showUtc} />
+    <>
+      <output>{state.data.requestedUtc}</output>
+      <ConfigPanel selection={state.selection} loading={state.loading} upToDate={false}
+        onSiteChange={state.setSiteId} onCoordinatesChange={state.setCoordinates}
+        onUtcChange={state.setUtc} onUpdate={state.update} onShowUtc={state.showUtc} />
+    </>
   );
 }
 
@@ -97,13 +89,6 @@ function chooseSite(id: SiteId) {
 }
 
 describe('D-020 duplicate-update policy', () => {
-  it('queries Apollo 11 at the current time on load', async () => {
-    await act(async () => root.render(<ConfigPanelOnLoad />));
-    expect(fetchEphemeris).toHaveBeenCalledTimes(1);
-    const selection = vi.mocked(fetchEphemeris).mock.calls[0]![0];
-    expect(selection).toMatchObject({ siteId: 'apollo-11', utc: NOW_UTC });
-  });
-
   it('blocks both clicks and form submission for the case queried on load, until the selection changes', async () => {
     const button = await mount();
     expect(button.disabled).toBe(true);
@@ -159,21 +144,31 @@ describe('Apollo 11 moments', () => {
   const moment = (label: string) =>
     [...container.querySelectorAll<HTMLButtonElement>('.apollo-moment')].find((button) => button.textContent?.startsWith(label));
 
-  it('queries the flag instant right away, marks it and blocks repeating the displayed case', async () => {
+  it('shows and queries Apollo 11 at flag raising on load', async () => {
+    act(() => root.render(<ConfigPanelOnLoad />));
+    expect(fetchEphemeris).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ siteId: 'apollo-11', utc: APOLLO_11_FLAG_UTC }), expect.any(AbortSignal),
+    );
+    expect(container.querySelector('output')?.textContent).toBe(APOLLO_11_FLAG_UTC);
+    expect(moment(MESSAGES.en.config.apollo11.flag)?.getAttribute('aria-pressed')).toBe('true');
+    await act(async () => {});
+  });
+
+  it('queries each moment right away when selected and blocks repeating the displayed case', async () => {
     const update = await mount();
     const { landing, flag } = MESSAGES.en.config.apollo11;
     expect(container.textContent).toContain(MESSAGES.en.config.apollo11.title);
-    // The page starts at the current time, not at a mission moment.
+    expect(moment(flag)!.disabled).toBe(true);
     expect(moment(landing)!.getAttribute('aria-pressed')).toBe('false');
     expect(moment(landing)!.disabled).toBe(false);
+    await act(async () => moment(landing)!.click());
+    expect(vi.mocked(fetchEphemeris).mock.calls[0]![0].utc).toBe(APOLLO_11_LANDING_UTC);
     await act(async () => moment(flag)!.click());
-    expect(fetchEphemeris).toHaveBeenCalledTimes(1);
-    expect(vi.mocked(fetchEphemeris).mock.calls[0]![0].utc).toBe('1969-07-21T03:41:43Z');
+    expect(fetchEphemeris).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(fetchEphemeris).mock.calls[1]![0].utc).toBe(APOLLO_11_FLAG_UTC);
     expect(moment(flag)!.getAttribute('aria-pressed')).toBe('true');
     expect(moment(flag)!.disabled).toBe(true);
     expect(update.disabled).toBe(true);
-    await act(async () => moment(landing)!.click());
-    expect(vi.mocked(fetchEphemeris).mock.calls[1]![0].utc).toBe('1969-07-20T20:17:40Z');
   });
 
   it('is only offered while Apollo 11 is selected', async () => {

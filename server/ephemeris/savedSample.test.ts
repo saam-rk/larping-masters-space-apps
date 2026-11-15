@@ -10,8 +10,8 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { EphemerisResponse } from '../../shared/ephemeris.js';
 import { APOLLO_11_SITE_ID, findSite, type SiteId } from '../../shared/sites.js';
-import { APOLLO_11_LANDING_UTC } from '../../shared/time.js';
-import { APOLLO_FIXTURE_RETRIEVED_AT, FIXTURES, loadFixtureText, NOBILE_FIXTURE_RETRIEVED_AT, respondWith } from '../horizons/__fixtures__/load.js';
+import { APOLLO_11_FLAG_UTC, APOLLO_11_LANDING_UTC } from '../../shared/time.js';
+import { APOLLO_FIXTURE_RETRIEVED_AT, APOLLO_FLAG_FIXTURE_RETRIEVED_AT, FIXTURES, loadFixtureText, NOBILE_FIXTURE_RETRIEVED_AT, respondWith } from '../horizons/__fixtures__/load.js';
 import { fetchObserverTable } from '../horizons/client.js';
 import { buildEphemerisResponse } from './service.js';
 
@@ -36,6 +36,7 @@ describe('saved sample', () => {
   it.each([
     ['nobile-rim-1', '2026-11-14T12:00:00Z', FIXTURES.nobileSun, FIXTURES.nobileEarth, NOBILE_FIXTURE_RETRIEVED_AT],
     [APOLLO_11_SITE_ID, APOLLO_11_LANDING_UTC, FIXTURES.apolloSun, FIXTURES.apolloEarth, APOLLO_FIXTURE_RETRIEVED_AT],
+    [APOLLO_11_SITE_ID, APOLLO_11_FLAG_UTC, FIXTURES.apolloFlagSun, FIXTURES.apolloFlagEarth, APOLLO_FLAG_FIXTURE_RETRIEVED_AT],
   ] as const)('%s matches the response derived from the raw Horizons fixtures', async (id, utc, sun, earth, retrievedAt) => {
     const sampleUrl = new URL(`../../shared/samples/${id}_${utc.replaceAll(':', '-')}.json`, import.meta.url);
     const expected = await buildSampleFromFixtures(id, utc, sun, earth, retrievedAt);

@@ -83,7 +83,7 @@ export function parseUtcInstant(input: string): UtcParseResult {
 }
 
 /**
- * Starting instant of the page: the current time, whole seconds. Falls back to
+ * The current time in whole seconds. Falls back to
  * the Apollo 11 touchdown when the clock is outside `SUPPORTED_UTC_RANGE`.
  */
 export function currentUtc(now: Date = new Date()): string {
