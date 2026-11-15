@@ -3,6 +3,10 @@
  * more than far ones). Redraws only when the shared motion loop reports a
  * change; with parallax off (low performance) it is drawn once per resize.
  *
+ * Resizes (browser zoom, window size) are applied once the viewport has settled
+ * (the canvas is stretched by CSS meanwhile) and keep the same stars: each star is placed in viewport-relative coordinates once, and
+ * a resize only rescales them and shows more or fewer of them for the new area.
+ *
  * A barrel distortion (`STAR_BARREL`) is applied in the projection itself (no extra
  * pass), so the starfield bulges like an old CRT tube.
  */
@@ -10,11 +14,16 @@
 import { useEffect, useRef } from 'react';
 import { STAR_BARREL } from './curvature';
 import { subscribeMotion, type MotionFrame } from './motion';
+import { onViewportSettled } from './resizeActivity';
 
 interface Star {
+  /** Position across the (overscanned) viewport, -1 … 1; fixed for the visit. */
+  readonly u: number;
+  readonly v: number;
+  /** Position in the current viewport, from `u`, `v` and `z` (see `place`). */
   x: number;
   y: number;
-  z: number;
+  readonly z: number;
   readonly near: boolean;
   readonly size: number;
   readonly alpha: number;
@@ -34,25 +43,25 @@ function random(min: number, max: number) {
 }
 
 /** Places a star at depth `z` so its projection lands uniformly on screen. */
-function scatter(star: Star, z: number, width: number, height: number, focal: number) {
-  star.z = z;
-  star.x = random(-1, 1) * ((z * width) / 2 / focal) * OVERSCAN;
-  star.y = random(-1, 1) * ((z * height) / 2 / focal) * OVERSCAN;
+function place(star: Star, width: number, height: number, focal: number) {
+  star.x = star.u * ((star.z * width) / 2 / focal) * OVERSCAN;
+  star.y = star.v * ((star.z * height) / 2 / focal) * OVERSCAN;
 }
 
-function createStars(count: number, width: number, height: number, focal: number): Star[] {
+/** Every star the field can show; the first ones fill smaller viewports (30 % near in any prefix). */
+function createStars(count: number): Star[] {
   return Array.from({ length: count }, (_, index) => {
     const near = index % 10 < 3;
-    const star: Star = {
+    return {
+      u: random(-1, 1),
+      v: random(-1, 1),
       x: 0,
       y: 0,
-      z: 1,
+      z: near ? random(...NEAR_Z) : random(...FAR_Z),
       near,
       size: near ? random(1.1, 1.9) : random(0.6, 1.1),
       alpha: near ? random(0.55, 0.95) : random(0.25, 0.6),
     };
-    scatter(star, near ? random(...NEAR_Z) : random(...FAR_Z), width, height, focal);
-    return star;
   });
 }
 
@@ -67,6 +76,7 @@ export function StarField() {
     let width = 0;
     let height = 0;
     let focal = 1;
+    const allStars = createStars(MAX_STARS);
     let stars: Star[] = [];
     let lastFrame: MotionFrame = { pointerX: 0, pointerY: 0 };
 
@@ -103,19 +113,25 @@ export function StarField() {
 
     function resize() {
       if (!canvas || !context) return;
+      // Device pixels, capped: below 1 when zoomed out, so the buffer never exceeds the screen.
       const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
+      const bufferWidth = Math.round(window.innerWidth * dpr);
+      const bufferHeight = Math.round(window.innerHeight * dpr);
+      if (window.innerWidth === width && window.innerHeight === height && canvas.width === bufferWidth && canvas.height === bufferHeight) return;
       width = window.innerWidth;
       height = window.innerHeight;
       focal = Math.max(width, height) / 2;
-      canvas.width = Math.round(width * dpr);
-      canvas.height = Math.round(height * dpr);
+      canvas.width = bufferWidth;
+      canvas.height = bufferHeight;
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
-      stars = createStars(Math.min(MAX_STARS, Math.round((width * height) / PIXELS_PER_STAR)), width, height, focal);
+      stars = allStars.slice(0, Math.min(MAX_STARS, Math.round((width * height) / PIXELS_PER_STAR)));
+      for (const star of stars) place(star, width, height, focal);
       draw(lastFrame);
     }
 
+    // The canvas is stretched to the viewport by CSS meanwhile; redraw once it settles.
     resize();
-    window.addEventListener('resize', resize);
+    const stopWatching = onViewportSettled(resize);
 
     const unsubscribe = subscribeMotion((frame) => {
       lastFrame = frame;
@@ -123,7 +139,7 @@ export function StarField() {
     });
 
     return () => {
-      window.removeEventListener('resize', resize);
+      stopWatching();
       unsubscribe();
     };
   }, []);

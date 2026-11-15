@@ -92,9 +92,19 @@ body,
   height: 100%;
 }
 
-/* Keep rem units tied to the user's font size; shrinking them with the viewport cancels browser zoom. */
+/*
+ * rem units start from the user's font size (the floor: the root never shrinks
+ * with the viewport, which would cancel browser zoom in).
+ *
+ * Zooming out widens the CSS viewport while everything keeps its CSS size, so
+ * the whole interface shrinks on screen. Above the 1920 x 1000 CSS px design
+ * viewport the root grows with the viewport (the smaller of the width and
+ * height ratios, 16px at the design size), which keeps text and controls about
+ * as large on screen as at 100 % zoom and lets the columns use the extra room.
+ * Everything is sized in rem / vw / vh, so the whole layout scales together.
+ */
 html {
-  font-size: 100%;
+  font-size: max(100%, min(0.8333vw, 1.6vh));
   background: var(--bg);
 }
 
@@ -119,7 +129,7 @@ a {
   text-underline-offset: 0.2em;
 }
 
-:where(:root:not([data-curve='on'])) a:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) a:hover,
 a[data-hover] {
   background: var(--cyan);
   color: #000;
@@ -218,8 +228,12 @@ button {
  * the screen, the 3D view giving up height first; only the control column
  * scrolls, when its boxes are taller than the screen. Stacked layouts (see the
  * media queries below) keep scrolling the whole workspace.
+ *
+ * It also needs some height: zooming in on a wide screen leaves a wide but
+ * short CSS viewport, where the data and update bar would squeeze the 3D view
+ * to a strip. Short screens stack instead (keep in sync with the stacked query).
  */
-@media (min-width: 1041px) {
+@media (min-width: 1041px) and (min-height: 601px) {
   .workspace {
     grid-template-rows: auto minmax(0, 1fr);
     overflow: hidden;
@@ -402,10 +416,10 @@ button {
   cursor: pointer;
 }
 
-:where(:root:not([data-curve='on'])) .icon-button:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .icon-button:hover,
 .icon-button[data-hover],
 .icon-button:focus-visible,
-:where(:root:not([data-curve='on'])) .text-button:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .text-button:hover,
 .text-button[data-hover],
 .text-button:focus-visible {
   color: #000;
@@ -658,7 +672,7 @@ button {
   cursor: pointer;
 }
 
-:where(:root:not([data-curve='on'])) .header-options:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .header-options:hover,
 .header-options[data-hover],
 .header-options:focus-visible {
   background: var(--magenta);
@@ -807,7 +821,7 @@ button {
   transition: transform 120ms ease-out;
 }
 
-:where(:root:not([data-curve='on'])) .number-wheel__label--button:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .number-wheel__label--button:hover,
 .number-wheel__label--button[data-hover],
 .number-wheel__label--button:focus-visible,
 .number-wheel__label--button[aria-expanded='true'] {
@@ -864,7 +878,7 @@ button {
   pointer-events: none;
 }
 
-:where(:root:not([data-curve='on'])) .number-wheel__control:hover::before,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .number-wheel__control:hover::before,
 .number-wheel__control[data-hover]::before,
 .number-wheel__control[data-open='true']::before {
   border-color: var(--accent);
@@ -1092,7 +1106,7 @@ button {
   content: '▶ ';
 }
 
-:where(:root:not([data-curve='on'])) .apollo-moment:not(:disabled):hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .apollo-moment:not(:disabled):hover,
 .apollo-moment:not(:disabled)[data-hover],
 .apollo-moment:focus-visible {
   color: #000;
@@ -1219,7 +1233,7 @@ input[aria-invalid='true'] {
   font-size: 0.7em;
 }
 
-:where(:root:not([data-curve='on'])) .wheel-select__trigger:hover .wheel-select__caret,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .wheel-select__trigger:hover .wheel-select__caret,
 .wheel-select__trigger[data-hover] .wheel-select__caret,
 .wheel-select__trigger[aria-expanded='true'] .wheel-select__caret {
   color: var(--accent);
@@ -1351,7 +1365,7 @@ input[aria-invalid='true'] {
   border-style: dashed;
 }
 
-:where(:root:not([data-curve='on'])) .button:hover:not(:disabled),
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .button:hover:not(:disabled),
 .button[data-hover]:not([aria-disabled='true']),
 .button:focus-visible:not(:disabled) {
   background: var(--accent);
@@ -1360,13 +1374,13 @@ input[aria-invalid='true'] {
   outline-offset: 0.25rem;
 }
 
-:where(:root:not([data-curve='on'])) .button--go:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .button--go:hover,
 .button--go[data-hover],
 .button--go:focus-visible {
   background: #8dffbb !important;
 }
 
-:where(:root:not([data-curve='on'])) .button--go:hover::before,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .button--go:hover::before,
 .button--go[data-hover]::before,
 .button--go:focus-visible::before {
   animation: none;
@@ -1649,6 +1663,16 @@ input[aria-invalid='true'] {
   height: auto !important;
 }
 
+/*
+ * R3F sets the canvas size in pixels once its box has stopped resizing (see
+ * `CANVAS_RESIZE` in SkyScene.tsx). Until then the last frame is stretched to
+ * the box, so zooming or resizing never shows a gap or a cropped view.
+ */
+.scene > div:first-child canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
 .scene__notes {
   position: absolute;
   left: 0;
@@ -1806,7 +1830,7 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   background: var(--cyan);
 }
 
-:where(:root:not([data-curve='on'])) .compass-toggle[aria-pressed='false']:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .compass-toggle[aria-pressed='false']:hover,
 .compass-toggle[aria-pressed='false'][data-hover],
 .compass-toggle:focus-visible {
   color: var(--text);
@@ -1839,7 +1863,7 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   background: var(--cyan);
 }
 
-:where(:root:not([data-curve='on'])) .view-toggle__option[aria-pressed='false']:not([aria-disabled='true']):hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .view-toggle__option[aria-pressed='false']:not([aria-disabled='true']):hover,
 .view-toggle__option[aria-pressed='false'][data-hover]:not([aria-disabled='true']),
 .view-toggle__option:focus-visible {
   color: var(--text);
@@ -1880,7 +1904,7 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   background: var(--cyan);
 }
 
-:where(:root:not([data-curve='on'])) .fullscreen-toggle[aria-pressed='false']:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .fullscreen-toggle[aria-pressed='false']:hover,
 .fullscreen-toggle[aria-pressed='false'][data-hover],
 .fullscreen-toggle:focus-visible {
   color: var(--text);
@@ -2032,7 +2056,7 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   cursor: pointer;
 }
 
-:where(:root:not([data-curve='on'])) .zoom-control__button:not(:disabled):hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .zoom-control__button:not(:disabled):hover,
 .zoom-control__button[data-hover]:not(:disabled),
 .zoom-control__button:focus-visible {
   color: #000;
@@ -2783,7 +2807,7 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   background: var(--text);
 }
 
-:where(:root:not([data-curve='on'])) .segmented__option[aria-pressed='false']:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .segmented__option[aria-pressed='false']:hover,
 .segmented__option[aria-pressed='false'][data-hover] {
   color: var(--text);
   background: rgba(211, 235, 204, 0.1);
@@ -2840,7 +2864,7 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   color: var(--muted);
 }
 
-:where(:root:not([data-curve='on'])) .setup__mode[aria-pressed='false']:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .setup__mode[aria-pressed='false']:hover,
 .setup__mode[aria-pressed='false'][data-hover],
 .setup__mode:focus-visible {
   border-color: var(--line);
@@ -3021,13 +3045,29 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
 }
 
 /*
+ * While the viewport changes (browser zoom steps, dragging the window edge;
+ * see resizeActivity.ts) every step re-lays out and repaints the page. The
+ * full-frame filter and the animated overlay are the costly part of that, so
+ * they step aside until the viewport has been still for a moment.
+ */
+:root[data-resizing='on'][data-curve='on'] .app__frame {
+  filter: none;
+}
+
+:root[data-resizing='on'] .crt *,
+:root[data-resizing='on'] .crt *::before,
+:root[data-resizing='on'] .crt *::after {
+  animation-play-state: paused !important;
+}
+
+/*
  * Pointer remapping (curvaturePointer.ts): while the filter is on, hover is
  * mirrored on [data-hover] (the :where(:root:not([data-curve='on'])) rules
  * above switch the real :hover off) and the cursor of the element drawn under
  * the pointer is applied to the whole frame.
  */
-:root[data-curve='on'][data-curve-cursor] .app__frame,
-:root[data-curve='on'][data-curve-cursor] .app__frame * {
+:root[data-curve='on']:not([data-resizing='on'])[data-curve-cursor] .app__frame,
+:root[data-curve='on']:not([data-resizing='on'])[data-curve-cursor] .app__frame * {
   cursor: var(--curve-cursor, default) !important;
 }
 
@@ -3152,8 +3192,11 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
 
 /* ───────────────────────── Stacked layout (tablets, phones and browser zoom) ───────────────────────── */
 
-/* Width-based breakpoints let the layout reflow as browser zoom reduces the CSS viewport. */
-@media (max-width: 1040px) {
+/*
+ * Viewport breakpoints let the layout reflow as browser zoom changes the CSS
+ * viewport: zooming in narrows it (and shortens it) until the columns stack.
+ */
+@media (max-width: 1040px), (max-height: 600px) {
   .workspace {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas: 'view' 'update' 'control';
@@ -3249,7 +3292,7 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   cursor: not-allowed;
 }
 
-:where(:root:not([data-curve='on'])) .text-button:disabled:hover,
+:where(:root:not([data-curve='on']), :root[data-resizing='on']) .text-button:disabled:hover,
 .text-button:disabled[data-hover] {
   color: var(--line-dim);
   background: var(--panel-solid);

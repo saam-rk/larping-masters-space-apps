@@ -1,5 +1,62 @@
 # Estado del proyecto
 
+## Implementation update — 2026-11-15 (branch `fix/zoom-resize-performance`)
+
+- PR #57 review: integrated `main` at `c855e67`, retaining the mobile wheel,
+  scene HUD and camera framing fixes. Resolved the state-log and CSS conflicts.
+- Fixed pointer remapping while resizing: coordinates, clicks and range presses
+  stay native when the curvature filter is temporarily off; an existing slider
+  drag follows the visible coordinates. Stale remapped hover/cursor is cleared
+  on resize and native CSS hover is enabled during the pause.
+- Review validation observed: `npm run check` (typecheck, lint, 696 tests /
+  65 files) and `npm run build` passed (existing large-chunk warning).
+  Three pointer regression tests were added; two reproduced failures before
+  the fix. Real browser zoom and frame timings were not verified in this review.
+  No scientific method, source or project decision changed.
+
+- **Browser zoom and resizing.** The 3D drawing buffer now follows the device
+  pixel ratio below 1 (zooming out no longer draws 4× the screen pixels at
+  50 %, 9× at 33 %), keeps the 1.5 cap, and stays under a ~2560 × 1440 device
+  pixel budget (large full-screen canvases). See `src/features/scene/renderDpr.ts`.
+- Canvas resizes are coalesced (100 ms) and no longer tracked on scroll; the
+  last frame is stretched to its box meanwhile, so no gap or crop shows.
+- Star backdrop keeps the same stars across resizes and resizes once per
+  frame; CRT curvature map capped at 256 px and rebuilt on the next frame (no
+  clipped frame after zooming out); hyperspace canvas resizes only while it animates.
+- Layout: short viewports (≤ 600 px high, e.g. zooming in on a wide screen)
+  stack the columns instead of squeezing the 3D view to a strip; in stacked
+  layouts every scene (not only Apollo 11) keeps `clamp(19rem, 48svh, 32rem)`.
+- Validation observed locally: `npm run check` (682 tests / 63 files) and
+  `npm run build` passed (existing large-chunk warning). Browser checks with
+  emulated viewports (640×360 to 3840×2160): layout, buffer sizes, curvature
+  and star resizes. Frame timings were not measured (preview pane hidden), and
+  real browser zoom (device pixel ratio change) was only covered by unit tests.
+- No scientific method or source changes. Pending: integrator review.
+- **Zoom-out legibility.** Zooming out widens the CSS viewport, so every
+  `rem`-sized element shrank on screen. The root font size is now
+  `max(100%, min(0.8333vw, 1.6vh))` (`src/styles.css`): unchanged up to a
+  1920 × 1000 CSS px viewport and never below the user's font size, then it
+  grows with the viewport so text, controls, dialogs and the 3D view keep about
+  the size they have at 100 % zoom (50 % zoom ≈ 2× root). Side effect: very
+  large monitors at 100 % zoom (e.g. 2560 × 1440) also get a ~1.3× interface.
+  Checked in the browser pane with emulated viewports (2560 × 1300, 3840 × 2000,
+  7680 × 4000, advanced mode open): no truncation, readings panel visible,
+  control column scrolls. Real browser zoom was not tried; no automated test
+  covers the CSS.
+- **Zoom stutter.** Each zoom step re-lays out and repaints the whole page, and
+  the full-frame curvature filter plus the animated CRT overlay made that
+  expensive. `src/features/backdrop/resizeActivity.ts` sets
+  `data-resizing="on"` on the root while `resize` events keep arriving (cleared
+  220 ms after the last one); meanwhile the CSS drops the curvature filter and
+  pauses the overlay animations. The curvature map and the star canvas are now
+  rebuilt once the viewport has been still for 100 ms (before the flag clears),
+  instead of on every step. Observed in the browser pane (full effects, manual
+  `resize` events): flag on through a burst, filter off and animations paused,
+  map and stars rebuilt, filter back. Unit tests added (688 total, `npm run
+  check` passed). Frame timings and real browser zoom were not measured.
+  Visible side effect: the curved-glass distortion is absent for ~0.3 s during
+  and after a zoom change.
+
 ## Implementation update — 2026-11-15 (branch `fix/mobile-wheels-and-views`)
 
 - Date and time wheels on touch screens: a drag no longer stops after the

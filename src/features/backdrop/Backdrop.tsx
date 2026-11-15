@@ -14,6 +14,7 @@
 import { useEffect, useState } from 'react';
 import { prefersReducedMotion } from '../../preferences/preferences';
 import { setParallaxEnabled } from './motion';
+import { installResizeActivity } from './resizeActivity';
 import { SketchLayer } from './SketchLayer';
 import { StarField } from './StarField';
 
@@ -60,6 +61,9 @@ export function Backdrop({ mode }: { mode: BackdropMode }) {
     setParallaxEnabled(mode === 'full' && !prefersReducedMotion());
     return () => setParallaxEnabled(false);
   }, [mode]);
+
+  // Lets the CSS drop the curvature filter and pause the overlay while the viewport changes.
+  useEffect(() => installResizeActivity(), []);
 
   return (
     <>
