@@ -51,7 +51,7 @@ function mount() {
     return (
       <ConfigPanel selection={state.selection} loading={state.loading} upToDate={upToDate}
         onSiteChange={state.setSiteId} onCoordinatesChange={state.setCoordinates}
-        onUtcChange={state.setUtc} onUpdate={state.update} />
+        onUtcChange={state.setUtc} onUpdate={state.update} onShowUtc={state.showUtc} />
     );
   }
   act(() => root.render(<Harness />));
@@ -121,5 +121,33 @@ describe('D-020 duplicate-update policy', () => {
     keyWheel('Time zone', 'ArrowUp');
     expect(button.disabled).toBe(true);
     expect(fetchEphemeris).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Apollo 11 moments', () => {
+  const moment = (label: string) =>
+    [...container.querySelectorAll<HTMLButtonElement>('.apollo-moment')].find((button) => button.textContent?.startsWith(label));
+
+  it('queries the flag instant right away, marks it and blocks repeating the displayed case', async () => {
+    const update = mount();
+    const { landing, flag } = MESSAGES.en.config.apollo11;
+    expect(container.textContent).toContain(MESSAGES.en.config.apollo11.title);
+    expect(moment(landing)!.getAttribute('aria-pressed')).toBe('true');
+    // The landing instant shows the saved sample, which stays queryable.
+    expect(moment(landing)!.disabled).toBe(false);
+    await act(async () => moment(flag)!.click());
+    expect(fetchEphemeris).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(fetchEphemeris).mock.calls[0]![0].utc).toBe('1969-07-21T03:41:43Z');
+    expect(moment(flag)!.getAttribute('aria-pressed')).toBe('true');
+    expect(moment(flag)!.disabled).toBe(true);
+    expect(update.disabled).toBe(true);
+    await act(async () => moment(landing)!.click());
+    expect(vi.mocked(fetchEphemeris).mock.calls[1]![0].utc).toBe('1969-07-20T20:17:40Z');
+  });
+
+  it('is only offered while Apollo 11 is selected', () => {
+    mount();
+    chooseSite('nobile-rim-2');
+    expect(container.querySelector('.apollo-moments')).toBeNull();
   });
 });

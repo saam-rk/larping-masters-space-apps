@@ -41,6 +41,7 @@ function mountPanel() {
       onCoordinatesChange={vi.fn()}
       onUtcChange={onUtcChange}
       onUpdate={vi.fn()}
+      onShowUtc={vi.fn()}
     />,
   ));
   const labelButton = (name: string) =>
@@ -143,6 +144,7 @@ describe('ConfigPanel and instants chosen elsewhere', () => {
           onCoordinatesChange={vi.fn()}
           onUtcChange={vi.fn()}
           onUpdate={vi.fn()}
+          onShowUtc={vi.fn()}
         />,
       ));
     const values = () => [...container.querySelectorAll('[role="spinbutton"]')].map((wheel) => wheel.getAttribute('aria-valuenow'));

@@ -7,8 +7,9 @@
  * spheres; distances and sizes carry no meaning here. Elevation is drawn with
  * a vertical exaggeration (`elevationExaggeration`, ×1 to ×10, shown in the
  * note and the legend) so the few degrees of a polar sky can be read; the
- * labels always give the true values. The Moon is not drawn; the green disc
- * is the local horizon plane (elevation 0) tangent at the site.
+ * labels always give the true values. The Sun and the Earth are the GLB
+ * models of `CelestialModel` (rotation not modeled). The Moon is not drawn;
+ * the green disc is the local horizon plane (elevation 0) tangent at the site.
  *
  * With the compass on, each body gets an azimuth arc on the plane from north
  * to its direction, a vertical elevation arc from the plane to the body, and
@@ -21,6 +22,7 @@
 
 import { Html, Line, OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { useMemo } from 'react';
+import type { Quaternion } from 'three';
 import type { BodyId } from '../../../shared/ephemeris';
 import { formatAngle } from '../../format';
 import { useI18n } from '../../i18n/context';
@@ -38,6 +40,8 @@ import {
 } from './angles';
 import type { PlacedBodies, SceneBody } from './bodies';
 import { BODY_COLOR } from './bodyColors';
+import { CelestialModel } from './CelestialModel';
+import { northAlongLunarAxis } from './celestialOrientation';
 import { horizontalToPosition, type Vector3Tuple } from './geometry';
 import { glowTexture } from './glow';
 import { OrbitZoom } from './OrbitZoom';
@@ -147,7 +151,17 @@ function Horizon({ exaggeration }: { exaggeration: number }) {
   );
 }
 
-function VisualBody({ body, drawnElevation, label }: { body: SceneBody; drawnElevation: number; label: string }) {
+function VisualBody({
+  body,
+  drawnElevation,
+  label,
+  orientation,
+}: {
+  body: SceneBody;
+  drawnElevation: number;
+  label: string;
+  orientation: Quaternion;
+}) {
   const position = horizontalToPosition(body.azimuthDeg, drawnElevation, R);
   const radius = BODY_RADIUS[body.body];
   const color = BODY_COLOR[body.body];
@@ -155,14 +169,21 @@ function VisualBody({ body, drawnElevation, label }: { body: SceneBody; drawnEle
     <group>
       <Line points={[[0, 0, 0], position]} color={color} lineWidth={1.2} dashed dashSize={0.3} gapSize={0.18} transparent opacity={0.7} />
       <group position={position}>
-        <mesh>
-          <sphereGeometry args={[radius, 48, 24]} />
-          {body.body === 'sun' ? (
-            <meshBasicMaterial color="#fff6d8" toneMapped={false} />
-          ) : (
-            <meshStandardMaterial color="#3d7fd6" emissive="#0d2a52" emissiveIntensity={0.7} roughness={0.85} />
-          )}
-        </mesh>
+        <CelestialModel
+          body={body.body}
+          radius={radius}
+          quaternion={orientation}
+          fallback={
+            <mesh>
+              <sphereGeometry args={[radius, 48, 24]} />
+              {body.body === 'sun' ? (
+                <meshBasicMaterial color="#fff6d8" toneMapped={false} />
+              ) : (
+                <meshStandardMaterial color="#3d7fd6" emissive="#0d2a52" emissiveIntensity={0.7} roughness={0.85} />
+              )}
+            </mesh>
+          }
+        />
         <sprite scale={[radius * 4, radius * 4, 1]}>
           <spriteMaterial map={glowTexture()} color={color} transparent depthWrite={false} toneMapped={false} />
         </sprite>
@@ -240,8 +261,18 @@ function DifferenceGuides({ from, to, exaggeration }: { from: SceneBody; to: Sce
   );
 }
 
-export function VisualScaleView({ bodies, controls }: { bodies: PlacedBodies; controls: ThirdPersonControls }) {
+export function VisualScaleView({
+  bodies,
+  latitudeDeg,
+  controls,
+}: {
+  bodies: PlacedBodies;
+  /** Site latitude, for the illustrative orientation of the body models. */
+  latitudeDeg: number;
+  controls: ThirdPersonControls;
+}) {
   const { messages } = useI18n();
+  const orientation = useMemo(() => northAlongLunarAxis(latitudeDeg), [latitudeDeg]);
   const cameraPosition = useMemo(() => initialCamera(bodies.placed), [bodies.placed]);
   const sun = bodies.placed.find((body) => body.body === 'sun');
   const earth = bodies.placed.find((body) => body.body === 'earth');
@@ -262,7 +293,7 @@ export function VisualScaleView({ bodies, controls }: { bodies: PlacedBodies; co
 
       {controls.showHorizon && <Horizon exaggeration={exaggeration} />}
       {bodies.placed.map((body) => (
-        <VisualBody key={body.body} body={body} drawnElevation={drawn(body)} label={messages.bodies[body.body]} />
+        <VisualBody key={body.body} body={body} drawnElevation={drawn(body)} label={messages.bodies[body.body]} orientation={orientation} />
       ))}
       {controls.showHorizon && bodies.placed.map((body) => <BodyGuides key={body.body} body={body} drawnElevation={drawn(body)} />)}
       {controls.showHorizon && sun && earth && <DifferenceGuides from={sun} to={earth} exaggeration={exaggeration} />}

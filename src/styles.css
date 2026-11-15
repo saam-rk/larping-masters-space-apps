@@ -213,6 +213,40 @@ button {
   pointer-events: none;
 }
 
+/*
+ * Side-by-side layout: the view column (local horizon and data) always fits
+ * the screen, the 3D view giving up height first; only the control column
+ * scrolls, when its boxes are taller than the screen. Stacked layouts (see the
+ * media queries below) keep scrolling the whole workspace.
+ */
+@media (min-width: 1041px) {
+  .workspace {
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow: hidden;
+  }
+
+  .column--view {
+    min-height: 0;
+  }
+
+  .column--control {
+    min-height: 0;
+    /* Room for the scrollbar, so it does not cover the box borders. */
+    margin-right: calc(-1 * clamp(0.5rem, 1vw, 0.9rem));
+    padding-right: clamp(0.5rem, 1vw, 0.9rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) rgba(10, 30, 18, 0.9);
+  }
+
+  /* Boxes keep their height and the column scrolls, instead of squeezing them. */
+  .column--control > *,
+  .column--control .config > * {
+    flex-shrink: 0;
+  }
+}
+
 /* ───────────────────────── Update bar ───────────────────────── */
 
 /*
@@ -960,6 +994,74 @@ button {
   font-size: 0.85em;
   letter-spacing: 0.06em;
   text-transform: var(--title-case);
+}
+
+/* Apollo 11 historic instants, shown in the site box while Apollo 11 is selected. */
+.apollo-moments {
+  margin-top: 0.65rem;
+  padding: 0.1rem 0.55rem 0.5rem;
+  border: 0.0625rem dashed var(--amber);
+}
+
+.apollo-moments__title {
+  color: var(--amber);
+}
+
+.apollo-moments__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.4rem;
+}
+
+.apollo-moment {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  padding: 0.25rem 0.5rem;
+  color: var(--amber);
+  font: inherit;
+  text-align: left;
+  background: var(--panel-solid);
+  border: 0.0625rem solid currentColor;
+  cursor: pointer;
+}
+
+.apollo-moment__label {
+  letter-spacing: var(--title-spacing);
+  text-transform: var(--title-case);
+}
+
+.apollo-moment__time {
+  color: var(--text);
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+}
+
+.apollo-moment--selected {
+  box-shadow: inset 0.3rem 0 0 var(--amber);
+}
+
+.apollo-moment--selected .apollo-moment__label::before {
+  content: '▶ ';
+}
+
+:where(:root:not([data-curve='on'])) .apollo-moment:not(:disabled):hover,
+.apollo-moment:not(:disabled)[data-hover],
+.apollo-moment:focus-visible {
+  color: #000;
+  background: var(--amber);
+}
+
+.apollo-moment:not(:disabled):hover .apollo-moment__time,
+.apollo-moment:not(:disabled)[data-hover] .apollo-moment__time,
+.apollo-moment:focus-visible .apollo-moment__time {
+  color: #000;
+}
+
+.apollo-moment:disabled {
+  cursor: default;
+  opacity: 0.75;
 }
 
 .search-field {

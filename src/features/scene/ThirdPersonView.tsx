@@ -9,7 +9,10 @@
  * Scene frame as in `geometry.ts` (-Z north, +X east, +Y up at the site);
  * the observer is the origin and the Moon center is at (0, -R, 0). The
  * observer marker, the glow sprites and the horizon plane size are not to
- * scale. The Moon is a smooth sphere: no relief.
+ * scale. Moon, Earth and Sun are the GLB models of `CelestialModel`: the Moon
+ * is turned so the site lies under the observer, with its coarse globe relief
+ * (an appearance model, not the terrain of the site; the observer stays on the
+ * reference sphere); the Earth's and the Sun's rotation are not modeled.
  *
  * The horizon compass (plane, grid, N/E/S/W and each body's azimuth and
  * elevation guides) grows with the camera distance, so it stays a readable
@@ -23,11 +26,13 @@
 import { Html, Line, OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
-import { Vector3, type Camera, type Group } from 'three';
+import { Vector3, type Camera, type Group, type Quaternion } from 'three';
 import type { EphemerisResponse } from '../../../shared/ephemeris';
 import { useI18n } from '../../i18n/context';
 import { BODY_COLOR } from './bodyColors';
 import { MOON_RADIUS_KM, radiusForAngularDiameter, type PlacedBodies, type SceneBody } from './bodies';
+import { CelestialModel } from './CelestialModel';
+import { moonOrientation, northAlongLunarAxis } from './celestialOrientation';
 import { horizontalToDirection, horizontalToPosition, type Vector3Tuple } from './geometry';
 import { glowTexture } from './glow';
 import { OrbitZoom } from './OrbitZoom';
@@ -67,7 +72,7 @@ function keepAboveSurface(camera: Camera) {
   if (offset.length() < minimum) camera.position.copy(center.add(offset.setLength(minimum)));
 }
 
-function Body({ body, label }: { body: SceneBody; label: string }) {
+function Body({ body, label, orientation }: { body: SceneBody; label: string; orientation: Quaternion }) {
   const position = horizontalToPosition(body.azimuthDeg, body.elevationDeg, body.rangeKm);
   const radius = radiusForAngularDiameter(body.angularDiameterDeg, body.rangeKm);
   const style = BODY_STYLE[body.body];
@@ -85,14 +90,21 @@ function Body({ body, label }: { body: SceneBody; label: string }) {
         opacity={0.75}
       />
       <group position={position}>
-        <mesh>
-          <sphereGeometry args={[radius, 64, 32]} />
-          {isSun ? (
-            <meshBasicMaterial color="#fff6d8" toneMapped={false} />
-          ) : (
-            <meshStandardMaterial color="#3d7fd6" emissive="#081a33" emissiveIntensity={0.5} roughness={0.85} />
-          )}
-        </mesh>
+        <CelestialModel
+          body={body.body}
+          radius={radius}
+          quaternion={orientation}
+          fallback={
+            <mesh>
+              <sphereGeometry args={[radius, 64, 32]} />
+              {isSun ? (
+                <meshBasicMaterial color="#fff6d8" toneMapped={false} />
+              ) : (
+                <meshStandardMaterial color="#3d7fd6" emissive="#081a33" emissiveIntensity={0.5} roughness={0.85} />
+              )}
+            </mesh>
+          }
+        />
         <sprite scale={[style.glow, style.glow, 1]}>
           <spriteMaterial map={glowTexture()} color={style.color} sizeAttenuation={false} transparent depthWrite={false} toneMapped={false} />
         </sprite>
@@ -183,7 +195,7 @@ export interface ThirdPersonControls {
 
 /** Contents of the shared canvas for the third-person view (see `SkyScene`). */
 export function ThirdPersonView(props: { data: EphemerisResponse; bodies: PlacedBodies; controls: ThirdPersonControls }) {
-  return props.controls.scale === 'visual' ? <VisualScaleView bodies={props.bodies} controls={props.controls} /> : <RealScaleView {...props} />;
+  return props.controls.scale === 'visual' ? <VisualScaleView bodies={props.bodies} latitudeDeg={props.data.site.latitudeDeg} controls={props.controls} /> : <RealScaleView {...props} />;
 }
 
 /** Third-person view to scale, in kilometers. */
@@ -199,6 +211,9 @@ function RealScaleView({
   const { messages } = useI18n();
   const cameraPosition = useMemo(() => initialCamera(bodies.placed), [bodies.placed]);
   const sun = bodies.placed.find((body) => body.body === 'sun');
+  const { latitudeDeg, longitudeEastDeg } = data.site;
+  const moonQuaternion = useMemo(() => moonOrientation(latitudeDeg, longitudeEastDeg), [latitudeDeg, longitudeEastDeg]);
+  const bodyQuaternion = useMemo(() => northAlongLunarAxis(latitudeDeg), [latitudeDeg]);
 
   // Lunar spin axis: geographic north lies at azimuth 0 and elevation = latitude.
   const north = horizontalToDirection(0, data.site.latitudeDeg);
@@ -215,11 +230,19 @@ function RealScaleView({
       <ambientLight intensity={0.14} />
       {sun && <directionalLight position={[sun.direction[0] * 1e6, sun.direction[1] * 1e6, sun.direction[2] * 1e6]} intensity={3} />}
 
-      {/* Moon placeholder: smooth sphere of the mean lunar radius. */}
-      <mesh position={MOON_CENTER}>
-        <sphereGeometry args={[MOON_RADIUS_KM, 128, 64]} />
-        <meshStandardMaterial color="#8f9289" roughness={0.95} />
-      </mesh>
+      {/* Moon model scaled to the mean lunar radius; a smooth sphere while it loads. */}
+      <CelestialModel
+        body="moon"
+        radius={MOON_RADIUS_KM}
+        quaternion={moonQuaternion}
+        position={MOON_CENTER}
+        fallback={
+          <mesh>
+            <sphereGeometry args={[MOON_RADIUS_KM, 128, 64]} />
+            <meshStandardMaterial color="#8f9289" roughness={0.95} />
+          </mesh>
+        }
+      />
       <Line points={axis} color="#6f7d70" lineWidth={1} transparent opacity={0.6} />
       <Html position={MOON_CENTER} center className="scene__label scene__label--muted">
         {messages.scene.moon}
@@ -232,7 +255,7 @@ function RealScaleView({
       </mesh>
 
       {bodies.placed.map((body) => (
-        <Body key={body.body} body={body} label={messages.bodies[body.body]} />
+        <Body key={body.body} body={body} label={messages.bodies[body.body]} orientation={bodyQuaternion} />
       ))}
 
       <OrbitControls

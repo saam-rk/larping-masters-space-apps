@@ -7,7 +7,11 @@
  * Units are meters. Scene frame as in `geometry.ts` (-Z north, +X east,
  * +Y up); the world origin is the site point on the terrain surface.
  *
- * The Apollo camera frames the three characters and Eagle. At the LOLA sites
+ * The Apollo camera frames the three characters and Eagle. What the
+ * reenactment shows depends on the result's instant: nothing before the
+ * touchdown, no flag until it was erected and only the flag after the liftoff
+ * (see `apolloTimeline.ts` and `apolloScene.ts`); its 50-star canton is
+ * repaired at load time (see `apolloFlag.ts`). At the LOLA sites
  * the viewer stands still at eye height right beside the 1.70 m astronaut (about
  * 2.6 m away), facing it with the Sun just to the right; a soft contact shadow
  * (decorative, not Sun-based) marks where the figure stands. Dragging only turns
@@ -53,6 +57,8 @@ import {
 import type { EphemerisResponse } from '../../../shared/ephemeris';
 import { APOLLO_11_SITE_ID } from '../../../shared/sites';
 import { useI18n } from '../../i18n/context';
+import { stageApolloScene } from './apolloScene';
+import { apolloScenePhase, type ApolloScenePhase } from './apolloTimeline';
 import { blobShadowTexture } from './blobShadow';
 import { radiusForAngularDiameter, upperLimbAboveHorizon, type PlacedBodies, type SceneBody } from './bodies';
 import { EYE_HEIGHT_M, EyeLevelRig } from './EyeLevelRig';
@@ -387,7 +393,16 @@ function Terrain({
   );
 }
 
-function ApolloTerrain({ bodies, controls }: { bodies: PlacedBodies; controls: FirstPersonControls }) {
+function ApolloTerrain({
+  bodies,
+  controls,
+  phase,
+}: {
+  bodies: PlacedBodies;
+  controls: FirstPersonControls;
+  /** What the reenactment shows at the result's instant. */
+  phase: ApolloScenePhase;
+}) {
   const { eye, heading, pitch, url } = APOLLO_11_REENACTMENT;
   const terrainGltf = useGLTF(APOLLO_11_TERRAIN.terrainUrl, false, false);
   const propsGltf = useGLTF(url, false, false);
@@ -396,16 +411,20 @@ function ApolloTerrain({ bodies, controls }: { bodies: PlacedBodies; controls: F
     clone.traverse((object) => { if (object instanceof Mesh) object.receiveShadow = true; });
     return clone;
   }, [terrainGltf.scene]);
-  const props = useMemo(() => {
+  const { props, stage } = useMemo(() => {
     const clone = propsGltf.scene.clone();
+    const stage = stageApolloScene(clone, propsGltf.animations);
     clone.traverse((object) => {
       if (object instanceof Mesh) {
         object.castShadow = true;
         object.receiveShadow = true;
       }
     });
-    return clone;
-  }, [propsGltf.scene]);
+    return { props: clone, stage };
+  }, [propsGltf.scene, propsGltf.animations]);
+  useEffect(() => () => stage.dispose(), [stage]);
+  const clips = stage.clips(phase);
+  const moving = controls.animateReenactment && clips.length > 0;
   const mixer = useMemo(() => new AnimationMixer(props), [props]);
   const occluder = useRef<Group>(null);
   const invalidate = useThree((state) => state.invalidate);
@@ -415,12 +434,15 @@ function ApolloTerrain({ bodies, controls }: { bodies: PlacedBodies; controls: F
   }, [terrain, eye]);
 
   useEffect(() => () => floor?.dispose(), [floor]);
+  // Each phase shows its own props and plays its own tracks from the start.
   useEffect(() => {
-    for (const clip of propsGltf.animations) mixer.clipAction(clip).play();
-    mixer.update(0);
+    mixer.stopAllAction();
+    stage.apply(phase);
+    for (const clip of clips) mixer.clipAction(clip).play();
+    mixer.setTime(0);
     invalidate();
     return () => { mixer.stopAllAction(); };
-  }, [mixer, propsGltf.animations, invalidate]);
+  }, [mixer, stage, phase, clips, invalidate]);
   useEffect(() => {
     if (!controls.animateReenactment) mixer.setTime(0);
     invalidate();
@@ -431,7 +453,7 @@ function ApolloTerrain({ bodies, controls }: { bodies: PlacedBodies; controls: F
   // full effects even when nobody touched the view. Dragging still renders at
   // the display rate (see `EyeLevelRig`).
   useEffect(() => {
-    if (!controls.animateReenactment) return;
+    if (!moving) return;
     let last = performance.now();
     const timer = window.setInterval(() => {
       const now = performance.now();
@@ -440,7 +462,7 @@ function ApolloTerrain({ bodies, controls }: { bodies: PlacedBodies; controls: F
       invalidate();
     }, 1000 / REENACTMENT_FPS);
     return () => window.clearInterval(timer);
-  }, [controls.animateReenactment, mixer, invalidate]);
+  }, [moving, mixer, invalidate]);
 
   return (
     <>
@@ -657,7 +679,7 @@ export function FirstPersonView({
       {/* Position and orientation are set by `EyeLevelRig` once the terrain is loaded. */}
       {apollo ? <ApolloCamera /> : <PerspectiveCamera makeDefault fov={DEFAULT_FOV_DEG} near={0.05} far={400_000} />}
       <Suspense fallback={<TerrainLoading />}>
-        {apollo ? <ApolloTerrain bodies={bodies} controls={controls} /> : model ? (
+        {apollo ? <ApolloTerrain bodies={bodies} controls={controls} phase={apolloScenePhase(data.requestedUtc)} /> : model ? (
           <Terrain key={model.siteId} data={data} bodies={bodies} controls={controls} model={model} />
         ) : (
           <Html center className="scene__label">

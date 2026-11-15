@@ -9,6 +9,25 @@ export const APOLLO_11_LANDING_UTC = '1969-07-20T20:17:40Z';
 export const DEFAULT_UTC = APOLLO_11_LANDING_UTC;
 
 /**
+ * Apollo 11 US flag erected, in UTC: 110:09:43 ground elapsed time, when
+ * Mission Control reports "They've got the flag up now" in the Apollo Lunar
+ * Surface Journal, "One Small Step" (https://apollojournals.org/alsj/a11/a11.step.html).
+ * Converted with the same journal's first-contact time, 109:24:15 GET =
+ * 1969-07-21 02:56:15 UTC (from the Mission Report). Setting up the flag began
+ * a few minutes earlier (about 110:05 GET); the time is rounded to the second
+ * and journal timings can differ by seconds.
+ */
+export const APOLLO_11_FLAG_UTC = '1969-07-21T03:41:43Z';
+
+/**
+ * Apollo 11 lunar liftoff (ascent stage), in UTC: 124:22:00 ground elapsed
+ * time in the Apollo Lunar Surface Journal, "The Return to Orbit"
+ * (https://apollojournals.org/alsj/a11/a11.launch.html), converted with the
+ * same GET origin as `APOLLO_11_FLAG_UTC` (1969-07-16 13:32:00 UTC).
+ */
+export const APOLLO_11_LIFTOFF_UTC = '1969-07-21T17:54:00Z';
+
+/**
  * Product guard on selectable instants: [1969-01-01, 2100-01-01) UTC.
  * This includes the Apollo 11 landing year and is not a Horizons limit.
  */

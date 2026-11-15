@@ -80,6 +80,16 @@ export interface Messages {
     readonly customTag: string;
     /** Display name of user-entered coordinates. */
     readonly customName: string;
+    /** Historic instants offered while Apollo 11 is selected. */
+    readonly apollo11: {
+      /** Box tag shown while Apollo 11 is selected. */
+      readonly tag: string;
+      readonly title: string;
+      readonly landing: string;
+      readonly flag: string;
+      /** Marks the instant currently selected. */
+      readonly selected: string;
+    };
     readonly search: string;
     readonly searchPlaceholder: string;
     /** Confirms how custom coordinates were read. */
@@ -385,6 +395,13 @@ const es: Messages = {
     ],
     customTag: 'PERSONALIZADO',
     customName: 'Punto personalizado',
+    apollo11: {
+      tag: '★ HISTÓRICO',
+      title: 'Momentos del Apolo 11',
+      landing: 'Alunizaje',
+      flag: 'Bandera izada',
+      selected: 'seleccionado',
+    },
     search: 'Coordenadas o nombre',
     searchPlaceholder: '-85.4381, 37.36667 · Haworth',
     searchReading: (coordinates) => `Punto personalizado: ${coordinates}`,
@@ -443,8 +460,8 @@ const es: Messages = {
       'third-person': [
         'Arrastra para girar la vista; usa la rueda, pellizca o mueve el control de zoom (+, barra y −) para acercar o alejar. El selector Escala, arriba a la izquierda, cambia entre la escala visual y la real. El botón Brújula, junto a 1ª P y 3ª P, muestra u oculta el plano del horizonte, su cuadrícula y las guías de ángulos; el botón de las esquinas abre la vista a pantalla completa.',
         'Escala visual (predeterminada): un esquema del cielo local que no está a escala. El Sol y la Tierra aparecen en su azimut real (el de JPL Horizons que muestra el panel de datos), sobre una cúpula de radio fijo y con un tamaño ampliado: en esta escala, la distancia y el tamaño no significan nada. Cerca del polo sur suelen estar a pocos grados del horizonte, así que la elevación se dibuja ampliada en vertical (×2 a ×10, indicado en la nota y en la tabla); las etiquetas dan siempre el valor real. Sobre el plano verde (elevación 0), un arco de color va del norte al azimut de cada uno y otro vertical sube del plano a su elevación, con su valor. La línea blanca discontinua une el Sol y la Tierra e indica su separación angular; el arco blanco sobre el plano, su diferencia de azimut. La tabla resume los valores y la diferencia Tierra − Sol. La separación se calcula con trigonometría esférica a partir del azimut y la elevación reales.',
-        'Escala real, en kilómetros: la Luna es una esfera de 1737,4 km de radio y el Sol y la Tierra están a la distancia y con el tamaño que da JPL Horizons. Por eso se ven pequeños: al alejarte se ve el sistema Tierra-Luna, y puedes ir más allá del Sol. El plano verde es el horizonte local de referencia, tangente en el lugar, con la brújula N/E/S/O; crece al alejarte para seguir sirviendo de referencia. Las líneas y arcos de color marcan el azimut y la elevación; la línea gris es el eje de rotación lunar.',
-        'En ninguna de las dos escalas están a escala el marcador del observador, los halos que ayudan a localizar el Sol y la Tierra ni el tamaño del plano. La Luna no tiene relieve y las estrellas son decorativas. No es un análisis de visibilidad, energía, comunicaciones ni idoneidad de aterrizaje.',
+        'Escala real, en kilómetros: la Luna es un globo de 1737,4 km de radio (modelo de NASA SVS orientado para que el lugar quede bajo el observador) y el Sol y la Tierra están a la distancia y con el tamaño que da JPL Horizons. Por eso se ven pequeños: al alejarte se ve el sistema Tierra-Luna, y puedes ir más allá del Sol. El plano verde es el horizonte local de referencia, tangente en el lugar, con la brújula N/E/S/O; crece al alejarte para seguir sirviendo de referencia. Las líneas y arcos de color marcan el azimut y la elevación; la línea gris es el eje de rotación lunar.',
+        'En ninguna de las dos escalas están a escala el marcador del observador, los halos que ayudan a localizar el Sol y la Tierra ni el tamaño del plano. Los globos de la Luna, la Tierra y el Sol son modelos de apariencia: el relieve lunar es grueso y no es el terreno del lugar, y no se calcula la rotación de la Tierra ni la del Sol. Las estrellas son decorativas. No es un análisis de visibilidad, energía, comunicaciones ni idoneidad de aterrizaje.',
       ],
     },
     views: {
@@ -788,6 +805,13 @@ const en: Messages = {
     ],
     customTag: 'CUSTOM',
     customName: 'Custom point',
+    apollo11: {
+      tag: '★ HISTORIC',
+      title: 'Apollo 11 moments',
+      landing: 'Landing',
+      flag: 'Flag erected',
+      selected: 'selected',
+    },
     search: 'Coordinates or name',
     searchPlaceholder: '-85.4381, 37.36667 · Haworth',
     searchReading: (coordinates) => `Custom point: ${coordinates}`,
@@ -846,8 +870,8 @@ const en: Messages = {
       'third-person': [
         'Drag to rotate the view; use the wheel, a pinch or the zoom control (+, bar and −) to zoom in or out. The Scale switch at the top left changes between the visual and the real scale. The Compass button, next to 1ST and 3RD, shows or hides the horizon plane, its grid and the angle guides; the corners button opens the view full screen.',
         'Visual scale (default): a schematic local sky, not to scale. The Sun and the Earth are at their true azimuth (the JPL Horizons value shown in the data panel), on a dome of fixed radius and enlarged: at this scale, distance and size mean nothing. Near the south pole they are usually a few degrees from the horizon, so elevation is drawn with a vertical exaggeration (×2 to ×10, shown in the note and the table); the labels always give the true value. On the green plane (elevation 0), a colored arc runs from north to each azimuth and a vertical one rises from the plane to each elevation, with its value. The dashed white line joins the Sun and the Earth and gives their angular separation; the white arc on the plane, their azimuth difference. The table sums up the values and the Earth − Sun difference. The separation is computed with spherical trigonometry from the true azimuth and elevation.',
-        'Real scale, in kilometers: the Moon is a sphere of 1,737.4 km radius and the Sun and the Earth are at the distance and size given by JPL Horizons. That is why they look small: zoom out to see the Earth–Moon system, and on beyond the Sun. The green plane is the local reference horizon, tangent at the site, with the N/E/S/W compass; it grows as you zoom out so it stays a reference. The colored lines and arcs mark the azimuth and elevation; the gray line is the lunar spin axis.',
-        'At neither scale are the observer marker, the glows that help find the Sun and the Earth, or the plane size to scale. The Moon has no relief and the stars are decorative. This is not a visibility, power, communications or landing-suitability analysis.',
+        'Real scale, in kilometers: the Moon is a globe of 1,737.4 km radius (a NASA SVS model turned so the site lies under the observer) and the Sun and the Earth are at the distance and size given by JPL Horizons. That is why they look small: zoom out to see the Earth–Moon system, and on beyond the Sun. The green plane is the local reference horizon, tangent at the site, with the N/E/S/W compass; it grows as you zoom out so it stays a reference. The colored lines and arcs mark the azimuth and elevation; the gray line is the lunar spin axis.',
+        'At neither scale are the observer marker, the glows that help find the Sun and the Earth, or the plane size to scale. The Moon, Earth and Sun globes are appearance models: the lunar relief is coarse and is not the terrain of the site, and the rotation of the Earth and the Sun is not computed. The stars are decorative. This is not a visibility, power, communications or landing-suitability analysis.',
       ],
     },
     views: {

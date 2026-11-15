@@ -27,6 +27,7 @@ function submitButton(loading: boolean, utc = DEFAULT_UTC, upToDate = false): st
       onCoordinatesChange={vi.fn()}
       onUtcChange={vi.fn()}
       onUpdate={vi.fn()}
+      onShowUtc={vi.fn()}
     />,
   );
   return html.match(/<button type="submit".*?<\/button>/)![0];
@@ -69,6 +70,7 @@ function renderPanel(siteId: SiteId): string {
       onCoordinatesChange={vi.fn()}
       onUtcChange={vi.fn()}
       onUpdate={vi.fn()}
+      onShowUtc={vi.fn()}
     />,
   );
 }
