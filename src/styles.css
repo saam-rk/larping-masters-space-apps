@@ -623,73 +623,6 @@ button {
   min-height: 0;
 }
 
-.site-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.site-option {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1.1em minmax(0, 1fr) auto;
-  align-items: baseline;
-  gap: 0.6rem;
-  padding: 0.2rem 0.45rem;
-  cursor: pointer;
-}
-
-.site-option input {
-  position: absolute;
-  opacity: 0;
-  width: 0.0625rem;
-  height: 0.0625rem;
-  pointer-events: none;
-}
-
-.site-option__cursor {
-  visibility: hidden;
-}
-
-.site-option__name {
-  text-transform: var(--title-case);
-  letter-spacing: 0.06em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.site-option__coords {
-  color: var(--muted);
-  font-size: 0.85em;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-:where(:root:not([data-curve='on'])) .site-option:hover,
-.site-option[data-hover] {
-  background: rgba(211, 235, 204, 0.08);
-}
-
-/* Inverse video for the selected row, as in DOS menus. */
-.site-option:has(input:checked) {
-  background: var(--text);
-  color: #000;
-}
-
-.site-option:has(input:checked) .site-option__cursor {
-  visibility: visible;
-}
-
-.site-option:has(input:checked) .site-option__coords {
-  color: #1d2b1f;
-}
-
-.site-option:has(input:focus-visible) {
-  outline: 0.125rem dashed var(--accent);
-  outline-offset: 0.125rem;
-}
-
 .hint {
   margin: 0.5rem 0 0;
   color: var(--muted);
@@ -2785,19 +2718,6 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
 
   .config > .box:first-child {
     grid-row: auto;
-  }
-
-  /* Only the selected site shows its coordinates. */
-  .site-option {
-    padding: 0.1rem 0.4rem;
-  }
-
-  .site-option__coords {
-    font-size: 0.75em;
-  }
-
-  .site-option:not(:has(input:checked)) .site-option__coords {
-    display: none;
   }
 
   .results__content {

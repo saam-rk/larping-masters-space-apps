@@ -1,9 +1,8 @@
 /**
- * Site and time selection: the three featured reference points (a
- * terminal-style radio list with their coordinates), a search box for custom
- * coordinates or a point name or code (filled in when a reference point is
- * picked), a drop-down with the other reference points in alphabetical order
- * (choosing one selects it exactly like a featured point), date and time wheels with a time zone wheel
+ * Site and time selection: one drop-down with every reference point (the
+ * three featured demo points first, then the others in alphabetical order), a
+ * search box for custom coordinates or a point name or code (filled in with
+ * the coordinates when a reference point is picked), date and time wheels with a time zone wheel
  * (UTC, the time NASA uses for launches, or the browser's local zone) and the
  * update button. Explanations live in each section's help dialog.
  *
@@ -121,19 +120,19 @@ export function ConfigPanel({
   const timeFieldId = useId();
   const zoneFieldId = useId();
   const timeHintId = useId();
-  const morePointsHintId = useId();
-  const moreSites = useMemo(() => {
+  const siteListHintId = useId();
+  const listedSites = useMemo(() => {
     const collator = new Intl.Collator(locale, { sensitivity: 'base' });
-    return [...MORE_SITES].sort((a, b) => collator.compare(a.name, b.name));
+    return [...FEATURED_SITES, ...[...MORE_SITES].sort((a, b) => collator.compare(a.name, b.name))];
   }, [locale]);
-  const moreIndex = moreSites.findIndex((site) => site.id === selection.siteId);
-  const moreOptions = useMemo(
+  const listedIndex = listedSites.findIndex((site) => site.id === selection.siteId);
+  const siteOptions = useMemo(
     () =>
-      moreSites.map((site) => {
+      listedSites.map((site) => {
         const code = siteCode(site);
         return code ? `${site.name} · ${code}` : site.name;
       }),
-    [moreSites],
+    [listedSites],
   );
   const wheelHintId = useId();
   const wheelIdBase = useId();
@@ -308,26 +307,21 @@ export function ConfigPanel({
         tag={custom ? `[${config.customTag}]` : undefined}
         tagTone="warning"
       >
-        <div className="site-list" role="radiogroup" aria-labelledby={siteTitleId}>
-          {FEATURED_SITES.map((option) => (
-            <label key={option.id} className="site-option">
-              <input
-                type="radio"
-                name="reference-site"
-                value={option.id}
-                checked={selection.siteId === option.id}
-                onChange={() => handlePresetChange(option.id)}
-              />
-              <span className="site-option__cursor" aria-hidden="true">
-                ►
-              </span>
-              <span className="site-option__name">{option.name}</span>
-              <span className="site-option__coords">
-                {formatCoordinates(option.latitudeDeg, option.longitudeEastDeg, locale, messages.hemisphere)}
-              </span>
-            </label>
-          ))}
-        </div>
+        <WheelSelect
+          label={config.siteList.label}
+          placeholder={config.siteList.placeholder}
+          options={siteOptions}
+          value={listedIndex === -1 ? null : listedIndex}
+          describedBy={siteListHintId}
+          onChange={(index) => {
+            const site = listedSites[index];
+            if (site) handlePresetChange(site.id);
+          }}
+        />
+        {/* Also in the help dialog; read with the drop-down. */}
+        <p id={siteListHintId} className="visually-hidden">
+          {config.siteList.hint(listedSites.length, FEATURED_SITES.length)}
+        </p>
 
         <label className="search-field__label" htmlFor={searchFieldId}>
           {config.search}
@@ -358,21 +352,6 @@ export function ConfigPanel({
           </p>
         )}
 
-        <WheelSelect
-          label={config.morePoints.label}
-          placeholder={config.morePoints.placeholder}
-          options={moreOptions}
-          value={moreIndex === -1 ? null : moreIndex}
-          describedBy={morePointsHintId}
-          onChange={(index) => {
-            const site = moreSites[index];
-            if (site) handlePresetChange(site.id);
-          }}
-        />
-        {/* Also in the help dialog; read with the drop-down. */}
-        <p id={morePointsHintId} className="visually-hidden">
-          {config.morePoints.hint(moreSites.length)}
-        </p>
       </Box>
 
       <Box
