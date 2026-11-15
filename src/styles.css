@@ -826,7 +826,8 @@ button {
   height: calc(3 * var(--wheel-row));
   overflow: hidden;
   cursor: grab;
-  touch-action: pan-x;
+  /* The reel takes every touch gesture: a browser pan (even a sideways one) would cancel the drag. */
+  touch-action: none;
   user-select: none;
   font-variant-numeric: tabular-nums;
 }
@@ -1635,9 +1636,14 @@ input[aria-invalid='true'] {
   pointer-events: none;
 }
 
-/* The R3F wrapper sets an inline 100% size; pin it to the flexible box instead. */
+/*
+ * The R3F wrapper sets an inline 100% size; pin it to the flexible box instead.
+ * Its own stacking context keeps the 3D labels (very large inline z-index)
+ * under the overlays drawn over the view (switches, countdown, notes, zoom).
+ */
 .scene > div:first-child {
   position: absolute !important;
+  z-index: 0;
   inset: 0;
   width: auto !important;
   height: auto !important;
@@ -1681,16 +1687,32 @@ input[aria-invalid='true'] {
     0 0 0.5rem #000;
 }
 
-/* Third-person scale switch and, at visual scale, the angle legend: top left over the view. */
-.scene__overlay {
+/*
+ * Top of the view: the third-person scale switch and angle legend on the
+ * left, the set/rise countdown on the right. When both do not fit side by
+ * side (narrow views), the countdown wraps below the switch instead of
+ * covering it.
+ */
+.scene__hud {
   position: absolute;
   top: 0.5rem;
   left: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.4rem;
+  pointer-events: none;
+}
+
+/* Third-person scale switch and, at visual scale, the angle legend. */
+.scene__overlay {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.4rem;
-  max-width: calc(100% - 3.5rem);
+  max-width: 100%;
   pointer-events: none;
 }
 
@@ -1913,20 +1935,26 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   color: var(--amber);
 }
 
-/* Time left until the Sun and the Earth set or rise: top right over the view. */
+/* Time left until the Sun and the Earth set or rise: top right over the view (see `.scene__hud`). */
 .scene__countdown {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
-  max-width: calc(100% - 1rem);
+  max-width: 100%;
+  margin-left: auto;
+  pointer-events: auto;
   padding: 0.3rem 0.5rem;
   font-size: 0.8em;
   background: rgba(0, 0, 0, 0.6);
   border: 1px solid var(--line-dim);
   cursor: help;
+}
+
+/* A narrow view leaves the countdown over the sky dome: no 3D label may show through it. */
+@container scene (max-width: 34rem) {
+  .scene__countdown {
+    background: rgba(0, 0, 0, 0.88);
+  }
 }
 
 .scene__countdown-row {
@@ -3136,17 +3164,20 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
     content: none;
   }
 
-  .scene-box.scene-box--apollo {
+  /*
+   * The workspace scrolls here, so the view keeps a usable height in every
+   * view mode and site instead of shrinking to what is left of the screen.
+   */
+  .scene-box {
     min-height: clamp(19rem, 48svh, 32rem);
   }
 
   /* The zoom moves to the top right here; the countdown sits beside it. */
-  .scene-box--apollo .scene__countdown {
+  .scene__hud {
     right: 2.6rem;
-    max-width: calc(100% - 3.1rem);
   }
 
-  .scene-box--apollo .scene__controls {
+  .scene__controls {
     top: 0.5rem;
     bottom: auto;
     max-height: 7rem;
@@ -3206,10 +3237,6 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
 
   .readings__body::before {
     content: none;
-  }
-
-  .scene-box {
-    min-height: 9rem;
   }
 }
 
