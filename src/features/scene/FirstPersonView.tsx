@@ -1,8 +1,9 @@
 /**
  * First-person local horizon on LROC terrain at Apollo 11, or on LOLA terrain
  * at a site with a terrain model (Nobile Rim 1, Nobile Rim 2, Shackleton Rim,
- * Amundsen Rim, Haworth and Shoemaker Rim A, see `terrain/models.ts`). The Sun and Earth are
- * placed from the same azimuth/elevation as the results panel.
+ * Amundsen Rim, Haworth, Shoemaker Rim A and Faustini Rim A, see
+ * `terrain/models.ts`). The Sun and Earth are placed from the same
+ * azimuth/elevation as the results panel.
  *
  * Units are meters. Scene frame as in `geometry.ts` (-Z north, +X east,
  * +Y up); the world origin is the site point on the terrain surface.
@@ -155,8 +156,8 @@ function astronautInFront(source: Object3D): Object3D {
 /**
  * Small copy of the terrain triangles around `center` (GLB frame), used for
  * cheap downward ray casts instead of testing every triangle of the crop
- * (tens of thousands; Shackleton Rim, Amundsen Rim, Haworth and Shoemaker
- * Rim A pack most of them near the viewer).
+ * (tens of thousands; the camera-led polar models concentrate detail near
+ * the viewer).
  */
 function buildProbe(terrain: Mesh, center: Vector3Tuple): Mesh {
   const source = terrain.geometry;

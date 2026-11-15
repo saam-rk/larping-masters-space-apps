@@ -6,6 +6,7 @@
 import type { ObserverSiteId } from '../../../../shared/sites';
 import { APOLLO_11_TERRAIN } from './apollo11';
 import { AMUNDSEN_RIM_TERRAIN } from './amundsenRim';
+import { FAUSTINI_RIM_A_TERRAIN } from './faustiniRimA';
 import { HAWORTH_TERRAIN } from './haworth';
 import { NOBILE_RIM_1_TERRAIN } from './nobileRim1';
 import { NOBILE_RIM_2_TERRAIN } from './nobileRim2';
@@ -20,6 +21,7 @@ export const POLAR_TERRAINS: readonly PolarTerrain[] = [
   AMUNDSEN_RIM_TERRAIN,
   HAWORTH_TERRAIN,
   SHOEMAKER_RIM_A_TERRAIN,
+  FAUSTINI_RIM_A_TERRAIN,
 ];
 
 export const SITE_TERRAINS: readonly SiteTerrain[] = [APOLLO_11_TERRAIN, ...POLAR_TERRAINS];
