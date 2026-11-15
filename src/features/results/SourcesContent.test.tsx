@@ -30,6 +30,15 @@ afterEach(() => {
 });
 
 describe('source catalog', () => {
+  it('limits historical research to Apollo 11 references', () => {
+    expect(SOURCE_CATALOG.filter((source) => source.section === 'historic').map((source) => source.id)).toEqual([
+      'sp4029Landing',
+      'lrocApollo11Mapping',
+      'nasaLunarModule3d',
+      'spacecraftDimensions',
+    ]);
+  });
+
   it('has unique ids and main URLs, and every section has at least one source', () => {
     const ids = SOURCE_CATALOG.map((source) => source.id);
     const urls = SOURCE_CATALOG.map((source) => source.url);
@@ -70,7 +79,14 @@ describe('SourcesContent', () => {
   it('renders every catalog source with its reason', () => {
     const links = [...container.querySelectorAll<HTMLAnchorElement>('.sources a[target="_blank"]')].map((link) => link.href);
     for (const source of SOURCE_CATALOG) expect(links).toContain(new URL(source.url).href);
-    expect(container.textContent).toContain(MESSAGES.en.results.sourceReasons.blueGhost);
+    expect(container.textContent).toContain(MESSAGES.en.results.sourceReasons.lrocApollo11Mapping);
+  });
+
+  it('does not show references to other historical missions', () => {
+    expect(container.textContent).not.toMatch(/Apollo (12|14|15|16|17)|Luna (2|17)|Surveyor|Chang'e|Chandrayaan|SLIM|Odysseus|Blue Ghost/);
+    expect(container.textContent).toContain(MESSAGES.en.results.sourceSections.historic.title);
+    const toc = container.querySelector('nav.sources-toc')!;
+    expect(toc.textContent).toContain(`${MESSAGES.en.results.sourceSections.historic.title} 44 sources`);
   });
 
   it('jumps to a section and focuses its heading without changing the URL', () => {
