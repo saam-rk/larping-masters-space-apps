@@ -1,0 +1,30 @@
+{
+  "status": "passed",
+  "freshProcessReopen": true,
+  "blenderVersion": "5.2.2 LTS",
+  "sceneCount": 1,
+  "vertices": 40400,
+  "triangles": 80226,
+  "astronautMeshParts": 13,
+  "astronautHeightM": 1.7000000476837158,
+  "packedTerrainImages": 3,
+  "cameraHeightAboveMeshM": 1.6496238708496094,
+  "framing": [
+    {
+      "resolution": [
+        1280,
+        900
+      ],
+      "fullBodyVisible": true
+    },
+    {
+      "resolution": [
+        390,
+        844
+      ],
+      "fullBodyVisible": true
+    }
+  ],
+  "activeCamera": "Initial | 1.65 m above final mesh.008",
+  "blendSha256": "0a521c4bc4ad08d72426e77a94608b7a16d9227cad812b059796a7dc2d831896"
+}

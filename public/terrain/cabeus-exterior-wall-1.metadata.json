@@ -1,0 +1,829 @@
+{
+  "schemaVersion": 1,
+  "id": "cabeus-exterior-wall-1",
+  "generatedUtc": "2026-11-15T01:55:37.960100+00:00",
+  "source": {
+    "provider": "NASA GSFC / LRO LOLA / PGDA product 78",
+    "product": "NPA_final_adj_5mpp_surf.tif",
+    "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/NPA/NPA_final_adj_5mpp_surf.tif",
+    "catalogUrl": "https://pgda.gsfc.nasa.gov/products/78",
+    "readmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+    "citation": "Barker et al. (2021), Planetary and Space Science 203, 105119",
+    "doi": "https://doi.org/10.1016/j.pss.2020.105119",
+    "version": "No explicit product version in TIFF; identified by filename and SHA-256",
+    "sha256": "1d13a8befcaefbe168589d525aee05a14aff222068221d93406ce951600d2b32",
+    "bytes": 64033687,
+    "dimensions": [
+      4000,
+      4000
+    ],
+    "affine": [
+      5.0,
+      0.0,
+      -98500.0,
+      0.0,
+      -5.0,
+      39500.0
+    ],
+    "wkt": "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+    "rasterResolutionM": [
+      5.0,
+      5.0
+    ],
+    "nodata": "NaN",
+    "dtype": "float32",
+    "scale": 1.0,
+    "offset": 0.0,
+    "registration": "pixel centers; affine maps pixel corners",
+    "tags": {
+      "NC_GLOBAL#Conventions": "COARDS, CF-1.5",
+      "NC_GLOBAL#GMT_version": "5.4.2 (r18461) [64-bit]",
+      "NC_GLOBAL#history": "xyz2grd -bi3 -I0005.00000 -R-9.85000000000e+04/-7.85000000000e+04/1.95000000000e+04/3.95000000000e+04 -G/att/nobackup/mkbarker/GCD/grid/NPA//NPA_final_adj_5mpp_surf_test.grd -r",
+      "NC_GLOBAL#node_offset": "1",
+      "x#actual_range": "{-98500,-78500}",
+      "x#long_name": "x",
+      "y#actual_range": "{19500,39500}",
+      "y#long_name": "y",
+      "z#actual_range": "{-2612.1767578125,-1347.232055664062}",
+      "z#long_name": "z",
+      "z#_FillValue": "nan",
+      "AREA_OR_POINT": "Area"
+    }
+  },
+  "historicalWindowCheck": null,
+  "frame": {
+    "name": "MOON_ME / DE421",
+    "evidence": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+    "note": "Frame realization comes from NASA README, not the generic TIFF datum name. No frame transformation performed.",
+    "latitude": "planetocentric degrees, north positive",
+    "longitude": "degrees, east positive"
+  },
+  "crs": {
+    "proj": "+proj=stere +lat_0=-90 +lon_0=0 +k=1 +x_0=0 +y_0=0 +R=1737400 +units=m +no_defs",
+    "referenceRadiusM": 1737400,
+    "projection": "south polar stereographic",
+    "latitudeOriginDeg": -90,
+    "centralMeridianDeg": 0,
+    "scaleAtPole": 1,
+    "falseEastingM": 0,
+    "falseNorthingM": 0
+  },
+  "units": "meters",
+  "vertical": {
+    "scale": 1,
+    "reference": "radial elevation above 1737400 m lunar sphere",
+    "evidence": "docs/LUNAR_SOUTH_POLE_RESEARCH.md and its LOLA elevation-definition references",
+    "model": "Projected height field, not body-fixed Cartesian or true local ENU. Lunar curvature is not embedded."
+  },
+  "origin": {
+    "projectedXM": -88501,
+    "projectedYM": 29500,
+    "radialElevationM": -2229
+  },
+  "axes": {
+    "blender": [
+      "X = projected X - origin X",
+      "Y = projected Y - origin Y",
+      "Z = height - origin height"
+    ],
+    "glb": [
+      "X = projected X - origin X",
+      "Y = height - origin height",
+      "Z = -(projected Y - origin Y)"
+    ],
+    "note": "Projection grid directions are NOT geographic east/north at this longitude. Do not align ephemeris azimuths directly."
+  },
+  "markerTransform": {
+    "projection": "rho = 2*R*tan(pi/4 + latitudeRadians/2); X = rho*sin(longitudeRadians); Y = rho*cos(longitudeRadians)",
+    "position": "[X-originX, meshHeight-originHeight+heightAboveMeshM, -(Y-originY)]",
+    "heightMethod": "Downward ray intersection with exported GLB triangles; barycentric height, not nearest vertex",
+    "validity": "Reject outside mesh center bounds or without a triangle hit. No extrapolation, no site-ID restriction.",
+    "implementation": "tools/lunar-terrain/marker.mjs"
+  },
+  "coverage": {
+    "cropPixelOuterBoundsM": [
+      -93000.0,
+      20000.0,
+      -79000.0,
+      34000.0
+    ],
+    "meshPixelCenterBoundsM": [
+      -92997.5,
+      20002.5,
+      -79002.5,
+      33997.5
+    ],
+    "boundsOrder": "minX,minY,maxX,maxY",
+    "sourceWindow": [
+      1100,
+      1100,
+      2800,
+      2800
+    ],
+    "cropAffine": [
+      5.0,
+      0.0,
+      -93000.0,
+      0.0,
+      -5.0,
+      34000.0
+    ],
+    "validPixels": 7840000,
+    "totalPixels": 7840000,
+    "validPixelFraction": 1.0,
+    "sourceNodataPixels": 0,
+    "meshProjectedAreaM2": 195860025.0,
+    "meshCenterRectangleFraction": 1.0,
+    "removedUnsupportedTriangles": 0,
+    "validityRepresentation": "Union of exported triangles is authoritative; crop rectangle alone is not a validity test.",
+    "nodataPolicy": "Reject triangle if its source-pixel bounding box contains any missing value; conservative holes, never zero-fill.",
+    "outerEdgePolicy": "Surface stops at outer pixel centers, 2.5 m inside raster crop edges. Half-pixel border is unsupported."
+  },
+  "generation": {
+    "config": {
+      "id": "cabeus-exterior-wall-1",
+      "displayName": "Cabeus Exterior Wall 1",
+      "sourceUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/NPA/NPA_final_adj_5mpp_surf.tif",
+      "sourceCatalogUrl": "https://pgda.gsfc.nasa.gov/products/78",
+      "sourceReadmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+      "siteSource": "docs/LUNAR_ADDITIONAL_SITES_RESEARCH.md catalog row 11 (Cabeus Exterior Wall 1, NPA), NASA Lunar Surface Data Book M2M-30044 Table A2.1-1. PGDA/Data Book reference point; center of an original candidate-region polygon; not an approved landing site.",
+      "frame": "MOON_ME / DE421",
+      "referenceRadiusM": 1737400,
+      "site": {
+        "latitudeDeg": -86.9243,
+        "longitudeEastDeg": -71.5651
+      },
+      "ridge": {
+        "latitudeDeg": -87.04350651665548,
+        "longitudeEastDeg": -74.60337939050781
+      },
+      "third": {
+        "latitudeDeg": -86.85173167797728,
+        "longitudeEastDeg": -72.75912046584315
+      },
+      "cropCenterProjectedM": [
+        -86000,
+        27000
+      ],
+      "cropSizeM": [
+        14000,
+        14000
+      ],
+      "originProjectedM": [
+        -88501,
+        29500,
+        -2229
+      ],
+      "targetVertices": 40400,
+      "baseStridePixels": 20,
+      "candidateStridePixels": 4,
+      "refinementBatchSize": 2500,
+      "ridgePriorityMultiplier": 2.5,
+      "ridgePriorityRadiusM": 1800,
+      "maxGlbBytes": 2097152,
+      "nearDetail": {
+        "centerProjectedM": [
+          -88472.5,
+          29532.5
+        ],
+        "seedBandsRadiusMStridePixels": [
+          [
+            35,
+            1
+          ],
+          [
+            150,
+            2
+          ],
+          [
+            500,
+            4
+          ]
+        ],
+        "residualPriorityBoost": 10,
+        "residualPriorityRadiusM": 550,
+        "textureSquareSizeM": 50,
+        "textureFullDetailRadiusM": 15,
+        "textureFadeEndRadiusM": 24,
+        "cameraHorizontalDirection": [
+          0.6427876096865394,
+          -0.766044443118978
+        ],
+        "cameraHeightAboveMeshM": 1.65,
+        "astronautDistanceAheadM": 5,
+        "astronautSideOffsetM": 0.65,
+        "initialMovementRadiusM": 2,
+        "illustrativeLightTravelDirection": [
+          0.72,
+          0.604,
+          -0.342
+        ]
+      },
+      "featureNotes": {
+        "ridge": "Highest source pixel within 250 m of the sampled skyline at grid bearing 159 degrees from the site: a crest of a broad rise grid-south-southeast of the site, about 6.05 km away and about 186 m above it, forming the far skyline of the initial view. Descriptive label from numeric NPA elevation and illustrative hillshade; not an IAU feature name.",
+        "third": "Off-grid holdout on the plain grid-west-southwest of the site, about 2.95 km away; no mission significance.",
+        "nearDetail": "Gentlest 25 m window found within 45 m of the saved point (about 0.2 degree plane-fit slope versus 3.3 degrees at the point), about 43 m grid-northeast of it. The surrounding plain slopes about 2 to 3 degrees within 100 m and under 2 degrees within 500 m. Selected for scale-figure footing, not landing suitability.",
+        "crop": "14 x 14 km, shifted 2.5 km grid-east and 2.5 km grid-south of the saved point so that the rises seen from the initial view (grid bearings about 105-175 degrees, 5.5-6.8 km away and 50-185 m above the eye) lie inside the crop. A planar raster scan from the site in 3-degree steps found every skyline point in that sector at least 3.0 km inside the crop boundary.",
+        "light": "Illustrative Blender/QA light from grid bearing about 230 degrees at about 20 degrees elevation, so the view (grid bearing 140 degrees) is side-lit rather than backlit. Not an ephemeris Sun; the application lights terrain with its own Sun direction."
+      },
+      "siteLimitations": [
+        "The saved point lies on a gently sloping cratered plain. Grid-north and grid-northwest of it the terrain rises about 760-870 m within about 10 km, but it is still rising at the north edge of the NPA raster, so the top of that slope is not in the source data. The 14 x 14 km crop keeps only the foot of the rise (to about 4.5 km grid-north); looking grid-north or grid-northwest the modeled skyline is the crop edge, not real terrain.",
+        "Terrain beyond the NPA raster (more than about 10 km from the site) was not checked; higher features outside it can rise above the modeled skyline in every direction.",
+        "The astronaut stands on a gently sloping triangle selected for footing; no claim of walkability, safe footing or landing suitability."
+      ]
+    },
+    "algorithm": "Deterministic Delaunay adaptive residual refinement at source pixel centers; ridge-weighted error; protected site/ridge support samples; camera-led full 5 m support and nested seed bands with Gaussian near-field residual priority",
+    "refinementHistory": [
+      {
+        "verticesBefore": 22428,
+        "added": 2500,
+        "candidateMaxErrorM": 25.599072265625182
+      },
+      {
+        "verticesBefore": 24928,
+        "added": 2500,
+        "candidateMaxErrorM": 14.2938232421875
+      },
+      {
+        "verticesBefore": 27428,
+        "added": 2500,
+        "candidateMaxErrorM": 15.200634765625182
+      },
+      {
+        "verticesBefore": 29928,
+        "added": 2500,
+        "candidateMaxErrorM": 11.1868896484375
+      },
+      {
+        "verticesBefore": 32428,
+        "added": 2500,
+        "candidateMaxErrorM": 12.232226562499818
+      },
+      {
+        "verticesBefore": 34928,
+        "added": 2500,
+        "candidateMaxErrorM": 9.165852864583485
+      },
+      {
+        "verticesBefore": 37428,
+        "added": 2500,
+        "candidateMaxErrorM": 9.721289062500091
+      },
+      {
+        "verticesBefore": 39928,
+        "added": 472,
+        "candidateMaxErrorM": 8.176806640624818
+      }
+    ],
+    "vertices": 40400,
+    "triangles": 80226,
+    "compression": "none",
+    "exportAttributes": [
+      "POSITION",
+      "NORMAL",
+      "TEXCOORD_0"
+    ],
+    "versions": {
+      "python": "3.11.9",
+      "numpy": "2.4.6",
+      "rasterio": "1.4.4",
+      "gdal": "3.10.3",
+      "pyproj": "3.7.2",
+      "proj": "9.5.1",
+      "scipy": "1.17.1",
+      "blender": "5.2.2 LTS"
+    },
+    "builder": "tools/lunar-terrain/build_camera_led.py"
+  },
+  "controlPoints": [
+    {
+      "name": "site",
+      "latitudeDeg": -86.9243,
+      "longitudeEastDeg": -71.5651,
+      "projectedM": [
+        -88500.728117849,
+        29500.158913411356
+      ],
+      "rasterBilinearM": -2229.0145674194646,
+      "meshHeightM": -2229.0095984898508,
+      "meshMinusBilinearM": 0.0049689296138240024
+    },
+    {
+      "name": "ridge",
+      "latitudeDeg": -87.04350651665548,
+      "longitudeEastDeg": -74.60337939050781,
+      "projectedM": [
+        -86452.50000000064,
+        23807.50000000018
+      ],
+      "rasterBilinearM": -2042.7806396484693,
+      "meshHeightM": -2042.7806396484375,
+      "meshMinusBilinearM": 3.183231456205249e-11
+    },
+    {
+      "name": "third",
+      "latitudeDeg": -86.85173167797728,
+      "longitudeEastDeg": -72.75912046584315,
+      "projectedM": [
+        -91199.42811784787,
+        28302.258913411006
+      ],
+      "rasterBilinearM": -2181.1605711826837,
+      "meshHeightM": -2181.3502883911133,
+      "meshMinusBilinearM": -0.1897172084295562
+    }
+  ],
+  "limitations": [
+    "Visualization asset, not a landing, power, radio-link or terrain-horizon certification.",
+    "5 m sample spacing is not effective resolution; NASA reports extensive interpolation (~90%).",
+    "No count/error layers used for this mesh; valid elevation does not mean direct LOLA observation.",
+    "Planar map view omits lunar curvature; use body-fixed geometry for physical sight-line calculations.",
+    "Manual coordinates must share the documented frame. No ME/PA or IAU_MOON conversion is supplied.",
+    "Illustrative Blender light is not an ephemeris-derived Sun position.",
+    "Fine grain is illustrative normal/color detail, not LOLA spatial information.",
+    "The saved point lies on a gently sloping cratered plain. Grid-north and grid-northwest of it the terrain rises about 760-870 m within about 10 km, but it is still rising at the north edge of the NPA raster, so the top of that slope is not in the source data. The 14 x 14 km crop keeps only the foot of the rise (to about 4.5 km grid-north); looking grid-north or grid-northwest the modeled skyline is the crop edge, not real terrain.",
+    "Terrain beyond the NPA raster (more than about 10 km from the site) was not checked; higher features outside it can rise above the modeled skyline in every direction.",
+    "The astronaut stands on a gently sloping triangle selected for footing; no claim of walkability, safe footing or landing suitability.",
+    "No live viewer integration or mobile FPS/network benchmark is included."
+  ],
+  "performance": {
+    "coldLoadTargetSeconds": 2,
+    "orbitTargetFps": 60,
+    "orbitMinimumFps": 50,
+    "status": "pending",
+    "device": null,
+    "browser": null,
+    "network": null,
+    "reason": "No mobile device/network performance test performed; asset size is not latency/FPS evidence.",
+    "initialModelBytes": 2155872,
+    "initialDownloadScope": "Terrain with all embedded maps plus separate astronaut; metadata accounted separately, app JS/CSS excluded."
+  },
+  "nearDetail": {
+    "centerProjectedM": [
+      -88472.5,
+      29532.5
+    ],
+    "seedBandsRadiusMStridePixels": [
+      [
+        35,
+        1
+      ],
+      [
+        150,
+        2
+      ],
+      [
+        500,
+        4
+      ]
+    ],
+    "residualPriorityBoost": 10,
+    "residualPriorityRadiusM": 550,
+    "textureSquareSizeM": 50,
+    "textureFullDetailRadiusM": 15,
+    "textureFadeEndRadiusM": 24,
+    "cameraHorizontalDirection": [
+      0.6427876096865394,
+      -0.766044443118978
+    ],
+    "cameraHeightAboveMeshM": 1.65,
+    "astronautDistanceAheadM": 5,
+    "astronautSideOffsetM": 0.65,
+    "initialMovementRadiusM": 2,
+    "illustrativeLightTravelDirection": [
+      0.72,
+      0.604,
+      -0.342
+    ],
+    "geometryFullDensityRadiusM": 35,
+    "texture": {
+      "type": "Illustrative deterministic baked regolith; NOT geographic lunar imagery",
+      "generator": "tools/lunar-terrain/shackleton_textures.py",
+      "seed": 2404,
+      "normalSize": [
+        2048,
+        2048
+      ],
+      "colorSize": [
+        512,
+        512
+      ],
+      "roughnessSize": [
+        256,
+        256
+      ],
+      "normalTexelFootprintM": 0.0244140625,
+      "fade": "Cubic smoothstep: full to 15 m radius, neutral at 24 m; clamp-to-edge",
+      "displacement": "none",
+      "externalTextureBytes": 0,
+      "materialCount": 1,
+      "normalConvention": "glTF tangent space +Y",
+      "uv": "U=(localX-centerX)/50+0.5; V=(localProjectedY-centerY)/50+0.5"
+    }
+  },
+  "astronaut": {
+    "url": "/terrain/astronaut.glb",
+    "sourcePath": "docs/research/site-terrain/nobile-rim-2/astronaut.glb",
+    "filename": "astronaut.glb",
+    "bytes": 73896,
+    "sha256": "ce2bfc709f9ff07ee259264a2e9fbaaa8739f8e1cb657ec4be0705433c48160b",
+    "rootName": "Astronaut_1p70m.011",
+    "uniformScale": 0.9984160895515637,
+    "translationGlbM": [
+      30.166667938232422,
+      1.3733724355697632,
+      -35.833335876464844
+    ],
+    "quaternionGlbXYZW": [
+      0.0014854720793664455,
+      -0.9396761059761047,
+      0.005554742645472288,
+      0.34201720356941223
+    ],
+    "matrixGlbColumnMajor": [
+      -0.7648306488990784,
+      0.0010063133668154478,
+      0.6417691707611084,
+      0.0,
+      -0.006580920424312353,
+      0.9983500838279724,
+      -0.00940827839076519,
+      0.0,
+      -0.6417361497879028,
+      -0.01143728755414486,
+      -0.7647734880447388,
+      0.0,
+      30.166667938232422,
+      1.3733724355697632,
+      -35.833335876464844,
+      1.0
+    ],
+    "heightWorldVerticalM": 1.7000000476837158,
+    "heightAlongBodyAxisM": 1.6973073522376583,
+    "heightDefinition": "Uniformly scaled AFTER rigid slope alignment: world vertical sole-to-helmet bounds = 1.70 m. Pose and materials unchanged.",
+    "tiltDeg": 0.6587882339512731,
+    "supportProjectedM": [
+      -88470.83333206177,
+      29535.833335876465,
+      -2227.6266275644302
+    ],
+    "supportGlbM": [
+      30.166667938232422,
+      1.3733724355697632,
+      -35.833335876464844
+    ],
+    "supportTriangle": 80111,
+    "bootSoleCorners": [
+      {
+        "boot": "Astronaut_boot_R.011",
+        "blenderM": [
+          30.014629364013672,
+          35.99898910522461,
+          1.3708090782165527
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_R.011",
+        "blenderM": [
+          30.014629364013672,
+          35.99898910522461,
+          1.3708090782165527
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_R.011",
+        "blenderM": [
+          30.014629364013672,
+          35.99898910522461,
+          1.3708090782165527
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_R.011",
+        "blenderM": [
+          30.232818603515625,
+          35.73896789550781,
+          1.3746976852416992
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_R.011",
+        "blenderM": [
+          30.232818603515625,
+          35.73896789550781,
+          1.3746976852416992
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_R.011",
+        "blenderM": [
+          30.232818603515625,
+          35.73896789550781,
+          1.3746976852416992
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_R.011",
+        "blenderM": [
+          29.84636688232422,
+          35.8577995300293,
+          1.3710304498672485
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_R.011",
+        "blenderM": [
+          29.84636688232422,
+          35.8577995300293,
+          1.3710304498672485
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_R.011",
+        "blenderM": [
+          29.84636688232422,
+          35.8577995300293,
+          1.3710304498672485
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_R.011",
+        "blenderM": [
+          30.064556121826172,
+          35.5977783203125,
+          1.374919056892395
+        ],
+        "gapM": -1.1920928955078125e-07
+      },
+      {
+        "boot": "Astronaut_boot_R.011",
+        "blenderM": [
+          30.064556121826172,
+          35.5977783203125,
+          1.374919056892395
+        ],
+        "gapM": -1.1920928955078125e-07
+      },
+      {
+        "boot": "Astronaut_boot_R.011",
+        "blenderM": [
+          30.064556121826172,
+          35.5977783203125,
+          1.374919056892395
+        ],
+        "gapM": -1.1920928955078125e-07
+      },
+      {
+        "boot": "Astronaut_boot_L.011",
+        "blenderM": [
+          30.19818878173828,
+          36.15301513671875,
+          1.3705675601959229
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_L.011",
+        "blenderM": [
+          30.19818878173828,
+          36.15301513671875,
+          1.3705675601959229
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_L.011",
+        "blenderM": [
+          30.19818878173828,
+          36.15301513671875,
+          1.3705675601959229
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_L.011",
+        "blenderM": [
+          30.416378021240234,
+          35.89299392700195,
+          1.3744561672210693
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_L.011",
+        "blenderM": [
+          30.416378021240234,
+          35.89299392700195,
+          1.3744561672210693
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_L.011",
+        "blenderM": [
+          30.416378021240234,
+          35.89299392700195,
+          1.3744561672210693
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_L.011",
+        "blenderM": [
+          30.029926300048828,
+          36.01182556152344,
+          1.3707889318466187
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_L.011",
+        "blenderM": [
+          30.029926300048828,
+          36.01182556152344,
+          1.3707889318466187
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_L.011",
+        "blenderM": [
+          30.029926300048828,
+          36.01182556152344,
+          1.3707889318466187
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_L.011",
+        "blenderM": [
+          30.24811553955078,
+          35.75180435180664,
+          1.3746775388717651
+        ],
+        "gapM": -1.1920928955078125e-07
+      },
+      {
+        "boot": "Astronaut_boot_L.011",
+        "blenderM": [
+          30.24811553955078,
+          35.75180435180664,
+          1.3746775388717651
+        ],
+        "gapM": -1.1920928955078125e-07
+      },
+      {
+        "boot": "Astronaut_boot_L.011",
+        "blenderM": [
+          30.24811553955078,
+          35.75180435180664,
+          1.3746775388717651
+        ],
+        "gapM": -1.1920928955078125e-07
+      }
+    ],
+    "maxAbsoluteSoleGapM": 1.1920928955078125e-07
+  },
+  "initialCamera": {
+    "positionGlbM": [
+      27.450658798217773,
+      2.9445457458496094,
+      -40.08137130737305
+    ],
+    "targetGlbM": [
+      30.292085647583008,
+      2.2205677032470703,
+      -35.949745178222656
+    ],
+    "upGlb": [
+      0,
+      1,
+      0
+    ],
+    "verticalFovDeg": 48,
+    "nearM": 0.05,
+    "farM": 30000,
+    "heightAboveFinalMeshM": 1.65,
+    "movementRadiusM": 2,
+    "portraitMovingMinimumFovDeg": 64,
+    "movementRule": "Translate within 2 m in projected XY; re-raycast final terrain and keep 1.65 m vertical clearance. Initial vertical FOV 48 degrees. At portrait aspect < 0.6 and displacement > 1 m, widen vertical FOV to at least 64 degrees to keep the full body framed.",
+    "astronautHorizontalDistanceM": 5.042074039909756,
+    "shiftedPositionGlbM": [
+      26.36322021484375,
+      2.951423168182373,
+      -39.82160568237305
+    ],
+    "framingChecks": [
+      {
+        "camera": "Initial | 1.65 m above final mesh.008",
+        "resolution": [
+          1280,
+          900
+        ],
+        "normalizedBoundsXY": [
+          [
+            0.45092472434043884,
+            0.6008799076080322
+          ],
+          [
+            0.3027559518814087,
+            0.6910277605056763
+          ]
+        ],
+        "fullBodyInsideFrame": true
+      },
+      {
+        "camera": "Initial | 1.65 m above final mesh.008",
+        "resolution": [
+          390,
+          844
+        ],
+        "normalizedBoundsXY": [
+          [
+            0.34895437955856323,
+            0.8104916214942932
+          ],
+          [
+            0.3027559518814087,
+            0.6910277605056763
+          ]
+        ],
+        "fullBodyInsideFrame": true
+      },
+      {
+        "camera": "Shifted | movement and transition check.008",
+        "resolution": [
+          1280,
+          900
+        ],
+        "normalizedBoundsXY": [
+          [
+            0.4555104672908783,
+            0.5936498641967773
+          ],
+          [
+            0.31879034638404846,
+            0.6736688017845154
+          ]
+        ],
+        "fullBodyInsideFrame": true
+      },
+      {
+        "camera": "Shifted | movement and transition check.008",
+        "resolution": [
+          390,
+          844
+        ],
+        "normalizedBoundsXY": [
+          [
+            0.3630685806274414,
+            0.7882388234138489
+          ],
+          [
+            0.31879034638404846,
+            0.6736688017845154
+          ]
+        ],
+        "fullBodyInsideFrame": true
+      }
+    ]
+  },
+  "blenderRoundTrip": {
+    "status": "passed",
+    "vertices": 40400,
+    "triangles": 80226,
+    "bijectiveVertexMatch": true,
+    "maxNearestVertexResidualM": 0.0,
+    "textureImages": 3,
+    "normalMapImported": true,
+    "uvLayers": 1,
+    "note": "Final scene uses reimported GLB, not the source mesh; screenshots therefore exercise exported materials."
+  },
+  "artifacts": {
+    "glb": {
+      "filename": "cabeus-exterior-wall-1.glb",
+      "bytes": 2081976,
+      "sha256": "c87ae9b75028a458d5eaf1de32db73e557db60a24b8607e2755e8712a8a1c95e"
+    },
+    "astronaut": {
+      "filename": "astronaut.glb",
+      "bytes": 73896,
+      "sha256": "ce2bfc709f9ff07ee259264a2e9fbaaa8739f8e1cb657ec4be0705433c48160b"
+    },
+    "blend": {
+      "filename": "cabeus-exterior-wall-1.blend",
+      "bytes": 2866637,
+      "sha256": "0a521c4bc4ad08d72426e77a94608b7a16d9227cad812b059796a7dc2d831896",
+      "normalizedStartupFile": true
+    }
+  }
+}

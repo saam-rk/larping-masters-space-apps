@@ -1,0 +1,51 @@
+{
+  "status": "passed",
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+  "threeRevision": "187",
+  "deviceClass": "Desktop embedded browser, NOT a physical mobile device",
+  "viewport": [
+    390,
+    844
+  ],
+  "siteId": "cabeus-exterior-wall-1",
+  "terrainVertices": 40400,
+  "terrainTriangles": 80226,
+  "imageDecode": {
+    "color": [
+      512,
+      512
+    ],
+    "normal": [
+      2048,
+      2048
+    ],
+    "roughness": [
+      256,
+      256
+    ]
+  },
+  "standardPbrChannels": true,
+  "clampToEdge": true,
+  "astronautHeightM": 1.6999999723269672,
+  "maxSoleGapM": 5.5586139913188504e-8,
+  "controls": [
+    {
+      "name": "site",
+      "heightM": -2229.0095984900586
+    },
+    {
+      "name": "ridge",
+      "heightM": -2042.7806396484696
+    },
+    {
+      "name": "third",
+      "heightM": -2181.350289839604
+    }
+  ],
+  "movementCases": 102,
+  "fullBodyFramingFailures": [],
+  "renderedDrawCalls": 14,
+  "renderedTriangles": 81126,
+  "webglError": 0,
+  "mobilePerformance": "Pending: no physical device, throttled-network or FPS claim"
+}
