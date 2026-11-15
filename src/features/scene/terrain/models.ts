@@ -6,6 +6,7 @@
 import type { ObserverSiteId } from '../../../../shared/sites';
 import { APOLLO_11_TERRAIN } from './apollo11';
 import { AMUNDSEN_RIM_TERRAIN } from './amundsenRim';
+import { CABEUS_EXTERIOR_WALL_1_TERRAIN } from './cabeusExteriorWall1';
 import { FAUSTINI_RIM_A_TERRAIN } from './faustiniRimA';
 import { HAWORTH_TERRAIN } from './haworth';
 import { MALAPERT_CRATER_1_TERRAIN } from './malapertCrater1';
@@ -23,6 +24,7 @@ export const POLAR_TERRAINS: readonly PolarTerrain[] = [
   HAWORTH_TERRAIN,
   SHOEMAKER_RIM_A_TERRAIN,
   FAUSTINI_RIM_A_TERRAIN,
+  CABEUS_EXTERIOR_WALL_1_TERRAIN,
   MALAPERT_CRATER_1_TERRAIN,
 ];
 

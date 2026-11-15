@@ -69,6 +69,7 @@ describe('hasFirstPersonView', () => {
     expect(hasFirstPersonView('haworth')).toBe(true);
     expect(hasFirstPersonView('shoemaker-rim-a')).toBe(true);
     expect(hasFirstPersonView('faustini-rim-a')).toBe(true);
+    expect(hasFirstPersonView('cabeus-exterior-wall-1')).toBe(true);
     expect(hasFirstPersonView('custom')).toBe(false);
   });
 });
