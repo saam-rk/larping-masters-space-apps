@@ -1,0 +1,35 @@
+{
+  "bytes": 2064284,
+  "vertices": 40500,
+  "triangles": 80462,
+  "connectedComponents": 1,
+  "boundaryLoops": 1,
+  "interiorCracks": 0,
+  "degenerateTriangles": 0,
+  "maxVertexSourceErrorM": 2.384749336670211e-05,
+  "decodedImages": [
+    {
+      "size": [
+        2048,
+        2048
+      ],
+      "format": "JPEG"
+    },
+    {
+      "size": [
+        512,
+        512
+      ],
+      "format": "JPEG"
+    },
+    {
+      "size": [
+        128,
+        128
+      ],
+      "format": "PNG"
+    }
+  ],
+  "compression": null,
+  "browserVisualCheck": "pending: integrated browser cannot reach local Vite server"
+}
