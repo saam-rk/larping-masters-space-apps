@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "vertices": 40400,
+  "triangles": 80245,
+  "bijectiveVertexMatch": true,
+  "maxNearestVertexResidualM": 0.0,
+  "textureImages": 3,
+  "normalMapImported": true,
+  "uvLayers": 1,
+  "note": "Final scene uses reimported GLB, not the source mesh; screenshots therefore exercise exported materials."
+}

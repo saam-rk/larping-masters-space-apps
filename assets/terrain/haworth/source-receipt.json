@@ -1,0 +1,12 @@
+{
+  "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Haworth/Haworth_final_adj_5mpp_surf.tif",
+  "httpStatus": 200,
+  "date": "Sun, 15 Nov 2026 00:19:55 GMT",
+  "lastModified": "Wed, 25 Nov 2020 00:39:20 GMT",
+  "contentLength": 142123767,
+  "etag": "W/\"878a2f7-175fcd726c0\"",
+  "downloadedBytes": 142123767,
+  "sha256": "387fd6e99bca266f4982f7256c4c185921105313882b4c2eee5b5ff1ef75016b",
+  "readmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+  "note": "Complete source file kept outside the repository."
+}
