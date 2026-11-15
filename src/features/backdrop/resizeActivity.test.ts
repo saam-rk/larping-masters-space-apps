@@ -1,6 +1,10 @@
 // @vitest-environment jsdom
+/// <reference types="node" />
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { installResizeActivity, onViewportSettled, RESIZE_IDLE_MS, SETTLE_WORK_MS } from './resizeActivity';
+import { readFileSync } from 'node:fs';
+
+const styles = readFileSync('src/styles.css', 'utf8');
 
 function createTarget() {
   const target = new EventTarget();
@@ -20,6 +24,35 @@ afterEach(() => {
 });
 
 describe('installResizeActivity', () => {
+  it('keeps the curved-glass filter applied throughout zoom resize bursts', () => {
+    const style = document.createElement('style');
+    style.textContent = styles;
+    const frame = document.createElement('div');
+    frame.className = 'app__frame';
+    document.head.append(style);
+    document.body.append(frame);
+    document.documentElement.dataset.curve = 'on';
+    const { target, resize } = createTarget();
+    const cleanup = installResizeActivity(target as unknown as Window);
+
+    try {
+      expect(getComputedStyle(frame).filter).toContain('#crt-curvature');
+      for (let step = 0; step < 5; step++) {
+        resize();
+        expect(getComputedStyle(frame).filter).toContain('#crt-curvature');
+        vi.advanceTimersByTime(RESIZE_IDLE_MS - 20);
+        expect(getComputedStyle(frame).filter).toContain('#crt-curvature');
+      }
+      vi.advanceTimersByTime(RESIZE_IDLE_MS);
+      expect(getComputedStyle(frame).filter).toContain('#crt-curvature');
+    } finally {
+      cleanup();
+      style.remove();
+      frame.remove();
+      delete document.documentElement.dataset.curve;
+    }
+  });
+
   it('flags the root while resizing and clears it once the viewport is still', () => {
     const { target, resize } = createTarget();
     const cleanup = installResizeActivity(target as unknown as Window);

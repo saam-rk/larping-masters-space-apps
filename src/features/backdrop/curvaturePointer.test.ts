@@ -100,21 +100,32 @@ describe('curvature pointer remapping', () => {
     stop();
   });
 
-  it('uses native coordinates and activation while resizing, then resumes remapping', () => {
+  it('keeps coordinates and activation remapped while resizing', () => {
     const stop = installCurvaturePointer();
+    const point = drawnPointerPosition(100, 50);
     document.documentElement.dataset.resizing = 'on';
-    expect(drawnPointerPosition(100, 50)).toEqual({ x: 100, y: 50 });
+    expect(drawnPointerPosition(100, 50)).toEqual(point);
+    expect(point).not.toEqual({ x: 100, y: 50 });
     const event = clickEvent(1, 100, 50);
     fire('mousedown', event);
     fire('click', event);
-    expect(event.preventDefault).not.toHaveBeenCalled();
-    expect(event.stopImmediatePropagation).not.toHaveBeenCalled();
-    expect(drawn.click).not.toHaveBeenCalled();
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(event.stopImmediatePropagation).toHaveBeenCalled();
+    expect(drawn.click).toHaveBeenCalledOnce();
 
     delete document.documentElement.dataset.resizing;
-    expect(drawnPointerPosition(100, 50)).not.toEqual({ x: 100, y: 50 });
-    fire('click', clickEvent(1, 100, 50));
-    expect(drawn.click).toHaveBeenCalledOnce();
+    expect(drawnPointerPosition(100, 50)).toEqual(point);
+    stop();
+  });
+
+  it('leaves coordinates and activation native when the filter is disabled', () => {
+    const stop = installCurvaturePointer();
+    document.documentElement.dataset.curve = 'off';
+    expect(drawnPointerPosition(100, 50)).toEqual({ x: 100, y: 50 });
+    const event = clickEvent(1, 100, 50);
+    fire('click', event);
+    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(drawn.click).not.toHaveBeenCalled();
     stop();
   });
 
@@ -125,7 +136,7 @@ describe('curvature pointer remapping', () => {
     stop();
   });
 
-  it('does not take over a native range press while resizing', () => {
+  it('does not take over a native range press when the filter is disabled', () => {
     const stop = installCurvaturePointer();
     class TestRange extends TestElement {
       type = 'range';
@@ -133,7 +144,7 @@ describe('curvature pointer remapping', () => {
     }
     vi.stubGlobal('HTMLInputElement', TestRange);
     drawn = new TestRange();
-    document.documentElement.dataset.resizing = 'on';
+    document.documentElement.dataset.curve = 'off';
     const event = clickEvent(1, 100, 50, 'pointerdown');
     fire('pointerdown', event);
     expect(event.preventDefault).not.toHaveBeenCalled();

@@ -1,18 +1,15 @@
 /**
- * Marks the page as "resizing" while the viewport changes, so decoration that
- * is expensive to repaint can step aside until it settles.
+ * Marks the page as "resizing" while the viewport changes, so the animated
+ * CRT overlay can pause until it settles. The curved-glass filter stays on;
+ * CrtCurvature updates its map before the next paint instead of waiting here.
  *
- * Browser zoom (and dragging the window edge) re-lays out the whole page on
- * every step, and the root font size follows the viewport (see `html` in the
- * CSS), so each step repaints everything. Doing that through the full-frame
- * curvature filter and the animated CRT overlay is what made fast zooming
- * stutter. While `data-resizing="on"` is set on the root, the CSS drops the
- * filter and pauses those animations; both come back once the viewport has
- * been still for `RESIZE_IDLE_MS`.
+ * Browser zoom and dragging the window edge re-layout and repaint the whole
+ * page. While `data-resizing="on"` is set on the root, CSS pauses the overlay
+ * animations until the viewport has been still for `RESIZE_IDLE_MS`.
  *
- * Work that must follow the final size (the curvature map, the star canvas)
- * subscribes with `onViewportSettled`, which waits for the same stillness
- * (a shorter `delayMs`, so it finishes before the flag is cleared).
+ * Work that only needs the final size (the star canvas) subscribes with
+ * `onViewportSettled`, using a shorter delay so it finishes before animations
+ * resume.
  */
 
 /** How long the viewport must be still before the page counts as settled, ms. */

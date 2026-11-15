@@ -62,7 +62,7 @@ export function Backdrop({ mode }: { mode: BackdropMode }) {
     return () => setParallaxEnabled(false);
   }, [mode]);
 
-  // Lets the CSS drop the curvature filter and pause the overlay while the viewport changes.
+  // Pause the animated overlay while the viewport changes, keeping curvature visible.
   useEffect(() => installResizeActivity(), []);
 
   return (

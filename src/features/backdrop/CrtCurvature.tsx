@@ -7,10 +7,9 @@
  * once per viewport size on a small canvas and stretched by the browser; the
  * field is smooth, so bilinear scaling keeps it exact enough. Its resolution
  * is capped (`MAX_MAP_SIDE`), so zooming out (a larger CSS viewport) does not
- * make it more expensive, and it is rebuilt once a resize has settled: the
- * filter region follows the viewport, and a stale, smaller region would clip
- * the frame after zooming out. The filter itself is off while the viewport is
- * changing (see `resizeActivity.ts`), which keeps fast zooming smooth.
+ * make it more expensive. Resize events are coalesced into one rebuild before
+ * the next paint: the filter stays on, and its region follows the viewport
+ * without a stale, smaller region clipping the frame after zooming out.
  *
  * Limits:
  * - The filter only moves pixels, and the browser hit-tests the undistorted
@@ -26,10 +25,10 @@
  *   star field and the bezel keep their curvature either way.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { barrelShift, encodeShift, evaluateProbe, isCalm, isFirefox, mapChannels, maxShift, PROBE, type MapChannels } from './curvature';
 import { installCurvaturePointer } from './curvaturePointer';
-import { onViewportSettled } from './resizeActivity';
 
 /** Decided once: the browser does not change during a visit. */
 const FILTER_SUPPORTED = typeof navigator === 'undefined' || !isFirefox(navigator.userAgent);
@@ -209,8 +208,9 @@ export function CrtCurvature({ enabled: requested }: { enabled: boolean }) {
   const [map, setMap] = useState<CurvatureMap | null>(null);
   const [verdict, setVerdict] = useState<'probing' | 'fast' | 'slow'>(probeResult ?? 'probing');
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!enabled) return;
+    let frameId = 0;
     let built = { width: 0, height: 0 };
     const build = () => {
       const { width, height } = readViewport();
@@ -219,16 +219,26 @@ export function CrtCurvature({ enabled: requested }: { enabled: boolean }) {
       setMap(createMap(width, height));
     };
     build();
-    // Rebuilt once the viewport is still. While it changes, the CSS switches the
-    // filter off (see `data-resizing` in resizeActivity.ts), so a stale map
-    // never clips the frame and a burst of zoom steps costs one rebuild.
-    return onViewportSettled(build);
+    const onResize = () => {
+      if (frameId !== 0) return;
+      frameId = requestAnimationFrame(() => {
+        frameId = 0;
+        // Commit the new image and filter bounds together before this paint,
+        // rather than letting React defer them while the viewport has grown.
+        flushSync(build);
+      });
+    };
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      if (frameId !== 0) cancelAnimationFrame(frameId);
+    };
   }, [enabled]);
 
   const active = enabled && map !== null && verdict !== 'slow';
 
-  // The CSS only references the filter once the map exists.
-  useEffect(() => {
+  // Keep the CSS readiness flag and map in sync before the browser paints.
+  useLayoutEffect(() => {
     const root = document.documentElement;
     root.dataset.curve = active ? 'on' : 'off';
     if (active) root.style.setProperty('--curve-pad', `${map.pad}px`);

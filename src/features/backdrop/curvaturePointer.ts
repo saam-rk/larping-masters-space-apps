@@ -177,10 +177,9 @@ function fullscreenShown(): boolean {
   return Boolean(document.fullscreenElement) || document.querySelector('[data-fullscreen]') !== null;
 }
 
-/** The resize CSS temporarily removes the filter without changing its readiness flag. */
+/** Curvature remains visible during resize, so pointer remapping must stay active. */
 function curvatureVisible(): boolean {
-  const { curve, resizing } = document.documentElement.dataset;
-  return curve === 'on' && resizing !== 'on';
+  return document.documentElement.dataset.curve === 'on';
 }
 
 /**
@@ -358,7 +357,7 @@ export function installCurvaturePointer(): () => void {
   window.addEventListener('click', onClick, true);
   document.documentElement.addEventListener('pointerleave', onPointerLeave);
   window.addEventListener('blur', onBlur);
-  // Remove stale remapped hover/cursor as soon as the resize CSS drops the filter.
+  // Clear hover/cursor from the old layout when the viewport changes.
   window.addEventListener('resize', onPointerLeave);
 
   return () => {
