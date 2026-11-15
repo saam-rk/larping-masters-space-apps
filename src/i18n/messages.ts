@@ -87,12 +87,12 @@ export interface Messages {
     /** Confirms how custom coordinates were read. */
     readonly searchReading: (coordinates: string) => string;
     /** Drop-down of further reference points; its options are placeholders for now. */
-    readonly morePoints: {
+    readonly siteList: {
       readonly label: string;
-      /** Shown while no option is chosen. */
+      /** Shown while no option is chosen (a custom point). */
       readonly placeholder: string;
-      /** Read with the drop-down: what its points are and how they are computed. */
-      readonly hint: (count: number) => string;
+      /** Read with the drop-down: what its points are, their order and how they are computed. */
+      readonly hint: (count: number, featured: number) => string;
     };
     readonly searchErrors: {
       readonly empty: string;
@@ -380,7 +380,7 @@ const es: Messages = {
     siteInfo: [
       'Elige el punto del polo sur lunar desde el que se calcula el cielo.',
       'Son los centros de regiones candidatas publicadas por NASA (Lunar Surface Data Book, tabla A2.1-1). No son lugares de aterrizaje aprobados.',
-      'Arriba están los tres puntos principales de la demo. El desplegable «Más puntos de referencia» tiene el resto de puntos documentados, en orden alfabético; se calculan con el mismo método y se muestran en la vista en tercera persona (la vista en primera persona con relieve solo existe para algunos puntos).',
+      'El desplegable «Lista de puntos» empieza por los tres puntos principales de la demo (Nobile Rim 1, Nobile Rim 2 y Shackleton Rim) y sigue con el resto de puntos documentados, en orden alfabético. Todos se calculan con el mismo método; la vista en primera persona con relieve solo existe para algunos puntos y el resto se muestra en tercera persona.',
       'También puedes escribir unas coordenadas en grados (latitud, longitud; sur y oeste en negativo o con S/O) o buscar un punto por su nombre o código (p. ej. «Haworth», «DM1», «Site20v2»). Un punto personalizado se calcula con el mismo método, a altura 0 km y sin relieve, y no tiene fuente publicada.',
       '«Leibnitz Beta Plateau, extended boundaries» (Site20v2) es una variante del producto de terreno de PGDA con las mismas coordenadas que Leibnitz Beta Plateau (Site20): su cálculo es idéntico.',
     ],
@@ -389,11 +389,11 @@ const es: Messages = {
     search: 'Coordenadas o nombre',
     searchPlaceholder: '-85.4381, 37.36667 · Haworth',
     searchReading: (coordinates) => `Punto personalizado: ${coordinates}`,
-    morePoints: {
-      label: 'Más puntos de referencia',
-      placeholder: 'Elegir otro punto…',
-      hint: (count) =>
-        `${count} puntos más del Lunar Surface Data Book, en orden alfabético. Se calculan con el mismo método y se muestran en tercera persona.`,
+    siteList: {
+      label: 'Lista de puntos',
+      placeholder: 'Elegir un punto de la lista…',
+      hint: (count, featured) =>
+        `${count} puntos del Lunar Surface Data Book: primero los ${featured} principales de la demo y después el resto, en orden alfabético. Todos se calculan con el mismo método.`,
     },
     searchErrors: {
       empty: 'Escribe unas coordenadas o el nombre de un punto.',
@@ -781,7 +781,7 @@ const en: Messages = {
     siteInfo: [
       'Choose the lunar south-pole point the sky is computed from.',
       'They are the centers of candidate regions published by NASA (Lunar Surface Data Book, table A2.1-1). They are not approved landing sites.',
-      'The three main demo points are listed first. The "More reference points" drop-down has the other documented points, in alphabetical order; they are computed with the same method and shown in the third-person view (the first-person terrain view only exists for some points).',
+      'The "Point list" drop-down starts with the three main demo points (Nobile Rim 1, Nobile Rim 2 and Shackleton Rim) and continues with the other documented points, in alphabetical order. All are computed with the same method; the first-person terrain view only exists for some points, and the others are shown in third person.',
       'You can also type coordinates in degrees (latitude, longitude; south and west negative or with S/W) or search a point by name or code (e.g. "Haworth", "DM1", "Site20v2"). A custom point is computed with the same method, at 0 km height and without terrain, and has no published source.',
       '"Leibnitz Beta Plateau, extended boundaries" (Site20v2) is a PGDA terrain-product variant with the same coordinates as Leibnitz Beta Plateau (Site20): its calculation is identical.',
     ],
@@ -790,11 +790,11 @@ const en: Messages = {
     search: 'Coordinates or name',
     searchPlaceholder: '-85.4381, 37.36667 · Haworth',
     searchReading: (coordinates) => `Custom point: ${coordinates}`,
-    morePoints: {
-      label: 'More reference points',
-      placeholder: 'Choose another point…',
-      hint: (count) =>
-        `${count} more points from the Lunar Surface Data Book, in alphabetical order. They are computed with the same method and shown in third person.`,
+    siteList: {
+      label: 'Point list',
+      placeholder: 'Choose a point from the list…',
+      hint: (count, featured) =>
+        `${count} points from the Lunar Surface Data Book: the ${featured} main demo points first, then the others in alphabetical order. All are computed with the same method.`,
     },
     searchErrors: {
       empty: 'Type coordinates or the name of a point.',

@@ -3,7 +3,7 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { siteAt } from '../../../shared/sites';
+import { findSite, siteAt, type SiteId } from '../../../shared/sites';
 import { fetchEphemeris } from '../../api/ephemerisClient';
 import { SAVED_SAMPLE } from '../../data/savedSample';
 import { useEphemeris } from '../../hooks/useEphemeris';
@@ -65,8 +65,13 @@ function keyWheel(name: string, key: string) {
   act(() => { wheel.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })); });
 }
 
-function chooseSite(id: string) {
-  act(() => container.querySelector<HTMLInputElement>(`input[value="${id}"]`)!.click());
+/** Picks a reference point from the site drop-down by its id. */
+function chooseSite(id: SiteId) {
+  const { name } = findSite(id);
+  const option = [...container.querySelectorAll<HTMLElement>('[role="option"]')].find(
+    (element) => element.textContent?.split(' · ')[0] === name,
+  )!;
+  act(() => option.click());
 }
 
 describe('D-020 duplicate-update policy', () => {
