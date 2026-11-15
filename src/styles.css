@@ -480,22 +480,12 @@ button {
 }
 
 .sources__group {
-  margin: 1.1rem 0 0.45rem;
+  margin: 0;
   font-size: 0.8em;
   font-weight: normal;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
-  border-bottom: 0.0625rem dashed var(--line-dim);
-  padding-bottom: 0.2rem;
-}
-
-.sources-list > .sources__group:first-child {
-  margin-top: 0;
-}
-
-.sources-list > .sources {
-  margin-bottom: 0.65rem;
 }
 
 .sources__reason {
@@ -503,6 +493,128 @@ button {
   padding-left: 2ch;
   color: var(--muted);
   font-size: 0.9em;
+}
+
+/* Secondary links of one source (mirror, related file or paper). */
+.sources__extra {
+  font-size: 0.9em;
+}
+
+/* Sources dialog: numbered table of contents; each entry jumps to its part. */
+.sources-toc {
+  margin: 0 0 0.4rem;
+  padding: 0.5rem 0.75rem 0.6rem;
+  border: 0.0625rem dashed var(--line-dim);
+  background: rgba(10, 30, 18, 0.45);
+}
+
+.sources-toc__title {
+  margin: 0 0 0.35rem;
+  font-size: 0.8em;
+  font-weight: normal;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.sources-toc__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sources-toc__list .sources-toc__list {
+  margin: 0.1rem 0 0.3rem;
+  padding-left: 2.5ch;
+}
+
+.sources-toc__list a {
+  display: flex;
+  align-items: baseline;
+  gap: 1ch;
+  padding: 0.05rem 0.2rem;
+  text-decoration: none;
+}
+
+.sources-toc__list a:hover,
+.sources-toc__list a:focus-visible {
+  text-decoration: underline;
+}
+
+.sources-toc__number {
+  flex: none;
+  min-width: 3ch;
+  color: var(--muted);
+}
+
+.sources-toc__count {
+  margin-left: auto;
+  padding-left: 1ch;
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
+.sources-toc__list a:hover .sources-toc__number,
+.sources-toc__list a:hover .sources-toc__count {
+  color: inherit;
+}
+
+/* Part (h3) and section (h4) headings; jump targets keep clear of the top edge. */
+/* Heading row: the heading, then its "back to contents" link outside it. */
+.sources__heading {
+  display: flex;
+  align-items: baseline;
+  gap: 1ch;
+  margin: 0.9rem 0 0.2rem;
+}
+
+.sources__heading--group {
+  margin: 1.1rem 0 0.45rem;
+  padding-bottom: 0.2rem;
+  border-bottom: 0.0625rem dashed var(--line-dim);
+}
+
+.sources__group,
+.sources__section {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  gap: 1ch;
+  scroll-margin-top: 0.5rem;
+}
+
+.sources__group:focus,
+.sources__section:focus,
+.sources-toc__title:focus {
+  outline: none;
+}
+
+.sources__section {
+  margin: 0;
+  font-size: 1em;
+  font-weight: normal;
+  color: var(--text);
+}
+
+.sources__number {
+  flex: none;
+  color: var(--muted);
+}
+
+.sources__back {
+  flex: none;
+  padding: 0 0.35rem;
+  font-size: 0.9em;
+  text-decoration: none;
+}
+
+.sources__summary {
+  color: var(--muted);
+  font-size: 0.9em;
+}
+
+.sources-list section > .sources {
+  margin-bottom: 0.65rem;
 }
 
 /* ───────────────────────── Status tags ───────────────────────── */

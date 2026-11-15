@@ -13,7 +13,7 @@ import { SOLAR_ECLIPSE_MAX_SEPARATION_DEG, TERRESTRIAL_ECLIPSE_MIN_SEPARATION_DE
 import type { PresenceState } from '../../shared/presence.js';
 import type { SkyAngle, SkySearchDirection } from '../../shared/skySearch.js';
 import type { SkySearchExample } from '../features/sky-search/examples';
-import type { SourceId } from '../features/results/sourceCatalog';
+import type { SourceId, SourceSectionId } from '../features/results/sourceCatalog';
 import type { HorizonEvent } from '../features/scene/horizonEvents';
 import type { SceneScale } from '../features/scene/sceneScale';
 import type { ViewMode } from '../features/scene/viewMode';
@@ -326,10 +326,17 @@ export interface Messages {
     readonly positionSource: string;
     readonly partial: string;
     readonly versionUnverified: string;
+    /** Sources dialog: table-of-contents title and the link back to it. */
+    readonly sourcesContents: string;
+    readonly sourcesBackToContents: string;
+    /** Accessible label of the source count next to each contents entry. */
+    readonly sourcesCount: (count: number) => string;
     /** Sources dialog group headings (see `features/results/sourceCatalog.ts`). */
     readonly sourcesCurrent: string;
     readonly sourcesApp: string;
     readonly sourcesResearch: string;
+    /** Name and one-line plain-language summary of each part of the project. */
+    readonly sourceSections: Readonly<Record<SourceSectionId, { readonly title: string; readonly summary: string }>>;
     /** Why each project source is listed (one short sentence). */
     readonly sourceReasons: Readonly<Record<SourceId, string>>;
   };
@@ -718,50 +725,164 @@ const es: Messages = {
     positionSource: 'Posiciones',
     partial: 'Resultado incompleto: uno de los objetos no se pudo calcular.',
     versionUnverified: 'Horizons devolvió una versión de API no comprobada; revisa los valores.',
+    sourcesContents: 'Contenido',
+    sourcesBackToContents: 'Volver al contenido',
+    sourcesCount: (count) => (count === 1 ? '1 fuente' : `${count} fuentes`),
     sourcesCurrent: 'Esta consulta',
     sourcesApp: 'Datos y métodos usados en la aplicación',
     sourcesResearch: 'Consultadas en la investigación (no integradas ni validadas en la app)',
+    sourceSections: {
+      ephemeris: {
+        title: 'Posiciones del Sol y la Tierra',
+        summary: 'De dónde salen el azimut y la elevación del panel, de la vista 3D y de la reproducción del intervalo.',
+      },
+      sites: {
+        title: 'Puntos de referencia',
+        summary: 'De dónde salen los nombres y las coordenadas de los lugares que puedes elegir.',
+      },
+      terrain: {
+        title: 'Relieve 3D',
+        summary: 'Modelos de elevación y herramientas con los que se construyen los terrenos en primera persona.',
+      },
+      apollo: {
+        title: 'Recreación del Apolo 11',
+        summary: 'Fechas, horas y detalles de la escena histórica. Las figuras son una ilustración, no una reconstrucción exacta.',
+      },
+      models: {
+        title: 'Modelos del Sol, la Tierra y la Luna',
+        summary:
+          'Texturas de las esferas en tercera persona. Son imágenes de apariencia, no datos para medir; el Sol es una textura propia, sin fuente científica.',
+      },
+      challenge: {
+        title: 'Reto, normas y uso de datos',
+        summary: 'El enunciado que fija el alcance y las condiciones para reutilizar y citar datos.',
+      },
+      polarTerrain: {
+        title: 'Relieve del polo sur evaluado',
+        summary: 'Otros modelos de elevación revisados al elegir el relieve. Que aparezcan aquí no significa que estén integrados.',
+      },
+      imagery: {
+        title: 'Imágenes del polo sur',
+        summary: 'Fotos y mosaicos para mirar el terreno. Sin alturas no sirven para calcular el horizonte.',
+      },
+      frames: {
+        title: 'Marcos de referencia y cálculo',
+        summary: 'Cómo se describen las coordenadas lunares y qué herramientas harían un cálculo más completo.',
+      },
+      illumination: {
+        title: 'Luz, horizonte y comunicaciones',
+        summary: 'Trabajos sobre cómo el relieve tapa el Sol o la Tierra. La app todavía no hace este cálculo.',
+      },
+      environment: {
+        title: 'Entorno lunar',
+        summary: 'Temperatura, hielo, cráteres y riesgos de aterrizaje como contexto; no son datos de los puntos elegidos.',
+      },
+      historic: {
+        title: 'Alunizajes históricos',
+        summary: 'Investigación sobre otras misiones para posibles escenas futuras; de momento solo el Apolo 11 está en la app.',
+      },
+    },
     sourceReasons: {
-      apolloLanding: 'Fecha y hora del alunizaje del Apolo 11, según el catálogo de NASA.',
-      apolloTerrain: 'Modelo de elevación LROC de 2 m/píxel que sirve de base a la recreación del Apolo 11.',
-      lunarSurfaceDataBook:
-        'Nombres y coordenadas de puntos de referencia en el polo sur; son centros de regiones candidatas.',
       horizonsApi: 'Calcula azimut, elevación, tamaño angular y distancia del Sol y la Tierra desde el punto lunar elegido.',
       horizonsManual: 'Define las cantidades del observador y los marcadores de presencia que traducimos a los estados del panel.',
       jplApiPolicy: 'Normas de uso y política CORS: por eso la consulta pasa por nuestra ruta de servidor y se guarda en caché.',
-      pgda78: 'Relieve LOLA de 5 m/píxel del que salen las mallas 3D de Nobile Rim 1, Nobile Rim 2, Shackleton Rim y Amundsen Rim (10 × 10 km), de Haworth (12 × 14 km) y de Shoemaker Rim A y Faustini Rim A (12 × 12 km) en primera persona; también documenta la variante ampliada Site20v2.',
+      moonOrbit:
+        'Duración media de los meses lunares con la que la reproducción del intervalo fija su recorrido; un mes real puede diferir en horas.',
+      lunarSurfaceDataBook:
+        'Nombres y coordenadas de puntos de referencia en el polo sur; son centros de regiones candidatas.',
+      nssdcaLandingSites:
+        'Coordenadas del módulo lunar del Apolo 11, medidas en imágenes de LRO (marco Mean Earth/Polar Axis, DE421).',
+      pgda78:
+        'Relieve LOLA de 5 m/píxel del que salen las mallas 3D en primera persona: Nobile Rim 1, Nobile Rim 2, Shackleton Rim y Amundsen Rim (10 × 10 km), Haworth (12 × 14 km), Shoemaker Rim A y Faustini Rim A (12 × 12 km), Cabeus Exterior Wall 1 (14 × 14 km) y Malapert Crater 1 (20 × 20 km). También documenta la variante ampliada Site20v2.',
       pgda78Readme: 'Unidades, marco MOON_ME/DE421 y proyección estereográfica polar con los que situamos el punto sobre la malla.',
-      barker2021: 'Cita de los productos DM1, DM2, Haworth, LM2 y LM7: método de los mapas LOLA mejorados, sus errores y el cálculo de horizontes.',
+      barker2021:
+        'Cita de los productos DM1, DM2, Haworth, LM2, LM7, NPA y NPD: método de los mapas LOLA mejorados, sus errores y el cálculo de horizontes.',
+      apolloTerrain:
+        'Modelo de elevación LROC de 2 m/píxel que sirve de base a la recreación del Apolo 11, con su mapa de confianza y su ortofoto.',
+      lrocProcessingGuide: 'Explica que a las alturas del modelo del Apolo 11 hay que sumar 1 737 400 m para obtener el radio lunar.',
+      lroCoordinateSystem: 'Convención de coordenadas Mean Earth en la que está expresado el relieve del Apolo 11.',
+      blenderGltf: 'Formato y opciones de exportación con los que convertimos el relieve en archivos GLB para la web.',
+      apolloLanding: 'Fecha y hora del alunizaje del Apolo 11, según el catálogo de NASA.',
+      alsjStep:
+        'Momento en que se iza la bandera (110:09:43 de misión) y primer contacto con la superficie: así se decide cuándo aparece la bandera.',
+      alsjLaunch: 'Hora del despegue del módulo (124:22:00 de misión); desde entonces solo queda la bandera en la escena.',
+      nasaFlagHistory: 'Forma de la bandera: barra horizontal y tela de 3 × 5 pies.',
+      nasaApolloProgram: 'Armstrong y Aldrin bajaron a la superficie y Collins se quedó en órbita; la tercera figura de la escena es ficticia.',
+      grcMoonGravity: 'Gravedad lunar de 1,62 m/s² que usa el salto ilustrativo de una figura.',
+      alsjLittleWest: 'Cráter Little West y mapas históricos del USGS para revisar el entorno del lugar de alunizaje.',
+      lrocApolloExhibit: 'Explicación del lugar histórico y del cráter West vistos por LRO.',
+      svsMoonKit: 'Color LROC y relieve LOLA de la Luna en tercera persona; NASA ajustó el color por estética.',
+      svsBlueMarble: 'Textura de la Tierra: un mosaico histórico, no el tiempo ni las nubes de una fecha concreta.',
+      nasaMediaGuidelines: 'Condiciones para reutilizar imágenes de NASA conservando sus créditos; el crédito no implica respaldo de NASA.',
       spaceAppsChallenge: 'Enunciado del reto que define el alcance del proyecto.',
-      pgda90: 'Relieve regional ajustado del polo sur: contexto de los tres puntos y perfiles de horizonte exploratorios.',
+      spaceAppsLegal: 'Términos del evento: citar cada fuente y documentar las licencias de los materiales de terceros.',
+      pdsFaq: 'Los datos del archivo PDS son de dominio público y piden ser citados; recomienda comprobar sumas de control.',
+      pgda90: 'Relieve regional ajustado del polo sur: contexto de los tres puntos iniciales y perfiles de horizonte exploratorios.',
       barker2023: 'Describe los productos LOLA regionales y sus capas de error y densidad de observaciones.',
       pgda81: 'Mosaico polar evaluado: cubre Shackleton Rim, pero no los dos puntos Nobile.',
-      pgda69: 'Iluminación, sombra permanente y visibilidad de la Tierra promediadas a largo plazo; no valen para una hora concreta.',
-      mazarico2011: 'Método de referencia para modelar la iluminación polar teniendo en cuenta el relieve.',
+      pgda104: 'Alternativa de 5 m con más detalle en zonas iluminadas; evaluada, no integrada.',
+      sfsArchive: 'Archivo descargable de esos modelos de detalle; declara licencia CC BY 4.0, versión y regiones cubiertas.',
       pdsLola: 'Archivo oficial de LOLA; consultamos sus etiquetas para decodificar alturas y unidades.',
+      lolaPolarGdr: 'Mapas polares estándar de LOLA; sus etiquetas aclaran marco, proyección y la diferencia entre altura y radio.',
+      lolaRdrSis: 'Define la altura como radio menos una esfera de 1 737 400 m; no es «altura sobre el nivel del mar».',
+      lolaArchiveSis: 'Estructura del archivo LOLA; confirma que SLDEM2015 solo llega hasta ±60° de latitud.',
+      lolaInstrument: 'Descripción del instrumento LOLA y de cómo define la elevación.',
       sldem2015: 'Descartado: solo cubre latitudes entre ±60°, lejos de los puntos polares.',
-      lrocNac: 'Relieve estéreo de alto detalle; los modelos revisados (NOBILE01, SHACKRDGE02) no cubren los puntos elegidos.',
+      lrocNac:
+        'Catálogo de zonas con relieve estéreo de alto detalle; los modelos revisados (NOBILE01, SHACKRDGE02) no cubren los puntos elegidos.',
+      usgsNacStereo: 'Método para obtener relieve detallado a partir de pares de imágenes NAC de LROC.',
       lrocGld100: 'Contexto global; en los polos no es relieve estéreo propio, sino relleno con LOLA.',
       kaguyaDtm: 'Evaluado: su cobertura llega a ±70°, fuera de los puntos polares.',
-      pgda104: 'Alternativa de 5 m con más detalle en zonas iluminadas; evaluada, no integrada.',
+      nacPoleControlled: 'Mosaico de 1 m/píxel entre 84 y 90° S, con control de posición solo entre 85 y 90° S.',
+      nacPoleUncontrolled: 'Mosaico de 1 m/píxel sin ajustar entre imágenes: puede tener costuras y sombras de fechas distintas.',
+      nacPolePsr: 'Cubre a parches las zonas en sombra permanente; sus valores son de visualización, no de brillo físico.',
+      shadowCamArchive: 'Imágenes pensadas para ver el terreno en sombra; no aportan alturas.',
+      shadowCam: 'Imágenes del interior en sombra de Shackleton; no aportan alturas.',
+      moonTrek: 'Inspección visual de perfiles y del relieve alrededor de los puntos.',
+      lunarCoordinateWhitePaper:
+        'Convenciones de coordenadas: longitud positiva hacia el este, esfera de 1737,4 km y diferencia entre los marcos ME y PA.',
       pgda95: 'Diferencia entre los marcos MOON_ME y MOON_PA (unos 875 m): no se deben mezclar.',
       naifFrameKernel: 'Correspondencia oficial de los marcos lunares para un futuro cálculo con SPICE.',
-      naifSpice: 'Rutinas de referencia para un cálculo controlado de dirección, iluminación y ocultación.',
+      naifSpice: 'Rutinas de referencia para un cálculo controlado de tiempo, dirección, iluminación, ocultación y cruce con el relieve.',
+      projStere: 'Referencia de la proyección estereográfica polar usada para situar coordenadas.',
+      gdal: 'Inspección de dimensiones, sistema de referencia y datos ausentes de los ráster, y lectura remota por partes.',
+      pgda69: 'Iluminación, sombra permanente y visibilidad de la Tierra promediadas a largo plazo; no valen para una hora concreta.',
+      mazarico2011: 'Método de referencia para modelar la iluminación polar teniendo en cuenta el relieve.',
       bryantIpn: 'Enfoque establecido: máscara de horizonte desde el relieve comparada con el Sol y la Tierra.',
       minow2023: 'Tamaño finito del disco solar, relevante cerca del horizonte polar.',
       dsn810: 'Referencia de enlaces de radio: la geometría por sí sola no garantiza comunicación.',
       glennPropagation: 'Por qué el relieve afecta a la propagación de radio en la superficie lunar.',
       hlsThermal: 'Contexto de ingeniería para el análisis térmico lunar.',
-      diviner: 'Temperaturas superficiales de LRO como contexto térmico.',
+      diviner: 'Temperaturas superficiales medidas por LRO, como contexto térmico.',
       lcross: 'Evidencia de hielo de agua en Cabeus; contexto, no dato de los puntos elegidos.',
       moonWater: 'Contexto general sobre agua y hielo en la Luna.',
-      shadowCam: 'Imágenes del interior en sombra de Shackleton; no aportan alturas.',
       zuberShackleton: 'Dimensiones del cráter Shackleton como contexto.',
+      gazetteer: 'Nombres oficiales de accidentes lunares y su ubicación aproximada, como el cráter Nobile.',
       landingHazard: 'La seguridad del aterrizaje exige analizar pendientes, rocas y cráteres aparte.',
-      moonTrek: 'Inspección visual de perfiles y del relieve alrededor de los puntos.',
-      gazetteer: 'Nombres oficiales de accidentes lunares y su ubicación aproximada.',
-      projStere: 'Referencia de la proyección estereográfica polar usada para situar coordenadas.',
-      gdal: 'Inspección de dimensiones, sistema de referencia y datos ausentes de los ráster.',
+      nssdcaApolloLandings: 'Nombre de cada lugar Apolo y totales de cada misión: tiempo fuera de la nave, recorrido y muestras.',
+      apolloMissionRecords: 'Tripulación y datos básicos de las misiones Apolo 12 a 17.',
+      sp4029Landing: 'Horas de alunizaje e inclinación del módulo al posarse; por ejemplo, 4,5° en el Apolo 11.',
+      lrocApolloDtms: 'Modelos de elevación de los demás lugares Apolo (de 2 a 5 m/píxel) para posibles escenas.',
+      lrocApollo11Mapping: 'Posiciones y recorridos de Armstrong y Aldrin, equipos, fotos y muestras del Apolo 11.',
+      nasaLunarModule3d: 'Modelo 3D candidato del módulo lunar; escala, variante y licencia aún sin revisar.',
+      spacecraftDimensions: 'El módulo lunar mide unos 7 m de alto y 9,4 m entre patas: sirve para comprobar la escala.',
+      nssdcaImpactSites: 'Fechas y coordenadas de las naves que llegaron a la Luna; las más antiguas son aproximadas.',
+      luna2History: 'Primer objeto en llegar a la Luna (1959), por impacto; su posición es aproximada.',
+      roboticExplorationHistory: 'Historia de la exploración robótica de la Luna como contexto.',
+      nssdcaSovietMissions: 'Horas de alunizaje de las misiones Luna 9, 16, 17, 20, 21 y 24.',
+      lrocLuna17: 'Vista de LRO del lugar del Luna 17 como prueba histórica.',
+      jplLunarConstants: 'Cronología lunar que distingue los retornos de muestras logrados de los fallidos.',
+      nssdcaSurveyor: 'Instrumentos de cada Surveyor: no todas las naves llevaban la misma carga.',
+      surveyor1: 'Hora de alunizaje y forma de la nave (unos 3 m y tres patas), con fotos digitalizadas.',
+      nasaMoonMissions: 'Lista de misiones lunares de NASA como contexto.',
+      change3Terrain: 'Relieve muy detallado solo junto a algunas paradas del rover; no es un mapa global.',
+      change4: "Fecha y lugar del Chang'e 4 en la cara oculta; la reconstrucción del descenso da una posición algo distinta.",
+      change5: 'Alunizaje en 2020 y regreso a la Tierra con unos 1731 g de muestras.',
+      change6: 'Hora del alunizaje en la cara oculta (2024) y regreso de 1935,3 g de muestras.',
+      chandrayaan3: 'Posición registrada del alunizaje; ISRO publica el centro de la zona prevista, que no es el punto real.',
+      slim: 'Fecha del alunizaje; el informe de JAXA muestra que la nave quedó inclinada, no derecha.',
+      im1Navigation: 'Posición publicada del alunizaje de Odysseus (2024), más precisa que la del catálogo.',
+      blueGhost: 'Alunizaje CLPS de 2025 en Mare Crisium, estable y de pie: conecta con el tema CLPS de la app.',
     },
   },
   skySearch: {
@@ -1229,50 +1350,161 @@ const en: Messages = {
     positionSource: 'Positions',
     partial: 'Incomplete result: one of the objects could not be computed.',
     versionUnverified: 'Horizons returned an unverified API version; check the values.',
+    sourcesContents: 'Contents',
+    sourcesBackToContents: 'Back to contents',
+    sourcesCount: (count) => (count === 1 ? '1 source' : `${count} sources`),
     sourcesCurrent: 'This query',
     sourcesApp: 'Data and methods used in the app',
     sourcesResearch: 'Consulted during research (not integrated or validated in the app)',
+    sourceSections: {
+      ephemeris: {
+        title: 'Sun and Earth positions',
+        summary: 'Where the azimuth and elevation in the panel, the 3D view and the interval playback come from.',
+      },
+      sites: {
+        title: 'Reference sites',
+        summary: 'Where the names and coordinates of the places you can choose come from.',
+      },
+      terrain: {
+        title: '3D terrain',
+        summary: 'Elevation models and tools used to build the first-person terrains.',
+      },
+      apollo: {
+        title: 'Apollo 11 reenactment',
+        summary: 'Dates, times and details of the historic scene. The figures are an illustration, not an exact reconstruction.',
+      },
+      models: {
+        title: 'Sun, Earth and Moon models',
+        summary:
+          'Textures of the third-person spheres. They are appearance images, not data to measure with; the Sun is our own texture with no scientific source.',
+      },
+      challenge: {
+        title: 'Challenge, rules and data use',
+        summary: 'The statement that sets the scope, and the conditions for reusing and citing data.',
+      },
+      polarTerrain: {
+        title: 'South-pole terrain evaluated',
+        summary: 'Other elevation models reviewed while choosing the terrain. Being listed here does not mean they are integrated.',
+      },
+      imagery: {
+        title: 'South-pole imagery',
+        summary: 'Photos and mosaics for looking at the terrain. Without heights they cannot be used to compute the horizon.',
+      },
+      frames: {
+        title: 'Reference frames and computation',
+        summary: 'How lunar coordinates are described and which tools would allow a fuller calculation.',
+      },
+      illumination: {
+        title: 'Light, horizon and communications',
+        summary: 'Work on how terrain blocks the Sun or the Earth. The app does not do this calculation yet.',
+      },
+      environment: {
+        title: 'Lunar environment',
+        summary: 'Temperature, ice, craters and landing hazards as context; not data for the chosen points.',
+      },
+      historic: {
+        title: 'Historic landings',
+        summary: 'Research on other missions for possible future scenes; for now only Apollo 11 is in the app.',
+      },
+    },
     sourceReasons: {
-      apolloLanding: 'Apollo 11 touchdown date and time from the NASA mission catalogue.',
-      apolloTerrain: 'LROC 2 m/pixel elevation model behind the Apollo 11 reenactment.',
-      lunarSurfaceDataBook:
-        'Names and coordinates of south pole reference points, at the centers of candidate regions.',
       horizonsApi: 'Computes azimuth, elevation, angular size and range of the Sun and the Earth from the chosen lunar point.',
       horizonsManual: 'Defines the observer quantities and the presence markers we turn into the panel states.',
       jplApiPolicy: 'Usage rules and CORS policy: the reason the query goes through our server route and is cached.',
-      pgda78: 'LOLA 5 m/pixel terrain behind the first-person 3D meshes of Nobile Rim 1, Nobile Rim 2, Shackleton Rim and Amundsen Rim (10 × 10 km), Haworth (12 × 14 km) and Shoemaker Rim A and Faustini Rim A (12 × 12 km); it also documents the extended Site20v2 variant.',
+      moonOrbit: 'Mean lunar month lengths the interval playback uses to set its course; a real month can differ by hours.',
+      lunarSurfaceDataBook:
+        'Names and coordinates of south pole reference points, at the centers of candidate regions.',
+      nssdcaLandingSites: 'Apollo 11 lunar module coordinates, measured on LRO images (Mean Earth/Polar Axis frame, DE421).',
+      pgda78:
+        'LOLA 5 m/pixel terrain behind the first-person 3D meshes: Nobile Rim 1, Nobile Rim 2, Shackleton Rim and Amundsen Rim (10 × 10 km), Haworth (12 × 14 km), Shoemaker Rim A and Faustini Rim A (12 × 12 km), Cabeus Exterior Wall 1 (14 × 14 km) and Malapert Crater 1 (20 × 20 km). It also documents the extended Site20v2 variant.',
       pgda78Readme: 'Units, MOON_ME/DE421 frame and polar stereographic projection used to place the point on the mesh.',
-      barker2021: 'Citation for the DM1, DM2, Haworth, LM2 and LM7 products: method of the improved LOLA maps, their errors and horizon computation.',
+      barker2021:
+        'Citation for the DM1, DM2, Haworth, LM2, LM7, NPA and NPD products: method of the improved LOLA maps, their errors and horizon computation.',
+      apolloTerrain: 'LROC 2 m/pixel elevation model behind the Apollo 11 reenactment, with its confidence map and orthophoto.',
+      lrocProcessingGuide: 'Explains that 1,737,400 m must be added to the Apollo 11 model heights to get the lunar radius.',
+      lroCoordinateSystem: 'Mean Earth coordinate convention in which the Apollo 11 terrain is expressed.',
+      blenderGltf: 'Format and export options we use to turn the terrain into GLB files for the web.',
+      apolloLanding: 'Apollo 11 touchdown date and time from the NASA mission catalogue.',
+      alsjStep:
+        'When the flag goes up (110:09:43 mission time) and first contact with the surface: this decides when the flag appears.',
+      alsjLaunch: 'Lunar module liftoff time (124:22:00 mission time); from then on only the flag stays in the scene.',
+      nasaFlagHistory: 'Shape of the flag: a horizontal rod and a 3 × 5 ft cloth.',
+      nasaApolloProgram: 'Armstrong and Aldrin walked on the surface and Collins stayed in orbit; the third figure in the scene is fictional.',
+      grcMoonGravity: 'Lunar gravity of 1.62 m/s² used by the illustrative hop of one figure.',
+      alsjLittleWest: 'Little West crater and historic USGS maps, to review the surroundings of the landing site.',
+      lrocApolloExhibit: 'Explanation of the historic site and West crater as seen by LRO.',
+      svsMoonKit: 'LROC color and LOLA relief of the third-person Moon; NASA adjusted the color for looks.',
+      svsBlueMarble: 'Earth texture: a historic composite, not the weather or clouds of a given date.',
+      nasaMediaGuidelines: 'Conditions for reusing NASA images while keeping their credits; credit does not imply NASA endorsement.',
       spaceAppsChallenge: 'Challenge statement that defines the project scope.',
-      pgda90: 'Adjusted regional south-pole terrain: context for the three points and exploratory horizon profiles.',
+      spaceAppsLegal: 'Event terms: cite every source and document the licenses of third-party material.',
+      pdsFaq: 'PDS archive data are public domain and ask to be cited; checksum comparison is recommended.',
+      pgda90: 'Adjusted regional south-pole terrain: context for the three initial points and exploratory horizon profiles.',
       barker2023: 'Describes the regional LOLA products and their error and observation-density layers.',
       pgda81: 'Polar mosaic evaluated: it covers Shackleton Rim, but not the two Nobile points.',
-      pgda69: 'Long-term averaged illumination, permanent shadow and Earth visibility; not valid for a specific hour.',
-      mazarico2011: 'Reference method for modeling polar illumination with terrain.',
+      pgda104: 'A 5 m alternative with more detail in sunlit areas; evaluated, not integrated.',
+      sfsArchive: 'Download archive of those detailed models; it states a CC BY 4.0 license, version and covered regions.',
       pdsLola: 'Official LOLA archive; we read its labels to decode heights and units.',
+      lolaPolarGdr: 'Standard LOLA polar maps; their labels state the frame, projection and the difference between height and radius.',
+      lolaRdrSis: 'Defines height as radius minus a 1,737,400 m sphere; it is not "height above sea level".',
+      lolaArchiveSis: 'Structure of the LOLA archive; it confirms SLDEM2015 only reaches ±60° latitude.',
+      lolaInstrument: 'Description of the LOLA instrument and of how it defines elevation.',
       sldem2015: 'Ruled out: it only covers latitudes within ±60°, far from the polar points.',
-      lrocNac: 'High-detail stereo terrain; the models we checked (NOBILE01, SHACKRDGE02) do not cover the chosen points.',
+      lrocNac:
+        'Catalogue of areas with high-detail stereo terrain; the models we checked (NOBILE01, SHACKRDGE02) do not cover the chosen points.',
+      usgsNacStereo: 'Method for getting detailed terrain from pairs of LROC NAC images.',
       lrocGld100: 'Global context; at the poles it is not native stereo terrain but filled with LOLA.',
       kaguyaDtm: 'Evaluated: its coverage reaches ±70°, outside the polar points.',
-      pgda104: 'A 5 m alternative with more detail in sunlit areas; evaluated, not integrated.',
+      nacPoleControlled: '1 m/pixel mosaic from 84 to 90° S, with position control only from 85 to 90° S.',
+      nacPoleUncontrolled: '1 m/pixel mosaic not adjusted between images: it can show seams and shadows from different dates.',
+      nacPolePsr: 'Patchy coverage of permanently shadowed areas; its values are for display, not physical brightness.',
+      shadowCamArchive: 'Images designed to see terrain in shadow; they do not provide heights.',
+      shadowCam: 'Images of the shadowed interior of Shackleton; they do not provide heights.',
+      moonTrek: 'Visual inspection of profiles and terrain around the points.',
+      lunarCoordinateWhitePaper:
+        'Coordinate conventions: east-positive longitude, a 1,737.4 km sphere and the difference between the ME and PA frames.',
       pgda95: 'Difference between the MOON_ME and MOON_PA frames (about 875 m): they must not be mixed.',
       naifFrameKernel: 'Official mapping of the lunar frames for a future SPICE calculation.',
-      naifSpice: 'Reference routines for a controlled direction, illumination and occultation calculation.',
+      naifSpice: 'Reference routines for a controlled time, direction, illumination, occultation and terrain-intersection calculation.',
+      projStere: 'Reference for the polar stereographic projection used to place coordinates.',
+      gdal: 'Inspection of raster dimensions, reference system and missing data, and remote partial reads.',
+      pgda69: 'Long-term averaged illumination, permanent shadow and Earth visibility; not valid for a specific hour.',
+      mazarico2011: 'Reference method for modeling polar illumination with terrain.',
       bryantIpn: 'Established approach: a terrain horizon mask compared with the Sun and the Earth.',
       minow2023: 'Finite size of the solar disk, relevant near the polar horizon.',
       dsn810: 'Radio link reference: geometry alone does not guarantee communication.',
       glennPropagation: 'Why terrain affects radio propagation on the lunar surface.',
       hlsThermal: 'Engineering context for lunar thermal analysis.',
-      diviner: 'LRO surface temperatures as thermal context.',
+      diviner: 'Surface temperatures measured by LRO, as thermal context.',
       lcross: 'Evidence of water ice at Cabeus; context, not data for the chosen points.',
       moonWater: 'General context on water and ice on the Moon.',
-      shadowCam: 'Images of the shadowed interior of Shackleton; they do not provide heights.',
       zuberShackleton: 'Dimensions of Shackleton crater as context.',
+      gazetteer: 'Official names of lunar features and their approximate location, such as Nobile crater.',
       landingHazard: 'Landing safety requires a separate analysis of slopes, rocks and craters.',
-      moonTrek: 'Visual inspection of profiles and terrain around the points.',
-      gazetteer: 'Official names of lunar features and their approximate location.',
-      projStere: 'Reference for the polar stereographic projection used to place coordinates.',
-      gdal: 'Inspection of raster dimensions, reference system and missing data.',
+      nssdcaApolloLandings: 'Name of each Apollo site and mission totals: time outside the craft, distance traveled and samples.',
+      apolloMissionRecords: 'Crew and basic facts of the Apollo 12 to 17 missions.',
+      sp4029Landing: 'Landing times and lunar module tilt at touchdown; for example, 4.5° on Apollo 11.',
+      lrocApolloDtms: 'Elevation models of the other Apollo sites (2 to 5 m/pixel) for possible scenes.',
+      lrocApollo11Mapping: 'Positions and paths of Armstrong and Aldrin, equipment, photos and samples of Apollo 11.',
+      nasaLunarModule3d: 'Candidate 3D model of the lunar module; scale, variant and license not yet reviewed.',
+      spacecraftDimensions: 'The lunar module is about 7 m tall and 9.4 m across its legs: useful to check scale.',
+      nssdcaImpactSites: 'Dates and coordinates of spacecraft that reached the Moon; the oldest ones are approximate.',
+      luna2History: 'First object to reach the Moon (1959), by impact; its position is approximate.',
+      roboticExplorationHistory: 'History of robotic lunar exploration as context.',
+      nssdcaSovietMissions: 'Landing times of the Luna 9, 16, 17, 20, 21 and 24 missions.',
+      lrocLuna17: 'LRO view of the Luna 17 site as historic evidence.',
+      jplLunarConstants: 'Lunar timeline that separates successful sample returns from failed ones.',
+      nssdcaSurveyor: 'Instruments of each Surveyor: not every lander carried the same payload.',
+      surveyor1: 'Landing time and shape of the lander (about 3 m, three legs), with digitized photos.',
+      nasaMoonMissions: "List of NASA's lunar missions as context.",
+      change3Terrain: 'Very detailed terrain only near some rover stops; not a global map.',
+      change4: "Date and place of Chang'e 4 on the far side; the descent reconstruction gives a slightly different position.",
+      change5: 'Landing in 2020 and return to Earth with about 1,731 g of samples.',
+      change6: 'Landing time on the far side (2024) and return of 1,935.3 g of samples.',
+      chandrayaan3: 'Registered landing position; ISRO publishes the center of the planned area, which is not the actual point.',
+      slim: "Landing date; JAXA's report shows the lander came to rest tilted, not upright.",
+      im1Navigation: 'Published landing position of Odysseus (2024), more precise than the catalogue value.',
+      blueGhost: "2025 CLPS landing in Mare Crisium, stable and upright: it links to the app's CLPS theme.",
     },
   },
   skySearch: {

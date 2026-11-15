@@ -1,267 +1,713 @@
 /**
- * Project-wide source list for the Sources dialog, taken from the research and
- * design documents in `docs/` (GUIA_PRIMERA_DEMO, LUNAR_DATA_RESEARCH,
- * LUNAR_SOUTH_POLE_RESEARCH, LUNAR_RELIABILITY_AUDIT,
- * POLAR_TERRAIN_SOURCE_REVIEW and the Nobile Rim 1, Nobile Rim 2,
- * Shackleton Rim, Amundsen Rim, Haworth, Shoemaker Rim A and Faustini Rim A
- * terrain READMEs).
+ * Project-wide source list for the Sources dialog, grouped by the part of the
+ * project each source supports. Taken from the code and from every document
+ * that cites sources: `docs/` (GUIA_PRIMERA_DEMO, HORIZON_PLAYBACK,
+ * LUNAR_DATA_RESEARCH, LUNAR_SOUTH_POLE_RESEARCH, LUNAR_ADDITIONAL_SITES_RESEARCH,
+ * LUNAR_RELIABILITY_AUDIT, POLAR_TERRAIN_SOURCE_REVIEW,
+ * POLAR_TERRAIN_VALIDATION_REPORT, HISTORIC_LUNAR_LANDINGS_RESEARCH and the
+ * `docs/research/` READMEs), the terrain and celestial-model READMEs in
+ * `assets/`, `tools/lunar-terrain/README.md`, `shared/sites.ts`,
+ * `shared/time.ts`, `src/features/scene/playback.ts` and `DECISIONES.md`.
  *
- * - `app`: sources whose data or definitions the application uses directly.
- * - `research`: sources the team consulted to choose data, frames and
- *   methods, or to set the limits of what the app claims. Being listed here
- *   does not mean a product is integrated or validated.
+ * Direct file downloads (single rasters, ZIPs, labels) are not listed one by
+ * one: the product page that publishes them is listed instead.
  *
- * Titles are proper names and stay untranslated; the reason for each source
- * is translated (`messages.results.sourceReasons`).
+ * - `app` sections: sources whose data or definitions the application uses
+ *   directly.
+ * - `research` sections: sources the team consulted to choose data, frames
+ *   and methods, or to set the limits of what the app claims. Being listed
+ *   here does not mean a product is integrated or validated.
+ *
+ * Titles and link labels are proper names and stay untranslated; section
+ * names, summaries and the reason for each source are translated
+ * (`messages.results.sourceSections` and `messages.results.sourceReasons`).
  */
 
 export type SourceGroup = 'app' | 'research';
 
-export interface SourceEntry {
-  readonly id: string;
-  readonly group: SourceGroup;
-  readonly title: string;
+export const SOURCE_SECTIONS = [
+  { id: 'ephemeris', group: 'app' },
+  { id: 'sites', group: 'app' },
+  { id: 'terrain', group: 'app' },
+  { id: 'apollo', group: 'app' },
+  { id: 'models', group: 'app' },
+  { id: 'challenge', group: 'research' },
+  { id: 'polarTerrain', group: 'research' },
+  { id: 'imagery', group: 'research' },
+  { id: 'frames', group: 'research' },
+  { id: 'illumination', group: 'research' },
+  { id: 'environment', group: 'research' },
+  { id: 'historic', group: 'research' },
+] as const satisfies readonly { id: string; group: SourceGroup }[];
+
+export type SourceSectionId = (typeof SOURCE_SECTIONS)[number]['id'];
+
+/** A secondary link of the same source (mirror, related file or paper). */
+export interface SourceLink {
+  readonly label: string;
   readonly url: string;
 }
 
+export interface SourceEntry {
+  readonly id: string;
+  readonly section: SourceSectionId;
+  readonly title: string;
+  readonly url: string;
+  readonly links?: readonly SourceLink[];
+}
+
 export const SOURCE_CATALOG = [
-  // Used directly by the application.
-  {
-    id: 'apolloLanding',
-    group: 'app',
-    title: 'NASA/NSSDCA Apollo 11 mission catalogue',
-    url: 'https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo11info.html',
-  },
-  {
-    id: 'apolloTerrain',
-    group: 'app',
-    title: 'LRO/LROC NAC_DTM_APOLLO11',
-    url: 'https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_DTM_APOLLO11',
-  },
-  {
-    id: 'lunarSurfaceDataBook',
-    group: 'app',
-    title: 'NASA Moon to Mars Lunar Surface Data Book (M2M-30044), table A2.1-1',
-    url: 'https://ntrs.nasa.gov/citations/20250002845',
-  },
+  // ── App: Sun and Earth positions ──
   {
     id: 'horizonsApi',
-    group: 'app',
+    section: 'ephemeris',
     title: 'JPL Horizons API',
     url: 'https://ssd-api.jpl.nasa.gov/doc/horizons.html',
   },
   {
     id: 'horizonsManual',
-    group: 'app',
+    section: 'ephemeris',
     title: 'JPL Horizons System manual',
     url: 'https://ssd.jpl.nasa.gov/horizons/manual.html',
   },
   {
     id: 'jplApiPolicy',
-    group: 'app',
+    section: 'ephemeris',
     title: 'JPL SSD/CNEOS API service',
     url: 'https://ssd-api.jpl.nasa.gov/',
   },
   {
+    id: 'moonOrbit',
+    section: 'ephemeris',
+    title: "NASA GSFC, F. Espenak: Eclipses and the Moon's Orbit",
+    url: 'https://eclipse.gsfc.nasa.gov/SEhelp/moonorbit.html',
+  },
+
+  // ── App: reference sites ──
+  {
+    id: 'lunarSurfaceDataBook',
+    section: 'sites',
+    title: 'NASA Moon to Mars Lunar Surface Data Book (M2M-30044), table A2.1-1',
+    url: 'https://ntrs.nasa.gov/citations/20250002845',
+    links: [
+      {
+        label: 'PDF',
+        url: 'https://ntrs.nasa.gov/api/citations/20250002845/downloads/M2M-30044%20Lunar%20Surface%20Data%20Book%20Baseline_Final.pdf',
+      },
+    ],
+  },
+  {
+    id: 'nssdcaLandingSites',
+    section: 'sites',
+    title: 'NASA/NSSDCA Apollo Landing Site Coordinates',
+    url: 'https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html',
+  },
+
+  // ── App: 3D terrain ──
+  {
     id: 'pgda78',
-    group: 'app',
-    title: 'NASA GSFC PGDA product 78: LRO/LOLA local 5 m topography (Site04, Site06, DM1, DM2, Haworth, LM2, LM7)',
+    section: 'terrain',
+    title:
+      'NASA GSFC PGDA product 78: LRO/LOLA local 5 m topography (Site04, Site06, DM1, DM2, Haworth, LM2, LM7, NPA, NPD)',
     url: 'https://pgda.gsfc.nasa.gov/products/78',
   },
   {
     id: 'pgda78Readme',
-    group: 'app',
+    section: 'terrain',
     title: 'NASA GSFC PGDA LOLA 5 m/pixel README',
     url: 'https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README',
   },
   {
     id: 'barker2021',
-    group: 'app',
+    section: 'terrain',
     title: 'Barker et al. (2021), Planetary and Space Science 203, 105119',
     url: 'https://doi.org/10.1016/j.pss.2020.105119',
+    links: [
+      {
+        label: 'NTRS PDF',
+        url: 'https://ntrs.nasa.gov/api/citations/20205009660/downloads/Mike%20Barker_%20Paper_%20Improved%20Lola.pdf',
+      },
+    ],
+  },
+  {
+    id: 'apolloTerrain',
+    section: 'terrain',
+    title: 'LRO/LROC NAC_DTM_APOLLO11',
+    url: 'https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_DTM_APOLLO11',
+    links: [
+      { label: 'NAC_DTM_APOLLO11_CONF', url: 'https://data.lroc.im-ldi.com/lroc/view_rdr_product/NAC_DTM_APOLLO11_CONF' },
+      {
+        label: 'NAC_DTM_APOLLO11_M150361817_2M',
+        url: 'https://data.lroc.im-ldi.com/lroc/view_rdr_product/NAC_DTM_APOLLO11_M150361817_2M',
+      },
+    ],
+  },
+  {
+    id: 'lrocProcessingGuide',
+    section: 'terrain',
+    title: 'LROC NAC Processing Guide',
+    url: 'https://www.lroc.asu.edu/data/support/downloads/LROC_NAC_Processing_Guide.pdf',
+  },
+  {
+    id: 'lroCoordinateSystem',
+    section: 'terrain',
+    title: 'LRO Project coordinate system standard',
+    url: 'https://pds-imaging.jpl.nasa.gov/documentation/LRO_Coordinate_System.pdf',
+  },
+  {
+    id: 'blenderGltf',
+    section: 'terrain',
+    title: 'Blender manual: glTF 2.0 importer/exporter',
+    url: 'https://docs.blender.org/manual/en/latest/addons/scene_gltf2.html',
   },
 
-  // Consulted during research.
+  // ── App: Apollo 11 reenactment ──
+  {
+    id: 'apolloLanding',
+    section: 'apollo',
+    title: 'NASA/NSSDCA Apollo 11 mission catalogue',
+    url: 'https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo11info.html',
+  },
+  {
+    id: 'alsjStep',
+    section: 'apollo',
+    title: 'Apollo Lunar Surface Journal: "One Small Step"',
+    url: 'https://apollojournals.org/alsj/a11/a11.step.html',
+    links: [{ label: 'nasa.gov', url: 'https://www.nasa.gov/wp-content/uploads/static/history/alsj/a11/a11.step.html' }],
+  },
+  {
+    id: 'alsjLaunch',
+    section: 'apollo',
+    title: 'Apollo Lunar Surface Journal: "The Return to Orbit"',
+    url: 'https://apollojournals.org/alsj/a11/a11.launch.html',
+  },
+  {
+    id: 'nasaFlagHistory',
+    section: 'apollo',
+    title: 'NASA History: Flag Day, Flying High, the Stars and Stripes in Space',
+    url: 'https://www.nasa.gov/history/flag-day-flying-high-the-stars-and-stripes-in-space/',
+  },
+  {
+    id: 'nasaApolloProgram',
+    section: 'apollo',
+    title: 'NASA: The Apollo Program',
+    url: 'https://www.nasa.gov/the-apollo-program/',
+  },
+  {
+    id: 'grcMoonGravity',
+    section: 'apollo',
+    title: "NASA Glenn Beginner's Guide to Aeronautics: the Moon",
+    url: 'https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/moon/',
+  },
+  {
+    id: 'alsjLittleWest',
+    section: 'apollo',
+    title: 'Apollo Lunar Surface Journal: Little West and USGS mapping',
+    url: 'https://www.nasa.gov/wp-content/uploads/static/history/alsj/a11/a11EastCraterRIP.html',
+  },
+  {
+    id: 'lrocApolloExhibit',
+    section: 'apollo',
+    title: 'LROC exhibit: Apollo 11 site and West crater',
+    url: 'https://lroc.im-ldi.com/visit/exhibits/1/gallery/8',
+  },
+
+  // ── App: Sun, Earth and Moon models ──
+  {
+    id: 'svsMoonKit',
+    section: 'models',
+    title: 'NASA SVS CGI Moon Kit (ID 4720)',
+    url: 'https://svs.gsfc.nasa.gov/4720/',
+  },
+  {
+    id: 'svsBlueMarble',
+    section: 'models',
+    title: 'NASA SVS Blue Marble (ID 2915)',
+    url: 'https://svs.gsfc.nasa.gov/2915/',
+  },
+  {
+    id: 'nasaMediaGuidelines',
+    section: 'models',
+    title: 'NASA Images and Media Usage Guidelines',
+    url: 'https://www.nasa.gov/nasa-brand-center/images-and-media/',
+  },
+
+  // ── Research: challenge, rules and data use ──
   {
     id: 'spaceAppsChallenge',
-    group: 'research',
+    section: 'challenge',
     title: 'NASA Space Apps Challenge 2026: Lunar Landing Site Navigator',
     url: 'https://www.spaceappschallenge.org/2026/challenges/lunar-landing-site-navigator/',
   },
   {
+    id: 'spaceAppsLegal',
+    section: 'challenge',
+    title: 'NASA Space Apps Challenge: legal terms',
+    url: 'https://www.spaceappschallenge.org/legal/',
+  },
+  {
+    id: 'pdsFaq',
+    section: 'challenge',
+    title: 'NASA PDS Geosciences: FAQ (data access and use)',
+    url: 'https://pds-geosciences.wustl.edu/faq.html',
+  },
+
+  // ── Research: south-pole terrain evaluated ──
+  {
     id: 'pgda90',
-    group: 'research',
+    section: 'polarTerrain',
     title: 'NASA GSFC PGDA product 90: adjusted regional LOLA topography',
     url: 'https://pgda.gsfc.nasa.gov/products/90',
+    links: [{ label: 'doi:10.60903/gsfcpgda-lola-spole', url: 'https://doi.org/10.60903/gsfcpgda-lola-spole' }],
   },
   {
     id: 'barker2023',
-    group: 'research',
+    section: 'polarTerrain',
     title: 'Barker et al. (2023), A New View of the Lunar South Pole from LOLA, PSJ 4, 183',
     url: 'https://doi.org/10.3847/PSJ/acf3e1',
+    links: [{ label: 'NTRS 20230014419', url: 'https://ntrs.nasa.gov/citations/20230014419' }],
   },
   {
     id: 'pgda81',
-    group: 'research',
+    section: 'polarTerrain',
     title: 'NASA GSFC PGDA product 81: LOLA 87–90° S 5 m mosaic',
     url: 'https://pgda.gsfc.nasa.gov/products/81',
   },
   {
-    id: 'pgda69',
-    group: 'research',
-    title: 'NASA GSFC PGDA product 69: polar illumination and Earth visibility',
-    url: 'https://pgda.gsfc.nasa.gov/products/69',
+    id: 'pgda104',
+    section: 'polarTerrain',
+    title: 'NASA GSFC PGDA product 104: LOLA + LROC shape from shading',
+    url: 'https://pgda.gsfc.nasa.gov/products/104',
+    links: [{ label: 'Bertone et al., doi:10.3847/PSJ/ae5b70', url: 'https://doi.org/10.3847/PSJ/ae5b70' }],
   },
   {
-    id: 'mazarico2011',
-    group: 'research',
-    title: 'Mazarico et al. (2011), Icarus: lunar polar illumination',
-    url: 'https://doi.org/10.1016/j.icarus.2010.10.030',
+    id: 'sfsArchive',
+    section: 'polarTerrain',
+    title: 'Zenodo record 17954508: shape-from-shading terrain archive',
+    url: 'https://zenodo.org/records/17954508',
+    links: [{ label: 'README', url: 'https://zenodo.org/records/17954508/files/README.md?download=1' }],
   },
   {
     id: 'pdsLola',
-    group: 'research',
+    section: 'polarTerrain',
     title: 'NASA PDS Geosciences: LRO LOLA archive',
     url: 'https://pds-geosciences.wustl.edu/missions/lro/lola.htm',
   },
   {
+    id: 'lolaPolarGdr',
+    section: 'polarTerrain',
+    title: 'NASA PDS: LOLA polar gridded elevation (LDEM_80S_20M, LDEM_875S_5M)',
+    url: 'https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/polar/img/',
+    links: [
+      {
+        label: 'LDEM_80S_20M.LBL',
+        url: 'https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/polar/img/ldem_80s_20m.lbl',
+      },
+      {
+        label: 'LDEM_875S_5M.LBL',
+        url: 'https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/polar/img/ldem_875s_5m.lbl',
+      },
+    ],
+  },
+  {
+    id: 'lolaRdrSis',
+    section: 'polarTerrain',
+    title: 'LOLA RDR Software Interface Specification',
+    url: 'https://science.nasa.gov/wp-content/uploads/2024/01/lola-rdrsis.pdf',
+  },
+  {
+    id: 'lolaArchiveSis',
+    section: 'polarTerrain',
+    title: 'NASA PDS: LOLA archive Software Interface Specification',
+    url: 'https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/document/archsis.htm',
+  },
+  {
+    id: 'lolaInstrument',
+    section: 'polarTerrain',
+    title: 'LOLA instrument paper, Geophysical Research Letters (doi:10.1029/2010GL043751)',
+    url: 'https://doi.org/10.1029/2010GL043751',
+  },
+  {
     id: 'sldem2015',
-    group: 'research',
+    section: 'polarTerrain',
     title: 'SLDEM2015 (LOLA + Kaguya), NASA PDS',
     url: 'https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/sldem2015/',
   },
   {
     id: 'lrocNac',
-    group: 'research',
-    title: 'LROC NAC DTM footprints (NAC_DTM_NOBILE01, NAC_DTM_SHACKRDGE02)',
+    section: 'polarTerrain',
+    title: 'LROC NAC DTM footprints (SHAPEFILE_NAC_DTMS)',
     url: 'https://data.lroc.im-ldi.com/lroc/view_rdr/SHAPEFILE_NAC_DTMS',
+    links: [
+      { label: 'NAC_DTM_NOBILE01', url: 'https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_DTM_NOBILE01' },
+      { label: 'NAC_DTM_SHACKRDGE02', url: 'https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_DTM_SHACKRDGE02' },
+    ],
+  },
+  {
+    id: 'usgsNacStereo',
+    section: 'polarTerrain',
+    title: 'USGS: Extracting accurate and precise topography from LROC Narrow Angle Camera stereo',
+    url: 'https://www.usgs.gov/publications/extracting-accurate-and-precise-topography-lroc-narrow-angle-camera-stereo',
   },
   {
     id: 'lrocGld100',
-    group: 'research',
+    section: 'polarTerrain',
     title: 'LROC WAC GLD100',
     url: 'https://data.lroc.im-ldi.com/lroc/view_rdr/WAC_GLD100',
   },
   {
     id: 'kaguyaDtm',
-    group: 'research',
+    section: 'polarTerrain',
     title: 'USGS Kaguya Terrain Camera DTMs',
     url: 'https://stac.astrogeology.usgs.gov/docs/data/moon/kaguyatc_dtms/',
+    links: [
+      { label: 'JAXA DARTS Kaguya', url: 'https://darts.isas.jaxa.jp/missions/kaguya' },
+      {
+        label: 'PDS ODE guide',
+        url: 'https://ode.rsl.wustl.edu/moon/pagehelp/Content/Missions_Instruments/KAGUYA%20%28SELENE%29/TC/Derived_Data.htm',
+      },
+    ],
+  },
+
+  // ── Research: polar imagery and maps ──
+  {
+    id: 'nacPoleControlled',
+    section: 'imagery',
+    title: 'LROC NAC controlled south-pole mosaic (NAC_POLE_SOUTH_CM_MAX)',
+    url: 'https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_POLE_SOUTH_CM_MAX',
   },
   {
-    id: 'pgda104',
-    group: 'research',
-    title: 'NASA GSFC PGDA product 104: LOLA + LROC shape from shading',
-    url: 'https://pgda.gsfc.nasa.gov/products/104',
+    id: 'nacPoleUncontrolled',
+    section: 'imagery',
+    title: 'LROC NAC uncontrolled south-pole mosaic (NAC_POLE_SOUTH)',
+    url: 'https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_POLE_SOUTH',
+  },
+  {
+    id: 'nacPolePsr',
+    section: 'imagery',
+    title: 'LROC NAC permanently shadowed regions mosaic (NAC_POLE_PSR_SOUTH)',
+    url: 'https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_POLE_PSR_SOUTH',
+  },
+  {
+    id: 'shadowCamArchive',
+    section: 'imagery',
+    title: 'ShadowCam archive',
+    url: 'https://shadowcam.im-ldi.com/archive',
+    links: [{ label: 'ShadowCam cmosaic', url: 'https://pds.shadowcam.im-ldi.com/derived/cmosaic/' }],
+  },
+  {
+    id: 'shadowCam',
+    section: 'imagery',
+    title: 'NASA ShadowCam: Shackleton',
+    url: 'https://science.nasa.gov/image-article/apod-2023-may-5-shackleton-from-shadowcam/',
+  },
+  {
+    id: 'moonTrek',
+    section: 'imagery',
+    title: 'NASA Moon Trek',
+    url: 'https://trek.nasa.gov/moon/',
+    links: [{ label: 'Moon Trek WMTS API', url: 'https://trek.nasa.gov/tiles/apidoc/trekAPI.html' }],
+  },
+
+  // ── Research: reference frames and computation ──
+  {
+    id: 'lunarCoordinateWhitePaper',
+    section: 'frames',
+    title: 'LRO/LGCWG: A Standardized Lunar Coordinate System (version 5, 2008)',
+    url: 'https://science.nasa.gov/wp-content/uploads/2024/01/luncoordwhitepaper-10-08.pdf',
   },
   {
     id: 'pgda95',
-    group: 'research',
+    section: 'frames',
     title: 'NASA GSFC PGDA product 95: MOON_PA shape and frame transformations',
     url: 'https://pgda.gsfc.nasa.gov/products/95',
   },
   {
     id: 'naifFrameKernel',
-    group: 'research',
+    section: 'frames',
     title: 'NAIF lunar frame kernel moon_de440_250416.tf',
     url: 'https://naif.jpl.nasa.gov/pub/naif/generic_kernels/fk/satellites/moon_de440_250416.tf',
   },
   {
     id: 'naifSpice',
-    group: 'research',
-    title: 'NAIF SPICE Toolkit (azlcpo, illumf, occult)',
+    section: 'frames',
+    title: 'NAIF SPICE Toolkit: azlcpo',
     url: 'https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/azlcpo_c.html',
-  },
-  {
-    id: 'bryantIpn',
-    group: 'research',
-    title: 'JPL IPN Progress Report 42-176 (Bryant)',
-    url: 'https://ipnpr.jpl.nasa.gov/progress_report/42-176/176C.html',
-  },
-  {
-    id: 'minow2023',
-    group: 'research',
-    title: 'NASA lunar environment presentation (Minow, SciTech 2023)',
-    url: 'https://ntrs.nasa.gov/api/citations/20230000854/downloads/Minow_SciTech_2023%20-%20presentation%20-%20final.pdf',
-  },
-  {
-    id: 'dsn810',
-    group: 'research',
-    title: 'DSN Telecommunications Link Design Handbook 810-005',
-    url: 'https://deepspace.jpl.nasa.gov/dsndocs/810-005/',
-  },
-  {
-    id: 'glennPropagation',
-    group: 'research',
-    title: 'NASA Glenn: lunar surface propagation',
-    url: 'https://www.nasa.gov/glenn/glenn-expertise-space-exploration/scan/lunar-surface-propagation/',
-  },
-  {
-    id: 'hlsThermal',
-    group: 'research',
-    title: 'HLS Lunar Thermal Analysis Guidebook',
-    url: 'https://ntrs.nasa.gov/citations/20210010030',
-  },
-  {
-    id: 'diviner',
-    group: 'research',
-    title: 'NASA PDS Geosciences: LRO Diviner archive',
-    url: 'https://pds-geosciences.wustl.edu/missions/lro/diviner.htm',
-  },
-  {
-    id: 'lcross',
-    group: 'research',
-    title: 'NASA LCROSS',
-    url: 'https://science.nasa.gov/mission/lcross/',
-  },
-  {
-    id: 'moonWater',
-    group: 'research',
-    title: 'NASA: Moon water and ices',
-    url: 'https://science.nasa.gov/moon/moon-water-and-ices/',
-  },
-  {
-    id: 'shadowCam',
-    group: 'research',
-    title: 'NASA ShadowCam: Shackleton',
-    url: 'https://science.nasa.gov/image-article/apod-2023-may-5-shackleton-from-shadowcam/',
-  },
-  {
-    id: 'zuberShackleton',
-    group: 'research',
-    title: 'Zuber et al.: Shackleton crater (NASA NTRS 20120013758)',
-    url: 'https://ntrs.nasa.gov/api/citations/20120013758/downloads/20120013758.pdf',
-  },
-  {
-    id: 'landingHazard',
-    group: 'research',
-    title: 'NASA/JPL landing hazard detection (NTRS 20110003001)',
-    url: 'https://ntrs.nasa.gov/citations/20110003001',
-  },
-  {
-    id: 'moonTrek',
-    group: 'research',
-    title: 'NASA Moon Trek',
-    url: 'https://trek.nasa.gov/moon/',
-  },
-  {
-    id: 'gazetteer',
-    group: 'research',
-    title: 'USGS Gazetteer of Planetary Nomenclature',
-    url: 'https://www.usgs.gov/tools/gazetteer-planetary-nomenclature',
+    links: [
+      { label: 'str2et', url: 'https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/str2et_c.html' },
+      { label: 'latrec', url: 'https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/latrec_c.html' },
+      { label: 'illumf', url: 'https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/illumf_c.html' },
+      { label: 'ilumin', url: 'https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/ilumin_c.html' },
+      { label: 'occult', url: 'https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/occult_c.html' },
+      { label: 'sincpt', url: 'https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/sincpt_c.html' },
+      { label: 'dskx02', url: 'https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/dskx02_c.html' },
+      { label: 'DSK Required Reading', url: 'https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/dsk.html' },
+    ],
   },
   {
     id: 'projStere',
-    group: 'research',
+    section: 'frames',
     title: 'PROJ: stereographic projection',
     url: 'https://proj.org/en/stable/operations/projections/stere.html',
   },
   {
     id: 'gdal',
-    group: 'research',
-    title: 'GDAL: gdalinfo and GeoTIFF driver',
+    section: 'frames',
+    title: 'GDAL: gdalinfo',
     url: 'https://gdal.org/en/stable/programs/gdalinfo.html',
+    links: [
+      { label: 'GDAL GTiff driver', url: 'https://gdal.org/en/stable/drivers/raster/gtiff.html' },
+      { label: 'GDAL virtual file systems', url: 'https://gdal.org/en/stable/user/virtual_file_systems.html' },
+    ],
+  },
+
+  // ── Research: light, horizon and communications ──
+  {
+    id: 'pgda69',
+    section: 'illumination',
+    title: 'NASA GSFC PGDA product 69: polar illumination and Earth visibility',
+    url: 'https://pgda.gsfc.nasa.gov/products/69',
+  },
+  {
+    id: 'mazarico2011',
+    section: 'illumination',
+    title: 'Mazarico et al. (2011), Icarus: lunar polar illumination',
+    url: 'https://doi.org/10.1016/j.icarus.2010.10.030',
+  },
+  {
+    id: 'bryantIpn',
+    section: 'illumination',
+    title: 'JPL IPN Progress Report 42-176 (Bryant)',
+    url: 'https://ipnpr.jpl.nasa.gov/progress_report/42-176/176C.html',
+  },
+  {
+    id: 'minow2023',
+    section: 'illumination',
+    title: 'NASA lunar environment presentation (Minow, SciTech 2023)',
+    url: 'https://ntrs.nasa.gov/api/citations/20230000854/downloads/Minow_SciTech_2023%20-%20presentation%20-%20final.pdf',
+  },
+  {
+    id: 'dsn810',
+    section: 'illumination',
+    title: 'DSN Telecommunications Link Design Handbook 810-005',
+    url: 'https://deepspace.jpl.nasa.gov/dsndocs/810-005/',
+  },
+  {
+    id: 'glennPropagation',
+    section: 'illumination',
+    title: 'NASA Glenn: lunar surface propagation',
+    url: 'https://www.nasa.gov/glenn/glenn-expertise-space-exploration/scan/lunar-surface-propagation/',
+  },
+
+  // ── Research: lunar environment ──
+  {
+    id: 'hlsThermal',
+    section: 'environment',
+    title: 'HLS Lunar Thermal Analysis Guidebook',
+    url: 'https://ntrs.nasa.gov/citations/20210010030',
+  },
+  {
+    id: 'diviner',
+    section: 'environment',
+    title: 'NASA PDS Geosciences: LRO Diviner archive',
+    url: 'https://pds-geosciences.wustl.edu/missions/lro/diviner.htm',
+    links: [{ label: 'Diviner (UCLA)', url: 'https://www.diviner.ucla.edu/data' }],
+  },
+  {
+    id: 'lcross',
+    section: 'environment',
+    title: 'NASA LCROSS',
+    url: 'https://science.nasa.gov/mission/lcross/',
+  },
+  {
+    id: 'moonWater',
+    section: 'environment',
+    title: 'NASA: Moon water and ices',
+    url: 'https://science.nasa.gov/moon/moon-water-and-ices/',
+  },
+  {
+    id: 'zuberShackleton',
+    section: 'environment',
+    title: 'Zuber et al.: Shackleton crater (NASA NTRS 20120013758)',
+    url: 'https://ntrs.nasa.gov/api/citations/20120013758/downloads/20120013758.pdf',
+  },
+  {
+    id: 'gazetteer',
+    section: 'environment',
+    title: 'USGS Gazetteer of Planetary Nomenclature',
+    url: 'https://www.usgs.gov/tools/gazetteer-planetary-nomenclature',
+    links: [{ label: 'Nobile, Feature 4321', url: 'https://planetarynames.wr.usgs.gov/Feature/4321' }],
+  },
+  {
+    id: 'landingHazard',
+    section: 'environment',
+    title: 'NASA/JPL landing hazard detection (NTRS 20110003001)',
+    url: 'https://ntrs.nasa.gov/citations/20110003001',
+  },
+
+  // ── Research: historic landings ──
+  {
+    id: 'nssdcaApolloLandings',
+    section: 'historic',
+    title: 'NASA/NSSDCA Apollo landings summary',
+    url: 'https://nssdc.gsfc.nasa.gov/planetary/lunar/apolloland.html',
+  },
+  {
+    id: 'apolloMissionRecords',
+    section: 'historic',
+    title: 'NASA/NSSDCA Apollo 12 mission record',
+    url: 'https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo12info.html',
+    links: [
+      { label: 'Apollo 14', url: 'https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo14info.html' },
+      { label: 'Apollo 15', url: 'https://www.nasa.gov/mission/apollo-15/' },
+      { label: 'Apollo 16', url: 'https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo16info.html' },
+      { label: 'Apollo 17', url: 'https://www.nasa.gov/mission/apollo-17/' },
+    ],
+  },
+  {
+    id: 'sp4029Landing',
+    section: 'historic',
+    title: 'NASA SP-4029: Apollo LM lunar landing table',
+    url: 'https://www.nasa.gov/wp-content/uploads/static/history/SP-4029/Apollo_18-27_LM_Lunar_Landing.htm',
+  },
+  {
+    id: 'lrocApolloDtms',
+    section: 'historic',
+    title: 'LROC NAC_DTM_APOLLO12',
+    url: 'https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_DTM_APOLLO12',
+    links: [
+      { label: 'APOLLO14', url: 'https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_DTM_APOLLO14' },
+      { label: 'APOLLO15', url: 'https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_DTM_APOLLO15' },
+      { label: 'APOLLO16', url: 'https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_DTM_APOLLO16' },
+      { label: 'APOLLO17', url: 'https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_DTM_APOLLO17' },
+    ],
+  },
+  {
+    id: 'lrocApollo11Mapping',
+    section: 'historic',
+    title: 'LROC Apollo 11 Spatio-Temporal Mapping (SHAPEFILE_APOLLO_11)',
+    url: 'https://data.lroc.im-ldi.com/lroc/view_rdr/SHAPEFILE_APOLLO_11',
+  },
+  {
+    id: 'nasaLunarModule3d',
+    section: 'historic',
+    title: 'NASA 3D Resources: Apollo Lunar Module',
+    url: 'https://science.nasa.gov/3d-resources/apollo-lunar-module/',
+  },
+  {
+    id: 'spacecraftDimensions',
+    section: 'historic',
+    title: 'NASA spacecraft dimensions reference (NTRS 19940023701)',
+    url: 'https://ntrs.nasa.gov/api/citations/19940023701/downloads/19940023701.pdf',
+  },
+  {
+    id: 'nssdcaImpactSites',
+    section: 'historic',
+    title: 'NASA/NSSDCA lunar spacecraft and impact sites',
+    url: 'https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html',
+  },
+  {
+    id: 'luna2History',
+    section: 'historic',
+    title: 'NASA History: 60 years ago, Luna 2 makes impact in Moon race',
+    url: 'https://www.nasa.gov/history/60-years-ago-luna-2-makes-impact-in-moon-race/',
+  },
+  {
+    id: 'roboticExplorationHistory',
+    section: 'historic',
+    title: 'NASA APPEL: robotic lunar exploration history (Huntress presentation)',
+    url: 'https://appel.nasa.gov/wp-content/uploads/2013/04/643333main_huntress_presentation.pdf',
+  },
+  {
+    id: 'nssdcaSovietMissions',
+    section: 'historic',
+    title: 'NASA/NSSDCA Soviet lunar missions',
+    url: 'https://nssdc.gsfc.nasa.gov/planetary/lunar/lunarussr.html',
+  },
+  {
+    id: 'lrocLuna17',
+    section: 'historic',
+    title: 'LROC exhibit: Luna 17',
+    url: 'https://lroc.im-ldi.com/visit/exhibits/1/gallery/10',
+  },
+  {
+    id: 'jplLunarConstants',
+    section: 'historic',
+    title: 'JPL D-32296: Lunar Constants and Models Document (2005)',
+    url: 'https://planetarydata.jpl.nasa.gov/img/data/m3/CH1M3_0002/EXTRAS/LunConstantsModels_2005_jpl_d32296.pdf',
+  },
+  {
+    id: 'nssdcaSurveyor',
+    section: 'historic',
+    title: 'NASA/NSSDCA Surveyor programme',
+    url: 'https://nssdc.gsfc.nasa.gov/planetary/lunar/surveyor.html',
+  },
+  {
+    id: 'surveyor1',
+    section: 'historic',
+    title: 'NASA Science: Surveyor 1',
+    url: 'https://science.nasa.gov/mission/surveyor-1/',
+    links: [{ label: 'University of Arizona: Surveyor I digitization', url: 'https://sic.lpl.arizona.edu/surveyor-digitization/surveyor-i' }],
+  },
+  {
+    id: 'nasaMoonMissions',
+    section: 'historic',
+    title: 'NASA Science: Moon missions',
+    url: 'https://science.nasa.gov/moon/missions/',
+  },
+  {
+    id: 'change3Terrain',
+    section: 'historic',
+    title: "Liu et al. (2014), ISPRS Archives XL-4: Chang'e-3 terrain reconstruction",
+    url: 'https://isprs-archives.copernicus.org/articles/XL-4/149/2014/isprsarchives-XL-4-149-2014.html',
+  },
+  {
+    id: 'change4',
+    section: 'historic',
+    title: "China NSSDC: Chang'e-4 mission record",
+    url: 'https://vsso.nssdc.ac.cn/mobile/nssdc_en/html/task/change4.html',
+    links: [{ label: 'Li et al. (2019), Nature Communications', url: 'https://www.nature.com/articles/s41467-019-12278-3' }],
+  },
+  {
+    id: 'change5',
+    section: 'historic',
+    title: "China NSSDC: Chang'e-5 mission record",
+    url: 'https://www.nssdc.ac.cn/mobile/nssdc_en/html/task/change5.html',
+  },
+  {
+    id: 'change6',
+    section: 'historic',
+    title: "Chinese Academy of Sciences: Chang'e-6 landing",
+    url: 'https://english.cas.cn/bcas/2024_2/202508/P020250813589311076398.pdf',
+    links: [{ label: "CAS: Chang'e-6 sample return", url: 'https://english.cas.cn/bcas/2025_1/202508/P020250813611333345559.pdf' }],
+  },
+  {
+    id: 'chandrayaan3',
+    section: 'historic',
+    title: 'UNOOSA registration document ST/SG/SER.E/1198 (Chandrayaan-3)',
+    url: 'https://www.unoosa.org/res/osoindex/data/documents/in/st/stsgser_e1198_html/ser1198E.pdf',
+    links: [{ label: 'ISRO Chandrayaan-3', url: 'https://www.isro.gov.in/ISRO_EN/Chandrayaan3_Details.html' }],
+  },
+  {
+    id: 'slim',
+    section: 'historic',
+    title: 'JAXA DARTS: SLIM',
+    url: 'https://darts.isas.jaxa.jp/en/missions/slim',
+    links: [{ label: 'JAXA press release 2024-01-25', url: 'https://global.jaxa.jp/press/2024/01/file/jaxa_doc01_20240125_e.pdf' }],
+  },
+  {
+    id: 'im1Navigation',
+    section: 'historic',
+    title: 'IM-1 Odysseus navigation paper (NTRS 20250007036)',
+    url: 'https://ntrs.nasa.gov/api/citations/20250007036/downloads/aasimndl.pdf',
+  },
+  {
+    id: 'blueGhost',
+    section: 'historic',
+    title: "NASA: Touchdown! Firefly's Blue Ghost lands on the Moon",
+    url: 'https://www.nasa.gov/news-release/touchdown-carrying-nasa-science-fireflys-blue-ghost-lands-on-moon/',
   },
 ] as const satisfies readonly SourceEntry[];
 
 export type SourceId = (typeof SOURCE_CATALOG)[number]['id'];
+
