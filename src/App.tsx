@@ -1,7 +1,11 @@
 /**
  * Single-screen dashboard (no page scroll): settings rail, control column
- * (site and time, then the inverse search), and the view column (3D horizon above, data below). The
- * scene and results both read the same `useEphemeris` state.
+ * (site and time, then the inverse search), the view column (3D horizon above,
+ * data below) and the update bar. The update button belongs to the site and
+ * time form but is drawn in the bar (see `ConfigPanel`): above the view on wide
+ * screens and between the view and the controls when they stack, so it stays
+ * in sight next to what it refreshes. The scene and results both read the same
+ * `useEphemeris` state.
  *
  * Decorative layers (stars, schematics, CRT overlay, screen curvature) live
  * in `Backdrop` and `CrtCurvature` and follow the effects switch: full
@@ -29,7 +33,6 @@ import { useEphemeris, type EphemerisState } from './hooks/useEphemeris';
 import { useI18n } from './i18n/context';
 import { prefersReducedMotion } from './preferences/preferences';
 import { usePreferences } from './preferences/context';
-import { AsciiHeading } from './ui/AsciiHeading';
 import { Box } from './ui/Box';
 
 // Three.js is large; load the scene separately from the rest of the app.
@@ -84,6 +87,8 @@ export function App() {
   // Full screen for the local horizon box, in both views.
   const sceneBoxRef = useRef<HTMLElement>(null);
   const fullscreen = useFullscreen(sceneBoxRef);
+  // Where `ConfigPanel` renders its update button (see `.update-bar` in styles.css).
+  const [updateSlot, setUpdateSlot] = useState<HTMLDivElement | null>(null);
 
   function handleUpdate() {
     viewSwitch.resetWarp();
@@ -110,7 +115,6 @@ export function App() {
           <h1 className="visually-hidden">{messages.app.title}</h1>
 
           <div className="column column--view">
-            <AsciiHeading text={messages.banner.horizon} />
             <Box
               title={messages.scene.heading}
               titleAs="h3"
@@ -139,8 +143,8 @@ export function App() {
               status={<DataStatus ephemeris={ephemeris} />}
             />
           </div>
+          <div className="update-bar" ref={setUpdateSlot} />
           <div className="column column--control">
-            <AsciiHeading text={messages.banner.config} />
             <ConfigPanel
               selection={ephemeris.selection}
               loading={busy}
@@ -149,6 +153,7 @@ export function App() {
               onCoordinatesChange={ephemeris.setCoordinates}
               onUtcChange={ephemeris.setUtc}
               onUpdate={handleUpdate}
+              updateTarget={updateSlot}
             />
             <SkySearchPanel selection={ephemeris.selection} onShow={handleShowMatch} />
           </div>

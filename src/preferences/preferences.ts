@@ -6,7 +6,7 @@
  * noise, flicker, screen curvature, hyperspace jump); `off` is the low
  * performance mode, which keeps the retro look but static (stars without
  * parallax, fixed scanlines and grain, no curvature filter) and swaps the pixel
- * font and block headings for a high-visibility font (`data-font`, see styles.css).
+ * font for a high-visibility font (`data-font`, see styles.css).
  *
  * Cookie format: `clps_prefs=v=2&lang=es&fx=on` (URL-encoded).
  * Parsing is defensive: unknown or missing fields fall back to defaults, and

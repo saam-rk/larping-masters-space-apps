@@ -5,7 +5,7 @@ type FrameCallback = (time: number) => void;
 
 let pending: FrameCallback[] = [];
 let now = 0;
-let pointerListener: ((event: { clientX: number; clientY: number }) => void) | null = null;
+let pointerListener: ((event: { clientX: number; clientY: number; buttons?: number }) => void) | null = null;
 
 /** Runs queued animation frames, 16 ms apart, until the loop sleeps or `limit` is hit. */
 function runFrames(limit = 1000): number {
@@ -63,5 +63,44 @@ describe('motion loop', () => {
     expect(frames.at(-1)?.pointerX).toBeCloseTo(1, 2);
     expect(frames.at(-1)?.pointerY).toBeCloseTo(-1, 2);
     expect(pending.length).toBe(0);
+  });
+
+  it('keeps the background still while a button is pressed (a drag)', async () => {
+    const motion = await import('./motion');
+    const frames: MotionFrame[] = [];
+    motion.subscribeMotion((frame) => frames.push(frame));
+    motion.setParallaxEnabled(true);
+    runFrames();
+    const before = frames.length;
+
+    pointerListener?.({ clientX: 1000, clientY: 0, buttons: 1 });
+    runFrames();
+    expect(frames.length).toBe(before);
+    expect(pending.length).toBe(0);
+
+    pointerListener?.({ clientX: 1000, clientY: 0, buttons: 0 });
+    runFrames();
+    expect(frames.at(-1)?.pointerX).toBeCloseTo(1, 2);
+  });
+
+  it('updates at most about 60 times per second on fast displays', async () => {
+    const motion = await import('./motion');
+    const frames: MotionFrame[] = [];
+    motion.subscribeMotion((frame) => frames.push(frame));
+    motion.setParallaxEnabled(true);
+    runFrames();
+    const before = frames.length;
+
+    pointerListener?.({ clientX: 1000, clientY: 0 });
+    // 165 Hz: one animation frame every ~6 ms for half a second.
+    for (let i = 0; i < 82 && pending.length > 0; i++) {
+      const callbacks = pending;
+      pending = [];
+      now += 6;
+      callbacks.forEach((callback) => callback(now));
+    }
+    const updates = frames.length - before;
+    expect(updates).toBeGreaterThan(20);
+    expect(updates).toBeLessThanOrEqual(36);
   });
 });

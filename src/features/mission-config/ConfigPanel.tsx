@@ -6,6 +6,11 @@
  * (UTC, the time NASA uses for launches, or the browser's local zone) and the
  * update button. Explanations live in each section's help dialog.
  *
+ * The update button can be rendered elsewhere in the page (`updateTarget`, the
+ * top of the view column in `App`) through a portal; it stays associated with
+ * this form through its `form` attribute, so it still submits it and Enter in
+ * the search box still triggers it.
+ *
  * The update button is available for valid selections while idle unless a
  * complete live result already matches the selected coordinates and UTC instant.
  * It then reads "Updated" and stays disabled until the point or date/time changes
@@ -13,6 +18,7 @@
  */
 
 import { useId, useMemo, useState, type FormEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { CUSTOM_SITE_ID, FEATURED_SITES, findSite, MORE_SITES, siteCode, type SiteId } from '../../../shared/sites';
 import type { EphemerisSelection } from '../../api/ephemerisClient';
 import { formatCoordinates } from '../../format';
@@ -56,6 +62,8 @@ interface ConfigPanelProps {
   readonly onCoordinatesChange: (latitudeDeg: number, longitudeEastDeg: number) => void;
   readonly onUtcChange: (utc: string) => void;
   readonly onUpdate: () => void;
+  /** Element where the update button is rendered; inside the form when absent. */
+  readonly updateTarget?: HTMLElement | null;
 }
 
 /** Names listed in the "several points match" hint before it is cut short. */
@@ -108,11 +116,13 @@ export function ConfigPanel({
   onCoordinatesChange,
   onUtcChange,
   onUpdate,
+  updateTarget,
 }: ConfigPanelProps) {
   const { locale, messages } = useI18n();
   const { preferences, configured } = usePreferences();
   const animated = configured && preferences.effects === 'on' && !prefersReducedMotion();
   const { config } = messages;
+  const formId = useId();
   const siteTitleId = useId();
   const searchFieldId = useId();
   const searchHintId = useId();
@@ -297,8 +307,14 @@ export function ConfigPanel({
     buttonClass += ' button--idle';
   }
 
+  const updateButton = (
+    <button type="submit" form={formId} className={buttonClass} disabled={!canUpdate} aria-busy={loading}>
+      {buttonLabel}
+    </button>
+  );
+
   return (
-    <form className="config" onSubmit={handleSubmit}>
+    <form id={formId} className="config" onSubmit={handleSubmit}>
       <Box
         title={config.site}
         titleAs="h3"
@@ -446,9 +462,7 @@ export function ConfigPanel({
         </p>
       </Box>
 
-      <button type="submit" className={buttonClass} disabled={!canUpdate} aria-busy={loading}>
-        {buttonLabel}
-      </button>
+      {updateTarget ? createPortal(updateButton, updateTarget) : updateButton}
     </form>
   );
 }

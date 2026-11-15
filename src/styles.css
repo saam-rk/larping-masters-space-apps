@@ -40,8 +40,6 @@
   --title-weight: 400;
   --title-case: uppercase;
   --title-spacing: 0.1em;
-  /* Block-art headings need a font where spaces and blocks share one width. */
-  --font-blocks: Consolas, 'DejaVu Sans Mono', Menlo, 'Liberation Mono', 'Noto Sans Mono', monospace;
   --font-hand: 'Caveat', 'Segoe Print', cursive;
   --border: 0.125rem;
   --stack-gap: clamp(0.6rem, 1.8vh, 1.25rem);
@@ -170,7 +168,11 @@ button {
 .workspace {
   display: grid;
   grid-template-columns: minmax(18rem, 30rem) minmax(0, 1fr);
-  grid-template-areas: 'control view';
+  grid-template-areas:
+    'control update'
+    'control view';
+  /* `min-content`, not 0: the view column scrolls with the page instead of overflowing its row. */
+  grid-template-rows: auto minmax(min-content, 1fr);
   gap: var(--stack-gap) var(--column-gap);
   height: 100%;
   min-height: 0;
@@ -211,70 +213,34 @@ button {
   pointer-events: none;
 }
 
-/* ───────────────────────── Section headings ───────────────────────── */
+/* ───────────────────────── Update bar ───────────────────────── */
 
-.ascii-heading {
+/*
+ * The update button of the site and time form (see ConfigPanel), in its own
+ * grid area: above the view on wide screens, between the view and the
+ * controls when they stack (see the media queries below). The column rule
+ * continues beside it, down to the view column.
+ */
+.update-bar {
+  grid-area: update;
+  position: relative;
   display: flex;
-  flex: none;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.25rem 1.5rem;
-  container-type: inline-size;
+  min-width: 0;
 }
 
-.ascii-heading__title {
-  /* --cols = characters per line; 0.6 = approximate advance of a monospace glyph. */
-  --art-size: min(1rem, calc(100cqw / (var(--cols) * 0.6)));
-  display: flex;
-  align-items: flex-end;
-  margin: 0;
-  font-size: 1em; /* Not the browser's larger default for <h2>. */
-  font-weight: 400;
-  /* The block art is 3 lines tall; the plain text of the legible font keeps the same height so nothing below moves. */
-  min-height: calc(3 * var(--art-size));
-}
-
-/* Accessible text of the heading: hidden while the block art is shown, the heading itself in the legible font. */
-:root:not([data-font='legible']) .ascii-heading__text {
+.update-bar::before {
+  content: '';
   position: absolute;
-  width: 0.0625rem;
-  height: 0.0625rem;
-  margin: -0.0625rem;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
+  top: 0;
+  bottom: calc(-1 * var(--stack-gap));
+  left: calc(var(--column-gap) / -2 - var(--border) / 2);
+  border-left: var(--border) dashed var(--muted);
+  pointer-events: none;
 }
 
-:root[data-font='legible'] .ascii-heading__text {
-  font-size: 1.5em;
-  font-weight: var(--title-weight);
-  line-height: 1;
-  letter-spacing: var(--title-spacing);
-  text-transform: var(--title-case);
-  color: var(--text);
-}
-
-:root[data-font='legible'] .ascii-heading__art {
-  display: none;
-}
-
-.ascii-heading__art {
-  display: block;
-  font-family: var(--font-blocks);
-  font-size: var(--art-size);
-  line-height: 1;
-  white-space: pre;
-  color: var(--text);
-  text-shadow: 0 0 0.625rem rgba(200, 255, 215, 0.3);
-  /* Horizontal gaps, like the phosphor rows of a CRT. */
-  mask-image: repeating-linear-gradient(to bottom, #000 0 0.125rem, rgba(0, 0, 0, 0.45) 0.125rem 0.1875rem);
-}
-
-.ascii-heading__aside {
-  padding-bottom: 0.1em;
+.update-bar > .button--update {
+  font-size: 1.15em;
+  padding-block: 0.6rem;
 }
 
 /* ───────────────────────── Boxes ───────────────────────── */
@@ -2542,14 +2508,21 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   }
 
   /*
+   * Frame budget of the decorative animations. Any animated pixel makes the
+   * compositor draw a new frame, and with full effects every frame re-runs the
+   * screen curvature filter over the whole interface (see CrtCurvature.tsx).
+   * Smooth (per-vsync) animations kept the GPU 50-95% busy on an idle page
+   * (integrated AMD GPU, 165 Hz display) and made the 3D view stutter, so
+   * every decorative animation is stepped: about 10-12 updates per second at
+   * most, ~3% GPU when idle. Measured in headless Edge with a CDP trace, see
+   * the pull request.
+   *
    * Pulse between the two greens of the update button (both modes: it is a cue,
-   * not decoration). Low performance blinks in two steps instead of fading: a
-   * smooth fade recomposites the screen every frame (measured ~40% of a core
-   * vs ~8% stepped on the dev laptop); with full effects the CRT layers already
-   * animate every frame, so the fade costs nothing extra there.
+   * not decoration): a stepped fade with full effects, two steps (a blink) in
+   * low performance.
    */
   .button--go::before {
-    animation: pulse 1.6s ease-in-out infinite;
+    animation: pulse 1.6s steps(8, end) infinite;
   }
 
   :root[data-fx='off'] .button--go::before {
@@ -2560,8 +2533,9 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
     animation: noise 0.6s steps(1) infinite;
   }
 
+  /* 132 steps over 11 s: 12 updates per second; the band is faint, so the steps do not show. */
   .crt[data-mode='full'] .crt__tracking {
-    animation: tracking 11s linear infinite;
+    animation: tracking 11s steps(132, end) infinite;
   }
 
   .crt[data-mode='full'] .crt__glass {
@@ -2631,8 +2605,12 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
 @media (max-width: 1040px) {
   .workspace {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: 'view' 'control';
-    grid-template-rows: max-content minmax(min-content, 1fr);
+    grid-template-areas: 'view' 'update' 'control';
+    grid-template-rows: max-content max-content minmax(min-content, 1fr);
+  }
+
+  .update-bar::before {
+    content: none;
   }
 
   .scene-box.scene-box--apollo {
@@ -2654,11 +2632,6 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
     border-top: var(--border) dashed var(--muted);
   }
 
-  /* Box titles already name each part. */
-  .ascii-heading {
-    display: none;
-  }
-
   .readings__aside {
     display: none;
   }
@@ -2666,16 +2639,7 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   .config {
     display: grid;
     grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-    grid-template-rows: auto auto;
     align-items: start;
-  }
-
-  .config > .box:first-child {
-    grid-row: span 2;
-  }
-
-  .config > .button {
-    align-self: end;
   }
 }
 
@@ -2730,10 +2694,6 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
 
   .config {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .config > .box:first-child {
-    grid-row: auto;
   }
 
   .results__content {
