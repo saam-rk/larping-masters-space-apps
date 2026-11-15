@@ -1,0 +1,47 @@
+{
+  "id": "amundsen-rim",
+  "displayName": "Amundsen Rim",
+  "sourceUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/DM1/DM1_final_adj_5mpp_surf.tif",
+  "sourceCatalogUrl": "https://pgda.gsfc.nasa.gov/products/78",
+  "sourceReadmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+  "siteSource": "docs/LUNAR_ADDITIONAL_SITES_RESEARCH.md catalog row 1 (DM1), NASA Lunar Surface Data Book M2M-30044 Table A2.1-1. Center of an original candidate-region polygon; not an approved landing site.",
+  "frame": "MOON_ME / DE421",
+  "referenceRadiusM": 1737400,
+  "site": {"latitudeDeg": -84.2287, "longitudeEastDeg": 69.44396},
+  "ridge": {"latitudeDeg": -84.29451437802126, "longitudeEastDeg": 68.91307426200034},
+  "third": {"latitudeDeg": -84.28417647426343, "longitudeEastDeg": 70.20557640746419},
+  "cropCenterProjectedM": [161500, 61500],
+  "cropSizeM": [10000, 10000],
+  "originProjectedM": [164000, 61500, 399],
+  "targetVertices": 40500,
+  "baseStridePixels": 20,
+  "candidateStridePixels": 4,
+  "refinementBatchSize": 2500,
+  "ridgePriorityMultiplier": 2.5,
+  "ridgePriorityRadiusM": 1800,
+  "maxGlbBytes": 2097152,
+  "nearDetail": {
+    "centerProjectedM": [163991.5, 61481.5],
+    "seedBandsRadiusMStridePixels": [[35, 1], [150, 2], [500, 4]],
+    "residualPriorityBoost": 10,
+    "residualPriorityRadiusM": 550,
+    "textureSquareSizeM": 50,
+    "textureFullDetailRadiusM": 15,
+    "textureFadeEndRadiusM": 24,
+    "cameraHorizontalDirection": [-0.9612616959383189, 0.27563735581699916],
+    "cameraHeightAboveMeshM": 1.65,
+    "astronautDistanceAheadM": 5,
+    "astronautSideOffsetM": 0.65,
+    "initialMovementRadiusM": 2
+  },
+  "featureNotes": {
+    "ridge": "Highest source pixel within 250 m of the sampled skyline at grid bearing 284 degrees from the site: the eastern rim of a roughly 1 km crater, about 2.57 km from the site and 270 m above it. Descriptive label from numeric DM1 elevation and illustrative hillshade; not an IAU feature name.",
+    "third": "Off-grid holdout on the slope that descends toward the Amundsen crater interior (grid south); no mission significance.",
+    "nearDetail": "Gentlest 25 m window (about 1 degree plane-fit slope) within 45 m of the saved point, about 21 m from it. Selected for scale-figure footing, not landing suitability.",
+    "crop": "Shifted 2.5 km grid-west of the saved point so that the higher west-southwest terrain crest seen from the viewpoint lies inside the crop instead of at its boundary."
+  },
+  "siteLimitations": [
+    "The saved point lies on a broad, gently undulating crest; the 10 km crop does not include the complete Amundsen crater or its floor.",
+    "The astronaut stands on a gently sloping triangle selected for footing; no claim of walkability, safe footing or landing suitability."
+  ]
+}

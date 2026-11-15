@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Camera-led terrain GLB verification — illustrative terrain</title>
+  <style>body{margin:0;background:#080808;color:#ddd;font:14px monospace}canvas{display:block}pre{white-space:pre-wrap;padding:12px;max-width:780px}</style>
+</head>
+<body>
+  <canvas id="view" width="390" height="844"></canvas>
+  <pre id="report">Loading separate terrain and astronaut GLBs. Illustrative light and grain; not a landing or visibility assessment.</pre>
+  <script type="module">
+    // Usage: /tools/lunar-terrain/terrain-review.html?site=amundsen-rim
+    import { reviewTerrain } from './check_camera_led_web.mjs';
+    const siteId = new URLSearchParams(location.search).get('site');
+    const output = document.querySelector('#report');
+    if (!siteId || !/^[a-z0-9-]+$/.test(siteId)) {
+      output.textContent = 'Missing or invalid ?site= parameter';
+    } else {
+      reviewTerrain(document.querySelector('#view'), siteId).then((report) => {
+        output.textContent = JSON.stringify(report, null, 2);
+      }).catch((error) => {
+        window.terrainReviewError = error.stack;
+        output.textContent = `FAILED\n${error.stack}`;
+        console.error(error);
+      });
+    }
+  </script>
+</body>
+</html>

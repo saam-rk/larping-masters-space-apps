@@ -1,0 +1,12 @@
+{
+  "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/DM1/DM1_final_adj_5mpp_surf.tif",
+  "httpStatus": 200,
+  "date": "Sat, 14 Nov 2026 23:51:21 GMT",
+  "lastModified": "Fri, 16 Apr 2021 12:36:52 GMT",
+  "contentLength": 64033681,
+  "etag": "W/\"3d11391-178daaf1aa0\"",
+  "downloadedBytes": 64033681,
+  "sha256": "ceb7e786d05ef6a604c80b78be885e641ad7bd2b5c3aac944201a4f2008d8ca4",
+  "readmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+  "note": "Complete source file kept outside the repository."
+}

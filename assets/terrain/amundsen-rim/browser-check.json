@@ -1,0 +1,51 @@
+{
+  "status": "passed",
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+  "threeRevision": "187",
+  "deviceClass": "Desktop embedded browser, NOT a physical mobile device",
+  "viewport": [
+    390,
+    844
+  ],
+  "siteId": "amundsen-rim",
+  "terrainVertices": 40500,
+  "terrainTriangles": 80572,
+  "imageDecode": {
+    "color": [
+      512,
+      512
+    ],
+    "normal": [
+      2048,
+      2048
+    ],
+    "roughness": [
+      256,
+      256
+    ]
+  },
+  "standardPbrChannels": true,
+  "clampToEdge": true,
+  "astronautHeightM": 1.699999817910819,
+  "maxSoleGapM": 1.0074207690280446e-8,
+  "controls": [
+    {
+      "name": "site",
+      "heightM": 399.4530260353668
+    },
+    {
+      "name": "ridge",
+      "heightM": 669.544067382801
+    },
+    {
+      "name": "third",
+      "heightM": 106.28977697736582
+    }
+  ],
+  "movementCases": 102,
+  "fullBodyFramingFailures": [],
+  "renderedDrawCalls": 14,
+  "renderedTriangles": 81472,
+  "webglError": 0,
+  "mobilePerformance": "Pending: no physical device, throttled-network or FPS claim"
+}
