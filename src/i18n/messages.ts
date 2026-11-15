@@ -28,8 +28,6 @@ type Paragraphs = readonly string[];
 
 export interface Messages {
   readonly app: { readonly title: string };
-  /** Section headings, drawn with block letters. */
-  readonly banner: { readonly config: string; readonly horizon: string };
   /** Short bracketed status tags shown next to headings. */
   readonly status: {
     readonly sample: string;
@@ -337,7 +335,6 @@ export interface Messages {
 
 const es: Messages = {
   app: { title: 'CLPS Lunar Mission Browser' },
-  banner: { config: 'Control', horizon: 'Horizonte' },
   status: {
     sample: 'MUESTRA',
     live: 'EN VIVO',
@@ -584,7 +581,7 @@ const es: Messages = {
   skySearch: {
     heading: 'Búsqueda inversa',
     info: [
-      'Busca la fecha y hora en que el Sol y la Tierra están donde indiques, vistos desde el punto de referencia elegido en «Control».',
+      'Busca la fecha y hora en que el Sol y la Tierra están donde indiques, vistos desde el punto elegido en «Punto de referencia».',
       'Abre la ventana de búsqueda para escribir las condiciones. Allí tienes ejemplos y una guía completa sobre unidades, valores posibles, precisión y límites.',
       'Son posiciones geométricas: el relieve no está modelado. Una coincidencia no garantiza luz, comunicaciones ni idoneidad de aterrizaje.',
     ],
@@ -646,7 +643,7 @@ const es: Messages = {
       {
         heading: 'Qué hace',
         paragraphs: [
-          '«Control» responde a «en esta fecha, ¿dónde están el Sol y la Tierra?». La búsqueda inversa responde a la pregunta contraria: indicas dónde quieres verlos y obtienes la fecha y hora UTC en que ocurre, vista desde el punto de referencia elegido en «Control».',
+          '«Actualizar vista» responde a «en esta fecha, ¿dónde están el Sol y la Tierra?». La búsqueda inversa responde a la pregunta contraria: indicas dónde quieres verlos y obtienes la fecha y hora UTC en que ocurre, vista desde el punto elegido en «Punto de referencia».',
           'Rellena entre uno y cuatro campos: azimut y elevación del Sol y de la Tierra. Todas las filas rellenas deben cumplirse a la vez; las vacías no imponen nada.',
         ],
       },
@@ -677,8 +674,8 @@ const es: Messages = {
       {
         heading: 'Fecha buscada y ventana',
         paragraphs: [
-          'La búsqueda parte de la fecha y hora seleccionadas en «Control». «Más próxima» acepta coincidencias antes o después; «Siguiente», solo posteriores; «Anterior», solo anteriores.',
-          'Explora hasta 366 días y entre 1969 y 2099, con resolución de 1 segundo. Si cambias el punto o la fecha en «Control», la siguiente búsqueda parte de los nuevos valores.',
+          'La búsqueda parte de la fecha y hora seleccionadas en «Fecha y hora». «Más próxima» acepta coincidencias antes o después; «Siguiente», solo posteriores; «Anterior», solo anteriores.',
+          'Explora hasta 366 días y entre 1969 y 2099, con resolución de 1 segundo. Si cambias el punto de referencia o la fecha y hora, la siguiente búsqueda parte de los nuevos valores.',
         ],
       },
       {
@@ -705,7 +702,7 @@ const es: Messages = {
     notFound: (start, end) => `Ninguna fecha entre ${start} y ${end} cumple las condiciones.`,
     budget: (start, end) =>
       `Se agotó el límite de consultas (revisado de ${start} a ${end}) sin encontrar coincidencia. Prueba con rangos más amplios o con otra fecha de referencia.`,
-    otherSite: (site) => `Resultado para ${site}; el punto de «Control» ha cambiado. Vuelve a buscar.`,
+    otherSite: (site) => `Resultado para ${site}; el punto de referencia ha cambiado. Vuelve a buscar.`,
     precision: 'JPL Horizons · resolución 1 s · 4 decimales · sin relieve',
   },
   presence: {
@@ -741,7 +738,6 @@ const es: Messages = {
 
 const en: Messages = {
   app: { title: 'CLPS Lunar Mission Browser' },
-  banner: { config: 'Control', horizon: 'Horizon' },
   status: {
     sample: 'SAMPLE',
     live: 'LIVE',
@@ -988,7 +984,7 @@ const en: Messages = {
   skySearch: {
     heading: 'Inverse search',
     info: [
-      'Finds the date and time at which the Sun and the Earth are where you say, seen from the reference point chosen under "Control".',
+      'Finds the date and time at which the Sun and the Earth are where you say, seen from the point chosen under "Reference point".',
       'Open the search window to enter the conditions. It has examples and a full guide to units, possible values, precision and limits.',
       'These are geometric positions: terrain is not modeled. A match does not guarantee light, communications or landing suitability.',
     ],
@@ -1050,7 +1046,7 @@ const en: Messages = {
       {
         heading: 'What it does',
         paragraphs: [
-          '"Control" answers "on this date, where are the Sun and the Earth?". The inverse search answers the opposite question: you say where you want to see them and get the UTC date and time at which that happens, seen from the reference point chosen under "Control".',
+          '"Update view" answers "on this date, where are the Sun and the Earth?". The inverse search answers the opposite question: you say where you want to see them and get the UTC date and time at which that happens, seen from the point chosen under "Reference point".',
           'Fill in one to four fields: azimuth and elevation of the Sun and of the Earth. Every filled row must hold at once; empty rows set nothing.',
         ],
       },
@@ -1081,8 +1077,8 @@ const en: Messages = {
       {
         heading: 'Date to find and window',
         paragraphs: [
-          'The search starts from the date and time selected under "Control". "Closest" accepts matches earlier or later; "Next", only later ones; "Previous", only earlier ones.',
-          'It covers up to 366 days, between 1969 and 2099, to the second. If you change the point or the date under "Control", the next search starts from the new values.',
+          'The search starts from the date and time selected under "Date and time". "Closest" accepts matches earlier or later; "Next", only later ones; "Previous", only earlier ones.',
+          'It covers up to 366 days, between 1969 and 2099, to the second. If you change the reference point or the date and time, the next search starts from the new values.',
         ],
       },
       {
@@ -1107,7 +1103,7 @@ const en: Messages = {
     notFound: (start, end) => `No date between ${start} and ${end} meets the conditions.`,
     budget: (start, end) =>
       `The request limit was reached (searched ${start} to ${end}) without a match. Try wider ranges or another reference date.`,
-    otherSite: (site) => `Result for ${site}; the point under "Control" has changed. Search again.`,
+    otherSite: (site) => `Result for ${site}; the reference point has changed. Search again.`,
     precision: 'JPL Horizons · 1 s resolution · 4 decimals · no terrain',
   },
   presence: {

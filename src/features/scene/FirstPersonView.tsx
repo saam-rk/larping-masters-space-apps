@@ -31,7 +31,7 @@
  */
 
 import { Html, Line, PerspectiveCamera, useGLTF } from '@react-three/drei';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useThree } from '@react-three/fiber';
 import { Suspense, useEffect, useMemo, useRef, type RefObject } from 'react';
 import {
   AnimationMixer,
@@ -101,6 +101,8 @@ const BODY_WIDTH_SEGMENTS = 32;
 const BODY_HEIGHT_SEGMENTS = 16;
 /** Draw order of the horizon line and ticks: after the terrain, which they are drawn over. */
 const HORIZON_RENDER_ORDER = 10;
+/** Steps per second of the Apollo 11 reenactment animation (renders it asks for). */
+const REENACTMENT_FPS = 30;
 /** Draw order of the astronaut: after the horizon line, so the figure stays in front of it. */
 const ASTRONAUT_RENDER_ORDER = 20;
 
@@ -423,11 +425,22 @@ function ApolloTerrain({ bodies, controls }: { bodies: PlacedBodies; controls: F
     if (!controls.animateReenactment) mixer.setTime(0);
     invalidate();
   }, [controls.animateReenactment, mixer, invalidate]);
-  useFrame((state, delta) => {
+  // The reenactment advances on its own clock at REENACTMENT_FPS and asks for
+  // one render per step, instead of rendering on every display refresh (up to
+  // 165 per second, each with a shadow pass): that kept the GPU saturated with
+  // full effects even when nobody touched the view. Dragging still renders at
+  // the display rate (see `EyeLevelRig`).
+  useEffect(() => {
     if (!controls.animateReenactment) return;
-    mixer.update(Math.min(delta, 1 / 15));
-    state.invalidate();
-  });
+    let last = performance.now();
+    const timer = window.setInterval(() => {
+      const now = performance.now();
+      mixer.update(Math.min((now - last) / 1000, 1 / 15));
+      last = now;
+      invalidate();
+    }, 1000 / REENACTMENT_FPS);
+    return () => window.clearInterval(timer);
+  }, [controls.animateReenactment, mixer, invalidate]);
 
   return (
     <>
