@@ -73,8 +73,8 @@ describe('ConfigPanel exact date and time pickers', () => {
   it('applies the picked value to that part only, closes and returns focus to the wheel', () => {
     const { labelButton, wheel, picker, options, onUtcChange } = mountPanel();
     act(() => labelButton('Year').click());
-    expect(options()).toHaveLength(100);
-    act(() => options()[34]!.click());
+    expect(options()).toHaveLength(131);
+    act(() => options().find((option) => option.textContent === '2034')!.click());
     expect(picker()).toBeNull();
     expect(wheel('Year').getAttribute('aria-valuenow')).toBe('2034');
     expect(wheel('Month').getAttribute('aria-valuenow')).toBe('1');

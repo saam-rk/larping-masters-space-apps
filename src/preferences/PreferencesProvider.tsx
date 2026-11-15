@@ -16,7 +16,8 @@ interface InitialState {
 function readInitialState(): InitialState {
   const stored = readPreferencesCookie();
   if (stored) return { preferences: stored, configured: true };
-  return { preferences: recommendPreferences(readDeviceHints()), configured: false };
+  // Open directly on the landing scene; the settings rail still opens preferences.
+  return { preferences: recommendPreferences(readDeviceHints()), configured: true };
 }
 
 export function PreferencesProvider({ children }: { children: ReactNode }) {
@@ -24,15 +25,14 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const { preferences, configured } = state;
 
   // `data-fx` drives the CSS: `on` = full (animated) effects, `off` = low
-  // performance (same look, static). Kept `off` until the setup screen is confirmed.
+  // performance (same look, static). Pause effects while the settings window is open.
   useEffect(() => {
     document.documentElement.dataset.fx = configured ? preferences.effects : 'off';
   }, [preferences.effects, configured]);
 
   // `data-font` drives the typeface: low performance uses the high-visibility
   // font. Unlike `data-fx` it ignores `configured`, so reopening the setup
-  // screen does not flip the font of the (inert) interface behind it; on a
-  // first visit it follows the suggested mode until the choice is confirmed.
+  // screen does not flip the font of the (inert) interface behind it.
   useEffect(() => {
     document.documentElement.dataset.font = preferences.effects === 'off' ? 'legible' : 'retro';
   }, [preferences.effects]);

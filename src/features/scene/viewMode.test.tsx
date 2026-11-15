@@ -47,7 +47,7 @@ function expectMode(firstPerson: boolean) {
 }
 
 describe('view selection and terrain availability', () => {
-  it.each<ObserverSiteId>(['nobile-rim-1', 'nobile-rim-2', 'shackleton-rim'])('starts in first person at %s', (siteId) => {
+  it.each<ObserverSiteId>(['apollo-11', 'nobile-rim-1', 'nobile-rim-2', 'shackleton-rim'])('starts in first person at %s', (siteId) => {
     render(siteId);
     expectMode(true);
     expect(option(0).getAttribute('aria-disabled')).toBe('false');

@@ -1,5 +1,5 @@
 /**
- * Predefined lunar south-pole reference points.
+ * Predefined lunar reference points.
  *
  * Source: NASA, "Lunar Surface Data Book", table A2.1-1 (M2M-30044, baseline,
  * 2025-03-18, p. 75). The points are the centers of the original
@@ -8,8 +8,8 @@
  * Coordinates are planetocentric latitude and east longitude in degrees, kept
  * exactly as published (see docs/LUNAR_ADDITIONAL_SITES_RESEARCH.md §3).
  *
- * The three featured points (`FEATURED_SITE_IDS`) are the original demo
- * points (D-015); the others are offered in a drop-down. Every point uses the
+ * The featured points (`FEATURED_SITE_IDS`) include Apollo 11 and the
+ * original demo points (D-015); the others are offered in a drop-down. Every point uses the
  * same geometric method; only some featured points have a first-person
  * terrain model.
  *
@@ -18,6 +18,7 @@
  */
 
 export const SITE_IDS = [
+  'apollo-11',
   'nobile-rim-1',
   'nobile-rim-2',
   'shackleton-rim',
@@ -49,8 +50,10 @@ export const SITE_IDS = [
 
 export type SiteId = (typeof SITE_IDS)[number];
 
-/** The most relevant points, listed first in the site selector: the original demo points (D-015). */
-export const FEATURED_SITE_IDS = ['nobile-rim-1', 'nobile-rim-2', 'shackleton-rim'] as const satisfies readonly SiteId[];
+export const APOLLO_11_SITE_ID = 'apollo-11';
+
+/** The default and original demo points, listed first in the site selector. */
+export const FEATURED_SITE_IDS = [APOLLO_11_SITE_ID, 'nobile-rim-1', 'nobile-rim-2', 'shackleton-rim'] as const satisfies readonly SiteId[];
 
 export interface DataSource {
   /** Human-readable source name. Proper noun; not translated. */
@@ -100,6 +103,12 @@ export const LUNAR_SURFACE_DATA_BOOK: DataSource = {
   locator: 'Table A2.1-1',
 };
 
+export const APOLLO_11_COORDINATE_SOURCE: DataSource = {
+  name: 'NASA/NSSDCA Apollo Landing Site Coordinates',
+  url: 'https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html',
+  locator: 'Apollo 11 · Lunar Module',
+};
+
 /**
  * Site20v2 ("Leibnitz beta plateau, extended boundaries", added 2022-08-15)
  * is listed by NASA GSFC PGDA product 78, not as its own Data Book row; it
@@ -116,6 +125,14 @@ function dataBookSite(id: SiteId, name: string, latitudeDeg: number, longitudeEa
 }
 
 export const REFERENCE_SITES: readonly ReferenceSite[] = [
+  {
+    id: APOLLO_11_SITE_ID,
+    name: 'Apollo 11',
+    latitudeDeg: 0.67416,
+    longitudeEastDeg: 23.47314,
+    source: APOLLO_11_COORDINATE_SOURCE,
+    codes: ['Apollo 11', 'Tranquility Base', 'Eagle', 'Mare Tranquillitatis'],
+  },
   dataBookSite('nobile-rim-1', 'Nobile Rim 1', -85.4381, 37.36667, ['R06', 'Site06']),
   dataBookSite('nobile-rim-2', 'Nobile Rim 2', -83.954, 58.82206, ['DM2']),
   // Published as 171.87° W.
@@ -171,7 +188,7 @@ export function siteCode(site: ReferenceSite): string | null {
   return code && code !== site.name ? code : null;
 }
 
-export const DEFAULT_SITE_ID: SiteId = 'nobile-rim-1';
+export const DEFAULT_SITE_ID: SiteId = APOLLO_11_SITE_ID;
 
 export function isSiteId(value: unknown): value is SiteId {
   return typeof value === 'string' && (SITE_IDS as readonly string[]).includes(value);

@@ -42,7 +42,7 @@ server/              Backend logic, framework-independent            backend
 shared/              Contract shared by browser and server            backend + science
   ephemeris.ts         API request/response types and error codes
   skySearch.ts         inverse search contract and 4-decimal range matching
-  sites.ts             27 reference sites (3 featured), their source, custom points
+  sites.ts             28 reference sites (4 featured), their source, custom points
   time.ts              UTC input parsing and the supported range
   presence.ts          meaning of the Horizons sky-presence markers
   samples/             saved sample derived from the fixtures
@@ -79,7 +79,7 @@ results are presented.
   (-180, 180]. Coordinates equal to a reference site resolve to that site;
   otherwise `site.id` is `custom` and `site.source` is `null` (user-entered,
   no publication). The method is the same as for the reference sites.
-- `utc`: UTC instant ending in `Z`, within [2000-01-01, 2100-01-01). The range
+- `utc`: UTC instant ending in `Z`, within [1969-01-01, 2100-01-01). The range
   is an application guard, not a Horizons limit.
 
 | Status | Meaning | Body |

@@ -170,6 +170,7 @@ button {
 .workspace {
   display: grid;
   grid-template-columns: minmax(18rem, 30rem) minmax(0, 1fr);
+  grid-template-areas: 'control view';
   gap: var(--stack-gap) var(--column-gap);
   height: 100%;
   min-height: 0;
@@ -189,9 +190,14 @@ button {
 /*
  * Separator between the control and view columns: a vertical rule centered in
  * the column gap. Stacked layouts (see the media queries below) draw the same
- * rule horizontally in the row gap, above the view column.
+ * rule horizontally below the view.
  */
+.column--control {
+  grid-area: control;
+}
+
 .column--view {
+  grid-area: view;
   position: relative;
 }
 
@@ -2692,13 +2698,23 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
 @media (max-width: 1040px) {
   .workspace {
     grid-template-columns: minmax(0, 1fr);
-    /* `max-content`, not `auto`: the controls row must not shrink below its content and overlap the view. */
+    grid-template-areas: 'view' 'control';
     grid-template-rows: max-content minmax(min-content, 1fr);
   }
 
-  .column--view::before {
-    top: calc(var(--stack-gap) / -2 - var(--border) / 2);
+  .scene-box.scene-box--apollo {
+    min-height: clamp(19rem, 48svh, 32rem);
+  }
+
+  .scene-box--apollo .scene__controls {
+    top: 0.5rem;
     bottom: auto;
+    max-height: 7rem;
+  }
+
+  .column--view::before {
+    top: auto;
+    bottom: calc(var(--stack-gap) / -2 - var(--border) / 2);
     left: 0;
     right: 0;
     border-left: none;

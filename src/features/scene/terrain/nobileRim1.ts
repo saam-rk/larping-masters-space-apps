@@ -12,9 +12,9 @@
  * Nobile Rim 2, so it is not added twice.
  */
 
-import type { SiteTerrain } from './siteTerrain';
+import type { PolarTerrain } from './siteTerrain';
 
-export const NOBILE_RIM_1_TERRAIN: SiteTerrain = {
+export const NOBILE_RIM_1_TERRAIN: PolarTerrain = {
   siteId: 'nobile-rim-1',
   terrainUrl: '/terrain/nobile-rim-1.glb',
   astronautUrl: '/terrain/nobile-rim-1.astronaut.glb',

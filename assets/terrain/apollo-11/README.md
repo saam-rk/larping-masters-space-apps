@@ -4,13 +4,49 @@ Revised 2026-11-15 on `feat/apollo-11-terrain`. The user explicitly authorized
 replacing the earlier coarse LOLA elevation grid with the LROC stereo DTM.
 The former 29.6 m model is superseded. No application UI or ephemeris code changed.
 
-## Files and acceptance evidence
+## Apollo 11 first-person scene
+
+The app opens on the surface scene at **0.67416° N, 23.47314° E** and
+**1969-07-20 20:17:40 UTC**, from the [NASA landing coordinates catalogue](https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html)
+and [NASA mission catalogue](https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo11info.html).
+Apollo 11 uses the existing LROC origin and its local metre axes (+X east,
++Y north, +Z up in Blender; +X east, -Z north, +Y up in glTF). The time is
+NASA/NSSDCA's catalogue convention; NASA histories can differ by seconds.
+
+- [Editable scene](../../../public/terrain/apollo-11.blend): eye-level camera,
+  schematic Eagle at the geographic anchor, and three posed instances of the
+  project's [astronaut](../../../docs/research/site-terrain/nobile-rim-2/astronaut.blend).
+  The terrain, packed textures, Little West camera and overview camera are retained.
+- [Web props](../../../public/terrain/apollo-11.reenactment.glb) and
+  [camera setup](../../../public/terrain/apollo-11.reenactment.json): props and
+  animation in the terrain frame, loaded beside the unchanged terrain GLB.
+- [Builder](../../../tools/lunar-terrain/build_apollo_reenactment.py): run in
+  Blender 5.3 with the public Apollo scene open. The script replaces its generated
+  collection and updates the Blender file and web props. Run it after
+  `finalize_apollo_blend.py` if rebuilding from the terrain source.
+
+The flag uses a horizontal support rod and a 3-by-5-foot field, as described
+in [NASA's history of the flag assembly](https://www.nasa.gov/history/flag-day-flying-high-the-stars-and-stripes-in-space/).
+The two-way hop uses an illustrative launch velocity of 1.02 m/s horizontal
+and 1.14 m/s vertical with [NASA's lunar surface gravity of 1.62 m/s²](https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/moon/).
+Each leg of the hop travels about 1.44 m in 1.41 s and reaches 0.40 m above
+the interpolated floor between the endpoints, which are raycast on the DTM.
+Reduced motion and the app's low-performance mode show the opening pose.
+
+The figures are an artistic post-landing tableau. [NASA's account](https://www.nasa.gov/the-apollo-program/)
+places Armstrong and Aldrin on the surface and Collins aboard Columbia, so
+the third surface figure is fictional. The saved geometric sky comes from JPL
+Horizons (API 1.2, DE441, high-precision MEAN_ME) at touchdown, not during the
+later flag deployment. It uses the reference sphere at 0 km altitude; neither
+the illustration nor the sky results assess visibility, power, communications,
+or landing suitability.
+
+## Original terrain files and acceptance evidence
 
 - [Terrain GLB](../../../public/terrain/apollo-11.glb): **2,064,284 bytes**,
   **40,500 vertices**, **80,462 triangles**, below 2 MiB without mesh compression.
-- [Editable Blender file](../../../public/terrain/apollo-11.blend): conventional
-  startup file with one terrain scene, packed maps, geographic anchor, eye-level
-  camera and overview camera. A matching copy is retained in this folder.
+- [Terrain-only Blender source](apollo-11.blend): original finalized terrain
+  with packed maps, geographic anchor, eye-level camera and overview camera.
 - `metadata.json` / public sidecar: CRS, origin, hashes, provenance and limitations.
 - `validation.json`: independent validation of the final exported GLB.
 - `landmarks.json`: source-raster measurements in identifiable crater neighborhoods.

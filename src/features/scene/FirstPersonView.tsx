@@ -1,17 +1,14 @@
 /**
- * First-person local horizon at a site with a terrain model (Nobile Rim 1,
- * Nobile Rim 2 and Shackleton Rim, see `terrain/models.ts`): LOLA terrain, the 1.70 m astronaut scale
- * figure, and the Sun and Earth placed from the same azimuth/elevation as the
- * results panel.
+ * First-person local horizon on LROC terrain at Apollo 11 or on LOLA terrain
+ * at a supported south pole site. The Sun and Earth use the displayed result.
  *
  * Units are meters. Scene frame as in `geometry.ts` (-Z north, +X east,
  * +Y up); the world origin is the site point on the terrain surface.
  *
- * The viewer stands still at eye height right beside the astronaut (about
- * 2.6 m away), facing it with the Sun just to the right; a soft contact shadow
- * (decorative, not Sun-based) marks where the figure stands; dragging only turns the head and
- * the wheel or the zoom slider narrows the field of view (see `EyeLevelRig`). Sun and Earth are drawn far
- * beyond the 10 km crop with their real apparent angular diameter. Beyond the
+ * The Apollo camera frames the three characters and Eagle. At the polar sites
+ * it stands beside the scale astronaut, which has a decorative contact shadow.
+ * Dragging turns the head; the wheel or slider narrows the field of view.
+ * Sun and Earth are drawn beyond each terrain crop at their apparent diameter. Beyond the
  * crop there is no relief data: an invisible floor marks an assumed horizon, a
  * smooth lunar sphere continuing from the crop edge as seen from eye height
  * (see `horizonFloor.ts`). It only writes depth, so it hides the Sun and the
@@ -29,9 +26,10 @@
  */
 
 import { Html, Line, PerspectiveCamera, useGLTF } from '@react-three/drei';
-import { useThree } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { Suspense, useEffect, useMemo, useRef, type RefObject } from 'react';
 import {
+  AnimationMixer,
   BufferAttribute,
   BufferGeometry,
   DoubleSide,
@@ -48,6 +46,7 @@ import {
   type Object3D,
 } from 'three';
 import type { EphemerisResponse } from '../../../shared/ephemeris';
+import { APOLLO_11_SITE_ID } from '../../../shared/sites';
 import { useI18n } from '../../i18n/context';
 import { blobShadowTexture } from './blobShadow';
 import { radiusForAngularDiameter, upperLimbAboveHorizon, type PlacedBodies, type SceneBody } from './bodies';
@@ -55,14 +54,15 @@ import { EYE_HEIGHT_M, EyeLevelRig } from './EyeLevelRig';
 import { horizontalToDirection, horizontalToPosition, type Vector3Tuple } from './geometry';
 import { glowTexture } from './glow';
 import { horizonProfile, type HorizonSample } from './horizonFloor';
-import { terrainForSite } from './terrain/models';
+import { APOLLO_11_REENACTMENT, APOLLO_11_TERRAIN } from './terrain/apollo11';
+import { polarTerrainForSite } from './terrain/models';
 import {
   ASTRONAUT_HEIGHT_M,
   SPHERE_RADIUS_M,
   projectSouthPolar,
   projectedToGlb,
   terrainYawRad,
-  type SiteTerrain,
+  type PolarTerrain,
 } from './terrain/siteTerrain';
 import { DEFAULT_FOV_DEG } from './zoom';
 
@@ -184,7 +184,7 @@ interface TerrainFrame {
 
 function useTerrainFrame(
   terrain: Mesh | null,
-  model: SiteTerrain,
+  model: PolarTerrain,
   latitudeDeg: number,
   longitudeEastDeg: number,
 ): TerrainFrame | null {
@@ -309,6 +309,7 @@ export interface FirstPersonControls {
   readonly onZoomChange: (level: number) => void;
   /** Draw the geometric horizon line, its ticks and the compass labels. */
   readonly showHorizon: boolean;
+  readonly animateReenactment?: boolean;
 }
 
 function Terrain({
@@ -320,7 +321,7 @@ function Terrain({
   data: EphemerisResponse;
   bodies: PlacedBodies;
   controls: FirstPersonControls;
-  model: SiteTerrain;
+  model: PolarTerrain;
 }) {
   const { messages, locale } = useI18n();
   const terrainGltf = useGLTF(model.terrainUrl, false, false);
@@ -378,6 +379,62 @@ function Terrain({
   );
 }
 
+function ApolloTerrain({ bodies, controls }: { bodies: PlacedBodies; controls: FirstPersonControls }) {
+  const { eye, heading, pitch, url } = APOLLO_11_REENACTMENT;
+  const terrainGltf = useGLTF(APOLLO_11_TERRAIN.terrainUrl, false, false);
+  const propsGltf = useGLTF(url, false, false);
+  const terrain = useMemo(() => {
+    const clone = terrainGltf.scene.clone();
+    clone.traverse((object) => { if (object instanceof Mesh) object.receiveShadow = true; });
+    return clone;
+  }, [terrainGltf.scene]);
+  const props = useMemo(() => {
+    const clone = propsGltf.scene.clone();
+    clone.traverse((object) => {
+      if (object instanceof Mesh) {
+        object.castShadow = true;
+        object.receiveShadow = true;
+      }
+    });
+    return clone;
+  }, [propsGltf.scene]);
+  const mixer = useMemo(() => new AnimationMixer(props), [props]);
+  const occluder = useRef<Group>(null);
+  const invalidate = useThree((state) => state.invalidate);
+  const floor = useMemo(() => {
+    const mesh = firstMesh(terrain);
+    return mesh ? floorGeometry(floorProfile(mesh, new Matrix4(), eye)) : null;
+  }, [terrain, eye]);
+
+  useEffect(() => () => floor?.dispose(), [floor]);
+  useEffect(() => {
+    for (const clip of propsGltf.animations) mixer.clipAction(clip).play();
+    mixer.update(0);
+    invalidate();
+    return () => { mixer.stopAllAction(); };
+  }, [mixer, propsGltf.animations, invalidate]);
+  useEffect(() => {
+    if (!controls.animateReenactment) mixer.setTime(0);
+    invalidate();
+  }, [controls.animateReenactment, mixer, invalidate]);
+  useFrame((state, delta) => {
+    if (!controls.animateReenactment) return;
+    mixer.update(Math.min(delta, 1 / 15));
+    state.invalidate();
+  });
+
+  return (
+    <>
+      <primitive object={terrain} />
+      <group ref={occluder}><primitive object={props} /></group>
+      <EyeLevelRig eye={eye} initialHeadingDeg={heading} initialPitchDeg={pitch}
+        zoom={controls.zoom} onZoomChange={controls.onZoomChange} />
+      {floor && <Sky eye={eye} floor={floor} bodies={bodies} showHorizon={controls.showHorizon}
+        occluder={occluder} surfaceReenactment />}
+    </>
+  );
+}
+
 /**
  * Horizon line, horizon floor, compass labels, Sun, Earth and the sunlight,
  * centered on the eye. `showHorizon` hides the line, ticks and labels; the
@@ -392,12 +449,14 @@ function Sky({
   bodies,
   showHorizon,
   occluder,
+  surfaceReenactment = false,
 }: {
   eye: Vector3Tuple;
   floor: BufferGeometry;
   bodies: PlacedBodies;
   showHorizon: boolean;
   occluder: RefObject<Object3D | null>;
+  surfaceReenactment?: boolean;
 }) {
   const { messages } = useI18n();
   const ring = useMemo(
@@ -425,11 +484,20 @@ function Sky({
     <>
       {/* Parallel sunlight; its target is the world origin, so only the direction matters. */}
       {/* Faint illustrative fill so the figure stays readable against the light. */}
-      <ambientLight intensity={0.15} />
+      <ambientLight intensity={surfaceReenactment ? 0.45 : 0.15} />
+      {surfaceReenactment && <directionalLight position={[-0.32, 0.46, 0.84]} intensity={0.5} />}
       {sun && (
         <directionalLight
-          position={[sun.direction[0] * 1e5, sun.direction[1] * 1e5, sun.direction[2] * 1e5]}
+          position={sun.direction.map((component) => component * 80) as Vector3Tuple}
           intensity={sunUp ? 3.2 : 0}
+          castShadow={surfaceReenactment && sunUp}
+          shadow-mapSize={[1024, 1024]}
+          shadow-camera-left={-24}
+          shadow-camera-right={24}
+          shadow-camera-top={24}
+          shadow-camera-bottom={-24}
+          shadow-camera-far={175}
+          shadow-normalBias={0.04}
         />
       )}
     <group position={eye}>
@@ -563,13 +631,14 @@ export function FirstPersonView({
   controls: FirstPersonControls;
 }) {
   const { messages } = useI18n();
-  const model = terrainForSite(data.site.id);
+  const apollo = data.site.id === APOLLO_11_SITE_ID;
+  const model = polarTerrainForSite(data.site.id);
   return (
     <>
       {/* Position and orientation are set by `EyeLevelRig` once the terrain is loaded. */}
-      <PerspectiveCamera makeDefault fov={DEFAULT_FOV_DEG} near={0.05} far={400_000} />
+      {apollo ? <ApolloCamera /> : <PerspectiveCamera makeDefault fov={DEFAULT_FOV_DEG} near={0.05} far={400_000} />}
       <Suspense fallback={<TerrainLoading />}>
-        {model ? (
+        {apollo ? <ApolloTerrain bodies={bodies} controls={controls} /> : model ? (
           <Terrain key={model.siteId} data={data} bodies={bodies} controls={controls} model={model} />
         ) : (
           <Html center className="scene__label">
@@ -579,4 +648,14 @@ export function FirstPersonView({
       </Suspense>
     </>
   );
+}
+
+function ApolloCamera() {
+  const size = useThree((state) => state.size);
+  const { fov, minAspect, eye, pitch, heading } = APOLLO_11_REENACTMENT;
+  // Keep the actors in frame when the viewport is narrower than the Blender camera.
+  const zoom = Math.min(1, size.width / Math.max(1, size.height) / minAspect);
+  // Start in the authored pose even before the terrain and the drag rig load.
+  return <PerspectiveCamera makeDefault position={eye} rotation={[pitch * Math.PI / 180, -heading * Math.PI / 180, 0, 'YXZ']}
+    fov={fov} zoom={Math.max(0.15, zoom)} near={0.05} far={400_000} />;
 }

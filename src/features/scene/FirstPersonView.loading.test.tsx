@@ -20,7 +20,7 @@ vi.mock('../../i18n/context', () => ({
 }));
 
 vi.mock('@react-three/fiber', () => ({
-  useThree: (select: (state: unknown) => unknown) => select({ gl: { domElement: loading.canvas }, events: { connected: loading.connected } }),
+  useThree: (select: (state: unknown) => unknown) => select({ size: { width: 800, height: 480 }, gl: { domElement: loading.canvas }, events: { connected: loading.connected } }),
 }));
 
 vi.mock('@react-three/drei', () => ({

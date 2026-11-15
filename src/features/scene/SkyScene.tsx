@@ -2,10 +2,8 @@
  * 3D local horizon. Two views read the same Sun/Earth placement
  * (`placeBodies`, from the azimuth/elevation shown in the results panel):
  *
- * - `first-person`: eye level next to a 1.70 m astronaut on the LOLA terrain
- *   of Nobile Rim 1, Nobile Rim 2 or Shackleton Rim (only where a terrain
- *   model exists, see
- *   `terrain/models.ts`).
+ * - `first-person`: the Apollo 11 surface reenactment or the eye-level view
+ *   beside an astronaut at a supported south pole site.
  * - `third-person`: at visual scale (default), a schematic sky dome with the
  *   true directions and labeled azimuth/elevation guides; at real scale,
  *   Moon, Earth and Sun to scale around the tangent horizon (see
@@ -23,6 +21,7 @@
 import { Canvas } from '@react-three/fiber';
 import { useCallback, useMemo, useState } from 'react';
 import type { EphemerisResponse } from '../../../shared/ephemeris';
+import { APOLLO_11_SITE_ID } from '../../../shared/sites';
 import { useI18n } from '../../i18n/context';
 import { AngleLegend } from './AngleLegend';
 import { elevationExaggeration } from './angles';
@@ -31,15 +30,17 @@ import { FirstPersonView } from './FirstPersonView';
 import { ScaleToggle } from './ScaleToggle';
 import { DEFAULT_SCENE_SCALE, type SceneScale } from './sceneScale';
 import { StarSphere } from './StarSphere';
+import { APOLLO_11_REENACTMENT } from './terrain/apollo11';
 import { ThirdPersonView } from './ThirdPersonView';
 import type { ViewMode } from './viewMode';
 import { ZoomControl } from './ZoomControl';
-import { START_VISUAL_ZOOM, START_ZOOM, distanceForLevel, fovForLevel } from './zoom';
+import { START_VISUAL_ZOOM, START_ZOOM, distanceForLevel, fovForLevel, levelForFov } from './zoom';
 
 /** Zoom kept per view, and per scale in third person. */
-type ZoomKey = 'first-person' | 'third-person-real' | 'third-person-visual';
+type ZoomKey = 'first-person' | 'apollo-11' | 'third-person-real' | 'third-person-visual';
 const START_ZOOM_BY_KEY: Readonly<Record<ZoomKey, number>> = {
   'first-person': START_ZOOM['first-person'],
+  'apollo-11': levelForFov(APOLLO_11_REENACTMENT.fov),
   'third-person-real': START_ZOOM['third-person'],
   'third-person-visual': START_VISUAL_ZOOM,
 };
@@ -48,27 +49,32 @@ export default function SkyScene({
   data,
   mode,
   showHorizon,
+  animateReenactment = false,
 }: {
   data: EphemerisResponse;
   mode: ViewMode;
   /** Horizon line (first person) and grid (third person). */
   showHorizon: boolean;
+  animateReenactment?: boolean;
 }) {
   const { messages, locale } = useI18n();
   const bodies = useMemo(() => placeBodies(data), [data]);
   const [scale, setScale] = useState<SceneScale>(DEFAULT_SCENE_SCALE);
   const visual = mode === 'third-person' && scale === 'visual';
-  const zoomKey: ZoomKey = mode === 'first-person' ? 'first-person' : `third-person-${scale}`;
+  const apollo = mode === 'first-person' && data.site.id === APOLLO_11_SITE_ID;
+  const zoomKey: ZoomKey = apollo ? 'apollo-11' : mode === 'first-person' ? 'first-person' : `third-person-${scale}`;
   const [zoomByKey, setZoomByKey] = useState<Record<ZoomKey, number>>(START_ZOOM_BY_KEY);
   const zoom = zoomByKey[zoomKey];
   const setZoom = useCallback(
     (level: number) => setZoomByKey((current) => (current[zoomKey] === level ? current : { ...current, [zoomKey]: level })),
     [zoomKey],
   );
-  const controls = { zoom, onZoomChange: setZoom, showHorizon, scale };
+  const controls = { zoom, onZoomChange: setZoom, showHorizon, scale, animateReenactment };
   const zoomText =
     mode === 'first-person'
-      ? messages.scene.zoom.fieldOfView(Math.round(fovForLevel(zoom)).toLocaleString(locale))
+      ? apollo
+        ? messages.scene.zoom.level(Math.round(zoom * 100).toLocaleString(locale))
+        : messages.scene.zoom.fieldOfView(Math.round(fovForLevel(zoom)).toLocaleString(locale))
       : visual
         ? messages.scene.zoom.level(Math.round(zoom * 100).toLocaleString(locale))
         : messages.scene.zoom.distance(formatDistanceKm(distanceForLevel(zoom), locale));
@@ -77,7 +83,7 @@ export default function SkyScene({
   const exaggeration = elevationExaggeration(bodies.placed.map((body) => body.elevationDeg));
   const note =
     mode === 'first-person'
-      ? messages.scene.firstPersonNote
+      ? apollo ? messages.scene.apolloReenactmentNote : messages.scene.firstPersonNote
       : scale === 'visual'
         ? messages.scene.thirdPersonNote.visual(exaggeration > 1 ? String(exaggeration) : null)
         : messages.scene.thirdPersonNote.real;
@@ -89,9 +95,9 @@ export default function SkyScene({
         Renders on demand (controls invalidate on change), not every frame.
         The logarithmic depth buffer covers meters to astronomical distances.
       */}
-      <Canvas frameloop="demand" dpr={[1, 1.5]} gl={{ logarithmicDepthBuffer: true }}>
+      <Canvas frameloop="demand" dpr={[1, 1.5]} shadows={apollo ? 'percentage' : false} gl={{ logarithmicDepthBuffer: true }}>
         <color attach="background" args={['#000000']} />
-        <StarSphere />
+        {!apollo && <StarSphere />}
         {mode === 'first-person' ? (
           <FirstPersonView data={data} bodies={bodies} controls={controls} />
         ) : (

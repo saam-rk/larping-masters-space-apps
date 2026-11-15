@@ -74,10 +74,10 @@ function renderPanel(siteId: SiteId): string {
 }
 
 describe('ConfigPanel reference points', () => {
-  it('lists the three featured points as radios and the others in the drop-down, alphabetically', () => {
+  it('lists the four featured points as radios and the others in the drop-down, alphabetically', () => {
     const html = renderPanel(DEFAULT_SITE_ID);
     const radios = [...html.matchAll(/<input[^>]*name="reference-site"[^>]*>/g)].map((match) => /value="([^"]+)"/.exec(match[0])?.[1]);
-    expect(radios).toEqual(['nobile-rim-1', 'nobile-rim-2', 'shackleton-rim']);
+    expect(radios).toEqual(['apollo-11', 'nobile-rim-1', 'nobile-rim-2', 'shackleton-rim']);
     const options = [...html.matchAll(/role="option"[^>]*>([^<]+)</g)].map((match) => match[1]!.replace(/&#x27;/g, "'"));
     expect(options).toHaveLength(MORE_SITES.length);
     expect(options[0]).toBe('Amundsen 1 · NPB');
@@ -91,7 +91,7 @@ describe('ConfigPanel reference points', () => {
   it('shows a drop-down point as the chosen option and checks no radio', () => {
     const html = renderPanel('malapert-massif');
     const radios = [...html.matchAll(/<input[^>]*name="reference-site"[^>]*>/g)].map((match) => match[0]);
-    expect(radios).toHaveLength(3);
+    expect(radios).toHaveLength(4);
     expect(radios.some((radio) => /\bchecked\b/.test(radio))).toBe(false);
     expect(renderPanel('shackleton-rim')).toMatch(/<input[^>]*checked[^>]*value="shackleton-rim"|<input[^>]*value="shackleton-rim"[^>]*checked/);
     expect(html).toMatch(/class="wheel-select__value">Malapert Massif · R23</);

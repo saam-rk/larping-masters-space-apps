@@ -86,7 +86,7 @@ describe('local mode (Europe/Madrid)', () => {
 
   it('applies the same range and calendar checks', () => {
     expect(fieldsToUtc({ date: '2026-02-30', time: '12:00' }, 'local')).toEqual({ ok: false, reason: 'invalid-date' });
-    expect(fieldsToUtc({ date: '1999-12-31', time: '12:00' }, 'local')).toEqual({ ok: false, reason: 'out-of-range' });
+    expect(fieldsToUtc({ date: '1968-12-31', time: '12:00' }, 'local')).toEqual({ ok: false, reason: 'out-of-range' });
     // Years below 100 must not be read as 19xx.
     expect(fieldsToUtc({ date: '0099-06-01', time: '12:00' }, 'local').ok).toBe(false);
     expect(fieldsToUtc({ date: '', time: '12:00' }, 'local')).toEqual({ ok: false, reason: 'format' });

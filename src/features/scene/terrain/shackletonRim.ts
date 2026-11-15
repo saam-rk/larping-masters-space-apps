@@ -22,9 +22,9 @@
  * landing pad.
  */
 
-import type { SiteTerrain } from './siteTerrain';
+import type { PolarTerrain } from './siteTerrain';
 
-export const SHACKLETON_RIM_TERRAIN: SiteTerrain = {
+export const SHACKLETON_RIM_TERRAIN: PolarTerrain = {
   siteId: 'shackleton-rim',
   terrainUrl: '/terrain/shackleton-rim.glb',
   astronautUrl: '/terrain/astronaut.glb',

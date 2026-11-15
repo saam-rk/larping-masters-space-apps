@@ -1,9 +1,8 @@
 # Horizons API fixtures
 
 Raw responses from the NASA/JPL Horizons API, saved byte-for-byte as returned
-(`format=json`). Tests parse them; the saved sample shown by the app
-(`shared/samples/`) is derived from the two Nobile Rim 1 files and a test keeps
-it in sync.
+(`format=json`). Tests derive both saved samples (`shared/samples/`) from
+these files. The app opens with the Apollo 11 sample.
 
 These are saved responses, not live queries. Do not present them as a current
 or validated landing-site assessment. Terrain is not modeled.
@@ -55,6 +54,21 @@ Values in the table rows:
 
 Header: planetary ephemeris DE441; observer frame `MEAN_ME (high precision)`;
 interfering body EARTH; atmospheric refraction NO (AIRLESS).
+
+## Apollo 11 — 1969-07-20 20:17:40 UT
+
+- Files: `apollo-11_1969-07-20T20-17-40Z_sun.json` and
+  `apollo-11_1969-07-20T20-17-40Z_earth.json`; retrieved 2026-11-15 at
+  01:06:08–01:06:09 UTC.
+- Same parameters, with `SITE_COORD='23.47314,0.67416,0'` and
+  `TLIST='1969-07-20 20:17:40'`. Coordinates and touchdown time are from
+  the NASA/NSSDCA Apollo catalogues.
+- API 1.2, DE441, `MEAN_ME (high precision)`, airless.
+
+| Body | Azimuth (deg) | Elevation (deg) | Ang. diameter (arcsec) |
+|---|---:|---:|---:|
+| Sun | 88.805495 | 10.703313 | 1889.744 |
+| Earth | 272.195241 | 59.224237 | 6782.737 |
 
 ## Error case
 

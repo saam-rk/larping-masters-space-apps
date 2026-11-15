@@ -1,0 +1,20 @@
+{
+  "eyeGlbM": [
+    -0.5199999809265137,
+    1.030175805091858,
+    12.600000381469727
+  ],
+  "headingDeg": 358.5,
+  "pitchDeg": 6.4,
+  "verticalFovDeg": 48,
+  "minimumFramingAspect": 1.52,
+  "landingUtc": "1969-07-20T20:17:40Z",
+  "hop": {
+    "gravityMPerS2": 1.62,
+    "horizontalSpeedMPerS": 1.02,
+    "verticalSpeedMPerS": 1.14,
+    "distanceM": 1.4355555555555555,
+    "apexM": 0.40111111111111103,
+    "flightS": 1.4074074074074072
+  }
+}

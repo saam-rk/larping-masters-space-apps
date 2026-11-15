@@ -198,6 +198,7 @@ export interface Messages {
       };
     };
     readonly firstPersonNote: string;
+    readonly apolloReenactmentNote: string;
     readonly thirdPersonNote: {
       /** `exaggeration`: vertical exaggeration factor of the drawn elevations, or null when drawn true. */
       readonly visual: (exaggeration: string | null) => string;
@@ -380,7 +381,7 @@ const es: Messages = {
     siteInfo: [
       'Elige el punto del polo sur lunar desde el que se calcula el cielo.',
       'Son los centros de regiones candidatas publicadas por NASA (Lunar Surface Data Book, tabla A2.1-1). No son lugares de aterrizaje aprobados.',
-      'Arriba están los tres puntos principales de la demo. El desplegable «Más puntos de referencia» tiene el resto de puntos documentados, en orden alfabético; se calculan con el mismo método y se muestran en la vista en tercera persona (la vista en primera persona con relieve solo existe para algunos puntos).',
+      'Arriba están el Apolo 11 y los tres puntos originales de la demo. El desplegable «Más puntos de referencia» tiene el resto, en orden alfabético. Todos usan el mismo método; la vista con relieve solo está disponible en algunos puntos.',
       'También puedes escribir unas coordenadas en grados (latitud, longitud; sur y oeste en negativo o con S/O) o buscar un punto por su nombre o código (p. ej. «Haworth», «DM1», «Site20v2»). Un punto personalizado se calcula con el mismo método, a altura 0 km y sin relieve, y no tiene fuente publicada.',
       '«Leibnitz Beta Plateau, extended boundaries» (Site20v2) es una variante del producto de terreno de PGDA con las mismas coordenadas que Leibnitz Beta Plateau (Site20): su cálculo es idéntico.',
     ],
@@ -404,7 +405,7 @@ const es: Messages = {
     },
     dateTime: 'Fecha y hora',
     dateTimeInfo: [
-      'Fecha y hora entre 2000 y 2099, con la zona horaria que elijas.',
+      'Fecha y hora entre 1969 y 2099, con la zona horaria que elijas.',
       'Gira las ruletas con la rueda del ratón, deslizando verticalmente (con impulso) o pulsando el número de arriba o de abajo. Con el teclado, usa las flechas, RePág/AvPág, Inicio/Fin o escribe un número.',
       'Para elegir una fecha exacta, pulsa el nombre encima de una ruleta de la fecha («Día», «Mes» o «Año»), o Intro sobre la ruleta: se abre un desplegable solo con ese campo. Al elegir un valor se aplica y la ruleta gira hasta él; Escape o un clic fuera lo cierran sin cambios. La hora y los minutos se eligen solo con sus ruletas.',
       '«EN VIVO» selecciona la fecha y hora actuales de tu dispositivo, al minuto, en la zona elegida. Se toma al pulsar el botón; no avanza automáticamente ni consulta datos hasta que pulses «Actualizar vista».',
@@ -426,7 +427,7 @@ const es: Messages = {
     update: 'Actualizar vista',
     updating: 'Consultando…',
     upToDate: 'Actualizado',
-    invalidTime: 'Introduce una fecha y hora válidas entre 2000 y 2099.',
+    invalidTime: 'Introduce una fecha y hora válidas entre 1969 y 2099.',
     nonexistentTime: 'Esa hora local no existe por el cambio de horario. Elige otra hora.',
   },
   compass: { north: 'N', east: 'E', south: 'S', west: 'O' },
@@ -436,9 +437,9 @@ const es: Messages = {
     heading: 'Horizonte local',
     info: {
       'first-person': [
-        'Vista a la altura de los ojos, de pie y quieto a unos metros de un astronauta de 1,70 m en Nobile Rim 1, Nobile Rim 2 o Shackleton Rim. Arrastra para girar la cabeza: en horizontal para mirar alrededor y en vertical para mirar al suelo o al cielo. La rueda, el pellizco o el control de zoom (+, barra y −) acercan o alejan la imagen, como unos prismáticos, sin moverte del sitio. Con la vista seleccionada, también funcionan las flechas y +/−. El botón Brújula, junto a 1ª P y 3ª P, muestra u oculta la línea del horizonte y los puntos cardinales; el botón de las esquinas abre la vista a pantalla completa.',
+        'Vista a la altura de los ojos, de pie y quieto en el Apolo 11 o junto al astronauta de un punto del polo sur con relieve disponible. Arrastra para girar la cabeza: en horizontal para mirar alrededor y en vertical para mirar al suelo o al cielo. La rueda, el pellizco o el control de zoom (+, barra y −) acercan o alejan la imagen, como unos prismáticos, sin moverte del sitio. Con la vista seleccionada, también funcionan las flechas y +/−. El botón Brújula, junto a 1ª P y 3ª P, muestra u oculta la línea del horizonte y los puntos cardinales; el botón de las esquinas abre la vista a pantalla completa.',
         'El relieve es un recorte de 10 × 10 km del modelo LOLA de 5 m/píxel (NASA GSFC PGDA, producto 78). La línea verde es el horizonte geométrico (elevación 0). Más allá del recorte no hay datos de relieve: hay un horizonte supuesto (invisible; bajo él solo se ven las estrellas), el de una Luna lisa de 1737,4 km de radio que sigue a la altura del borde del recorte, visto desde los ojos (1,60 m sobre el suelo). No es terreno real. Donde el terreno baja, ese horizonte queda bajo la línea verde y el Sol o la Tierra pueden verse en parte aunque su centro esté bajo el horizonte geométrico. La parte del Sol o de la Tierra que tapan el relieve o ese horizonte supuesto se dibuja translúcida, para poder localizarla; desde allí no se vería.',
-        'El Sol y la Tierra se dibujan con su posición y su diámetro aparente de JPL Horizons. La iluminación es ilustrativa: sin sombras proyectadas; el recorte de relieve es plano y la curvatura lunar solo se supone más allá de él. No es un análisis de visibilidad, energía, comunicaciones ni idoneidad de aterrizaje.',
+        'El Sol y la Tierra se dibujan con su posición y su diámetro aparente de JPL Horizons. La iluminación es ilustrativa: el recorte de relieve es plano y la curvatura lunar solo se supone más allá de él. No es un análisis de visibilidad, energía, comunicaciones ni idoneidad de aterrizaje.',
         'El astronauta es una figura de escala ilustrativa. Las estrellas son decorativas y no reproducen el cielo real.',
       ],
       'third-person': [
@@ -452,7 +453,7 @@ const es: Messages = {
       label: 'Vista',
       names: { 'first-person': 'Primera persona', 'third-person': 'Tercera persona' },
       short: { 'first-person': '1ª P', 'third-person': '3ª P' },
-      firstPersonUnavailable: 'Primera persona: solo disponible en Nobile Rim 1, Nobile Rim 2 y Shackleton Rim, que tienen modelo de relieve.',
+      firstPersonUnavailable: 'Primera persona: disponible en el Apolo 11, Nobile Rim 1, Nobile Rim 2 y Shackleton Rim.',
     },
     compassToggle: {
       label: 'Brújula',
@@ -492,6 +493,7 @@ const es: Messages = {
         exaggeration: (factor) => `Elevación dibujada ×${factor}`,
       },
     },
+    apolloReenactmentNote: 'Recreación del Apolo 11 sobre relieve LROC · Collins permaneció en órbita.',
     firstPersonNote: 'Relieve LOLA 10 × 10 km · luz ilustrativa · figura 1,70 m',
     thirdPersonNote: {
       visual: (exaggeration) =>
@@ -536,8 +538,10 @@ const es: Messages = {
     sourcesApp: 'Datos y métodos usados en la aplicación',
     sourcesResearch: 'Consultadas en la investigación (no integradas ni validadas en la app)',
     sourceReasons: {
+      apolloLanding: 'Fecha y hora del alunizaje del Apolo 11, según el catálogo de NASA.',
+      apolloTerrain: 'Modelo de elevación LROC de 2 m/píxel que sirve de base a la recreación del Apolo 11.',
       lunarSurfaceDataBook:
-        'Nombres y coordenadas de todos los puntos de referencia predefinidos; son centros de regiones candidatas, no lugares de aterrizaje aprobados.',
+        'Nombres y coordenadas de puntos de referencia en el polo sur; son centros de regiones candidatas.',
       horizonsApi: 'Calcula azimut, elevación, tamaño angular y distancia del Sol y la Tierra desde el punto lunar elegido.',
       horizonsManual: 'Define las cantidades del observador y los marcadores de presencia que traducimos a los estados del panel.',
       jplApiPolicy: 'Normas de uso y política CORS: por eso la consulta pasa por nuestra ruta de servidor y se guarda en caché.',
@@ -665,7 +669,7 @@ const es: Messages = {
         heading: 'Qué valores son posibles en este punto',
         paragraphs: [
           'Visto desde la Luna, el Sol nunca se aparta más de 1,6° del ecuador lunar y la Tierra nunca más de unos 10,7° de su posición media. Por eso, desde un punto cercano al polo, cada objeto solo recorre una franja estrecha del cielo.',
-          'La columna «Posible aquí» indica qué elevación y azimut puede tener cada objeto en el punto elegido. Los límites salen de JPL Horizons (DE441, 2000–2100) con 0,25° de margen. Si una fila pide valores fuera de esa franja, el formulario la marca y no deja buscar.',
+          'La columna «Posible aquí» indica qué elevación y azimut puede tener cada objeto en el punto elegido. Los límites salen de JPL Horizons (DE441, 1969–2100) con 0,25° de margen. Si una fila pide valores fuera de esa franja, el formulario la marca y no deja buscar.',
           'Una condición aceptada puede, aun así, no cumplirse dentro de la ventana buscada, sobre todo si combinas varias filas que deben coincidir en el mismo instante.',
         ],
       },
@@ -673,7 +677,7 @@ const es: Messages = {
         heading: 'Fecha buscada y ventana',
         paragraphs: [
           'La búsqueda parte de la fecha y hora seleccionadas en «Control». «Más próxima» acepta coincidencias antes o después; «Siguiente», solo posteriores; «Anterior», solo anteriores.',
-          'Explora hasta 366 días y entre 2000 y 2099, con resolución de 1 segundo. Si cambias el punto o la fecha en «Control», la siguiente búsqueda parte de los nuevos valores.',
+          'Explora hasta 366 días y entre 1969 y 2099, con resolución de 1 segundo. Si cambias el punto o la fecha en «Control», la siguiente búsqueda parte de los nuevos valores.',
         ],
       },
       {
@@ -781,7 +785,7 @@ const en: Messages = {
     siteInfo: [
       'Choose the lunar south-pole point the sky is computed from.',
       'They are the centers of candidate regions published by NASA (Lunar Surface Data Book, table A2.1-1). They are not approved landing sites.',
-      'The three main demo points are listed first. The "More reference points" drop-down has the other documented points, in alphabetical order; they are computed with the same method and shown in the third-person view (the first-person terrain view only exists for some points).',
+      'Apollo 11 and the three original demo points are listed first. The "More reference points" drop-down lists the rest alphabetically. All use the same calculation; first-person terrain is available at some points.',
       'You can also type coordinates in degrees (latitude, longitude; south and west negative or with S/W) or search a point by name or code (e.g. "Haworth", "DM1", "Site20v2"). A custom point is computed with the same method, at 0 km height and without terrain, and has no published source.',
       '"Leibnitz Beta Plateau, extended boundaries" (Site20v2) is a PGDA terrain-product variant with the same coordinates as Leibnitz Beta Plateau (Site20): its calculation is identical.',
     ],
@@ -805,7 +809,7 @@ const en: Messages = {
     },
     dateTime: 'Date and time',
     dateTimeInfo: [
-      'Date and time between 2000 and 2099, in the time zone you choose.',
+      'Date and time between 1969 and 2099, in the time zone you choose.',
       'Turn the wheels with your mouse wheel, by swiping vertically (they keep spinning) or by pressing the number above or below. On a keyboard, use the arrows, Page Up/Down, Home/End or type a number.',
       'To pick an exact date, press the name above a date wheel (“Day”, “Month” or “Year”), or Enter on the wheel: a dropdown opens with just that field. Picking a value applies it and the wheel rolls to it; Escape or a click outside closes it without changes. The hour and minute are set with their wheels only.',
       '“LIVE” selects your device’s current date and time, to the minute, in the chosen zone. It captures the time when pressed; it does not keep ticking or query data until you press “Update view”.',
@@ -827,7 +831,7 @@ const en: Messages = {
     update: 'Update view',
     updating: 'Querying…',
     upToDate: 'Updated',
-    invalidTime: 'Enter a valid date and time between 2000 and 2099.',
+    invalidTime: 'Enter a valid date and time between 1969 and 2099.',
     nonexistentTime: 'That local time does not exist because of a daylight-saving change. Pick another time.',
   },
   compass: { north: 'N', east: 'E', south: 'S', west: 'W' },
@@ -837,9 +841,9 @@ const en: Messages = {
     heading: 'Local horizon',
     info: {
       'first-person': [
-        'Eye-level view, standing still a few meters from a 1.70 m astronaut at Nobile Rim 1, Nobile Rim 2 or Shackleton Rim. Drag to turn your head: sideways to look around, up or down to look at the ground or the sky. The wheel, a pinch or the zoom control (+, bar and −) zooms the image in or out, like binoculars, without moving you. With the view focused, the arrow keys and +/− also work. The Compass button, next to 1ST and 3RD, shows or hides the horizon line and the cardinal points; the corners button opens the view full screen.',
+        'Eye-level view, standing still at Apollo 11 or beside an astronaut at a south pole site with terrain. Drag to turn your head: sideways to look around, up or down to look at the ground or the sky. The wheel, a pinch or the zoom control (+, bar and −) zooms the image in or out, like binoculars, without moving you. With the view focused, the arrow keys and +/− also work. The Compass button, next to 1ST and 3RD, shows or hides the horizon line and the cardinal points; the corners button opens the view full screen.',
         'The relief is a 10 × 10 km crop of the 5 m/pixel LOLA model (NASA GSFC PGDA, product 78). The green line is the geometric horizon (elevation 0). There is no relief data beyond the crop: there is an assumed horizon (invisible; only stars show below it), that of a smooth Moon of 1,737.4 km radius continuing at the height of the crop edge, seen from the eyes (1.60 m above the ground). It is not real terrain. Where the terrain falls away, that horizon lies below the green line, so the Sun or the Earth may show in part even when its center is below the geometric horizon. The part of the Sun or the Earth hidden by the relief or that assumed horizon is drawn translucent so it can be found; it would not be visible from there.',
-        'The Sun and the Earth are drawn with their JPL Horizons position and apparent diameter. Lighting is illustrative: no cast shadows; the relief crop is flat and lunar curvature is only assumed beyond it. This is not a visibility, power, communications or landing-suitability analysis.',
+        'The Sun and the Earth are drawn with their JPL Horizons position and apparent diameter. Lighting is illustrative: the relief crop is flat and lunar curvature is only assumed beyond it. This is not a visibility, power, communications or landing-suitability analysis.',
         'The astronaut is an illustrative scale figure. The stars are decorative and do not reproduce the real sky.',
       ],
       'third-person': [
@@ -853,7 +857,7 @@ const en: Messages = {
       label: 'View',
       names: { 'first-person': 'First person', 'third-person': 'Third person' },
       short: { 'first-person': '1ST', 'third-person': '3RD' },
-      firstPersonUnavailable: 'First person: only available at Nobile Rim 1, Nobile Rim 2 and Shackleton Rim, which have a relief model.',
+      firstPersonUnavailable: 'First person: available at Apollo 11, Nobile Rim 1, Nobile Rim 2 and Shackleton Rim.',
     },
     compassToggle: {
       label: 'Compass',
@@ -893,6 +897,7 @@ const en: Messages = {
         exaggeration: (factor) => `Elevation drawn ×${factor}`,
       },
     },
+    apolloReenactmentNote: 'Apollo 11 reenactment on LROC terrain · Collins remained in orbit.',
     firstPersonNote: 'LOLA relief 10 × 10 km · illustrative light · 1.70 m figure',
     thirdPersonNote: {
       visual: (exaggeration) =>
@@ -937,8 +942,10 @@ const en: Messages = {
     sourcesApp: 'Data and methods used in the app',
     sourcesResearch: 'Consulted during research (not integrated or validated in the app)',
     sourceReasons: {
+      apolloLanding: 'Apollo 11 touchdown date and time from the NASA mission catalogue.',
+      apolloTerrain: 'LROC 2 m/pixel elevation model behind the Apollo 11 reenactment.',
       lunarSurfaceDataBook:
-        'Names and coordinates of every predefined reference point; they are centers of candidate regions, not approved landing sites.',
+        'Names and coordinates of south pole reference points, at the centers of candidate regions.',
       horizonsApi: 'Computes azimuth, elevation, angular size and range of the Sun and the Earth from the chosen lunar point.',
       horizonsManual: 'Defines the observer quantities and the presence markers we turn into the panel states.',
       jplApiPolicy: 'Usage rules and CORS policy: the reason the query goes through our server route and is cached.',
@@ -1066,7 +1073,7 @@ const en: Messages = {
         heading: 'Which values are possible at this point',
         paragraphs: [
           'Seen from the Moon, the Sun never strays more than 1.6° from the lunar equator and the Earth never more than about 10.7° from its mean position. So, from a point near the pole, each body only covers a narrow band of the sky.',
-          'The "Possible here" column shows which elevation and azimuth each body can have at the chosen point. The bounds come from JPL Horizons (DE441, 2000–2100) with a 0.25° margin. If a row asks for values outside that band, the form flags it and does not allow the search.',
+          'The "Possible here" column shows which elevation and azimuth each body can have at the chosen point. The bounds come from JPL Horizons (DE441, 1969–2100) with a 0.25° margin. If a row asks for values outside that band, the form flags it and does not allow the search.',
           'An accepted condition may still not be met within the searched window, especially when you combine several rows that must hold at the same instant.',
         ],
       },
@@ -1074,7 +1081,7 @@ const en: Messages = {
         heading: 'Date to find and window',
         paragraphs: [
           'The search starts from the date and time selected under "Control". "Closest" accepts matches earlier or later; "Next", only later ones; "Previous", only earlier ones.',
-          'It covers up to 366 days, between 2000 and 2099, to the second. If you change the point or the date under "Control", the next search starts from the new values.',
+          'It covers up to 366 days, between 1969 and 2099, to the second. If you change the point or the date under "Control", the next search starts from the new values.',
         ],
       },
       {

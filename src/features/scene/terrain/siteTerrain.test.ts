@@ -10,7 +10,7 @@ function normalize([x, y, z]: readonly number[]): number[] {
 
 describe('terrain models', () => {
   it('has first-person terrain for every reference site and none for custom points', () => {
-    expect(SITE_TERRAINS.map((model) => model.siteId).sort()).toEqual(['nobile-rim-1', 'nobile-rim-2', 'shackleton-rim']);
+    expect(SITE_TERRAINS.map((model) => model.siteId).sort()).toEqual(['apollo-11', 'nobile-rim-1', 'nobile-rim-2', 'shackleton-rim']);
     expect(terrainForSite('custom')).toBeNull();
   });
 
