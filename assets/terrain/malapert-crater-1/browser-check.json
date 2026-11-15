@@ -1,0 +1,51 @@
+{
+  "status": "passed",
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+  "threeRevision": "187",
+  "deviceClass": "Desktop embedded browser, NOT a physical mobile device",
+  "viewport": [
+    390,
+    844
+  ],
+  "siteId": "malapert-crater-1",
+  "terrainVertices": 40400,
+  "terrainTriangles": 80241,
+  "imageDecode": {
+    "color": [
+      512,
+      512
+    ],
+    "normal": [
+      2048,
+      2048
+    ],
+    "roughness": [
+      256,
+      256
+    ]
+  },
+  "standardPbrChannels": true,
+  "clampToEdge": true,
+  "astronautHeightM": 1.7000000705357905,
+  "maxSoleGapM": 8.062196132918586e-9,
+  "controls": [
+    {
+      "name": "site",
+      "heightM": -2267.0352548642677
+    },
+    {
+      "name": "ridge",
+      "heightM": -2261.633789062558
+    },
+    {
+      "name": "third",
+      "heightM": -2263.5536302910004
+    }
+  ],
+  "movementCases": 102,
+  "fullBodyFramingFailures": [],
+  "renderedDrawCalls": 14,
+  "renderedTriangles": 81141,
+  "webglError": 0,
+  "mobilePerformance": "Pending: no physical device, throttled-network or FPS claim"
+}
