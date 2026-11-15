@@ -161,7 +161,7 @@ button {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: 4.75rem minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   height: 100%;
 }
 
@@ -272,8 +272,16 @@ button {
   pointer-events: none;
 }
 
+.update-bar {
+  gap: 0.5rem;
+}
+
+/* Logo (order 0), update button (1, fills the rest) and options (2) share the bar. */
 .update-bar > .button--update {
-  font-size: 1.15em;
+  order: 1;
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: 1.05em;
   padding-block: 0.6rem;
 }
 
@@ -521,101 +529,38 @@ button {
   color: var(--cyan);
 }
 
-/* ───────────────────────── Sidebar ───────────────────────── */
+/* ───────────────────────── Header controls ───────────────────────── */
 
-.sidebar {
-  position: relative;
-  z-index: 5;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.8rem;
-  height: 100%;
-  min-height: 0;
-  padding: 1rem 0.55rem 1.1rem;
-  border-right: var(--border) solid var(--line);
+.header-logo,
+.header-options {
+  flex: none;
+  box-sizing: border-box;
+  width: 3rem;
+  align-self: stretch;
+  display: grid;
+  place-items: center;
+  padding: 0.2rem;
   background: var(--panel);
+  border: var(--border) solid var(--line);
 }
 
-.sidebar__logo {
-  width: 100%;
-  margin-bottom: 0.5rem;
-}
-
-.sidebar__logo svg {
+.header-logo svg {
   display: block;
   width: 100%;
-  height: 3.25rem;
+  height: 100%;
+  max-height: 2.4rem;
 }
 
-.sidebar__button,
-.sidebar__settings {
-  color: var(--text);
-  background: transparent;
-  border: var(--border) solid var(--line);
+.header-options {
+  order: 2;
+  color: var(--magenta);
+  border-color: var(--magenta);
   cursor: pointer;
 }
 
-.sidebar__button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.15rem;
-  width: 100%;
-  padding: 0.35rem 0;
-  line-height: 1;
-}
-
-.sidebar__glyph {
-  font-size: 1.05em;
-  letter-spacing: 0.05em;
-}
-
-.sidebar__button--switch[aria-pressed='true'] .sidebar__glyph {
-  color: var(--accent);
-}
-
-.sidebar__button--switch[aria-pressed='false'] .sidebar__glyph {
-  color: var(--muted);
-}
-
-.sidebar__label {
-  font-size: 0.6em;
-  letter-spacing: 0.12em;
-  color: var(--muted);
-}
-
-.sidebar__settings {
-  margin-top: auto;
-  display: grid;
-  place-items: center;
-  width: 2.7rem;
-  height: 2.7rem;
-  padding: 0;
-  border-radius: 50%;
-  color: var(--magenta);
-  border-color: var(--magenta);
-}
-
-:where(:root:not([data-curve='on'])) .sidebar__button:hover,
-.sidebar__button[data-hover],
-.sidebar__button:focus-visible {
-  background: var(--text);
-  color: #000;
-}
-
-:where(:root:not([data-curve='on'])) .sidebar__button:hover .sidebar__label,
-.sidebar__button[data-hover] .sidebar__label,
-.sidebar__button:focus-visible .sidebar__label,
-:where(:root:not([data-curve='on'])) .sidebar__button:hover .sidebar__glyph,
-.sidebar__button[data-hover] .sidebar__glyph,
-.sidebar__button:focus-visible .sidebar__glyph {
-  color: #000;
-}
-
-:where(:root:not([data-curve='on'])) .sidebar__settings:hover,
-.sidebar__settings[data-hover],
-.sidebar__settings:focus-visible {
+:where(:root:not([data-curve='on'])) .header-options:hover,
+.header-options[data-hover],
+.header-options:focus-visible {
   background: var(--magenta);
   color: #000;
 }
@@ -2586,23 +2531,6 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
     radial-gradient(ellipse 75% 70% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.6) 100%);
 }
 
-/*
- * Curvature overscan (CrtCurvature.tsx): near the sides the filter draws
- * content sampled from outside the frame. The sidebar background continues
- * past the screen edge so that area is not left empty and the backdrop does
- * not show beside the sidebar.
- */
-:root[data-curve='on'] .sidebar::before {
-  content: '';
-  position: absolute;
-  top: calc(-1 * var(--curve-pad, 0px));
-  bottom: calc(-1 * var(--curve-pad, 0px));
-  right: 100%;
-  width: var(--curve-pad, 0px);
-  background: var(--panel);
-  pointer-events: none;
-}
-
 /* Rounded tube corners and dark curved edges. */
 .crt__bezel {
   border-radius: 22px / 26px;
@@ -2617,7 +2545,6 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
  * the two sharp offsets (cheap) and drops the blurred glow.
  */
 .workspace,
-.sidebar,
 .dialog {
   text-shadow:
     0.055em 0 rgba(255, 45, 95, 0.38),
@@ -2625,7 +2552,6 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
 }
 
 :root[data-fx='on'] .workspace,
-:root[data-fx='on'] .sidebar,
 :root[data-fx='on'] .dialog {
   text-shadow:
     0.055em 0 rgba(255, 45, 95, 0.38),
@@ -2838,41 +2764,6 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   .app__frame {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr);
-  }
-
-  .sidebar {
-    flex-direction: row;
-    height: auto;
-    padding: 0.4rem 0.75rem;
-    border-right: none;
-    border-bottom: var(--border) solid var(--line);
-  }
-
-  /* The bar spans the screen: the overscan is also needed above it and on its right. */
-  :root[data-curve='on'] .sidebar::after {
-    content: '';
-    position: absolute;
-    top: calc(-1 * var(--curve-pad, 0px));
-    bottom: 0;
-    left: 100%;
-    width: var(--curve-pad, 0px);
-    background: var(--panel);
-    pointer-events: none;
-  }
-
-  .sidebar__logo {
-    width: 3.6rem;
-    margin: 0 0.25rem 0 0;
-  }
-
-  .sidebar__button {
-    width: 4rem;
-  }
-
-  .sidebar__settings {
-    margin: 0 0 0 auto;
-    width: 2.3rem;
-    height: 2.3rem;
   }
 
   .workspace {

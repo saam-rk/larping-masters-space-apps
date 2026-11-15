@@ -1,6 +1,6 @@
 /**
  * Landing window: shown on the first visit and when reopened from the
- * sidebar. The intro and logo sit on the left (stacked above the options when
+ * header options button. The intro and logo sit on the left (stacked above the options when
  * the window is narrow); the options choose the language and the effects mode,
  * and "Save preferences" stores them in a cookie (see preferences.ts) and
  * closes the window.

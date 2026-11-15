@@ -1,6 +1,6 @@
 /**
- * Display preferences suggested on the first visit and adjustable in the
- * sidebar. User changes are persisted in a first-party cookie.
+ * Display preferences suggested on the first visit and adjustable from the
+ * header options button. User changes are persisted in a first-party cookie.
  *
  * A single switch controls the effects: `on` shows the animated CRT (parallax,
  * noise, flicker, screen curvature, hyperspace jump); `off` is the low
