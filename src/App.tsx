@@ -36,7 +36,7 @@ import { AssessmentPanel } from './features/mission/AssessmentPanel';
 import { ComparisonPanel } from './features/mission/ComparisonPanel';
 import { dataSelection, useMission, useWindowSamples } from './features/mission/useMission';
 import type { EphemerisSelection } from './api/ephemerisClient';
-import { HeaderLogo, OptionsButton } from './features/shell/HeaderControls';
+import { OptionsButton } from './features/shell/HeaderControls';
 import { Hyperspace } from './features/transition/Hyperspace';
 import { useUpdateTransition } from './features/transition/useUpdateTransition';
 import { useViewTransition } from './features/transition/useViewTransition';
@@ -231,7 +231,6 @@ export function App() {
             />
           </div>
           <div className="update-bar" ref={setUpdateSlot}>
-            <HeaderLogo />
             <OptionsButton />
           </div>
           <div className="column column--control">
