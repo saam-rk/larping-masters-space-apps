@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Analytics } from '@vercel/analytics/react';
 // Self-hosted fonts (SIL Open Font License), Latin subset only.
 import '@fontsource/vt323/latin-400.css';
 import '@fontsource/ibm-plex-mono/latin-400.css';
@@ -20,5 +21,6 @@ createRoot(root).render(
         <App />
       </I18nProvider>
     </PreferencesProvider>
+    <Analytics />
   </StrictMode>,
 );

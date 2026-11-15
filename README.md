@@ -35,6 +35,17 @@ npm run build   # build de producción en dist/
 
 Estructura, responsables por carpeta, contrato de la API y límites: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
+## Web Analytics
+
+Vercel Web Analytics is mounted once in `src/main.tsx` using
+`@vercel/analytics/react`. Enable **Web Analytics** in the Vercel project
+dashboard, then deploy the branch through the normal review/deployment flow.
+Visit the deployed app and check the project's **Analytics** tab for page views.
+Local development uses the SDK's debug mode and does not record visits.
+No custom events or mission inputs are sent by this integration.
+
+Setup reference: [Vercel Web Analytics quickstart](https://vercel.com/docs/analytics/quickstart).
+
 ## Skills del proyecto
 
 El asistente del hackathon está disponible como skill de proyecto para Codex en `.agents/skills/clps-hackathon-assistant/` y para Claude Code en `.claude/skills/clps-hackathon-assistant/`. Invócalo por nombre o deja que el agente lo seleccione por la tarea. Solo se comparte esta skill; las skills personales quedan fuera del repositorio.
