@@ -63,6 +63,7 @@ export default function SkyScene({
   mode,
   showHorizon,
   animateReenactment = false,
+  lowResolution = false,
   busy = false,
   playback = false,
 }: {
@@ -71,6 +72,8 @@ export default function SkyScene({
   /** Horizon line (first person) and grid (third person). */
   showHorizon: boolean;
   animateReenactment?: boolean;
+  /** Low performance mode: one drawn pixel per CSS pixel. */
+  lowResolution?: boolean;
   /** A new result is being queried: the set/rise countdown waits (see `HorizonCountdown`). */
   busy?: boolean;
   playback?: boolean;
@@ -115,7 +118,7 @@ export default function SkyScene({
         Renders on demand (controls invalidate on change), not every frame.
         The logarithmic depth buffer covers meters to astronomical distances.
       */}
-      <Canvas frameloop="demand" dpr={[1, 1.5]} shadows={mode === 'first-person' ? 'basic' : false} gl={{ logarithmicDepthBuffer: true }}>
+      <Canvas frameloop="demand" dpr={lowResolution ? 1 : [1, 1.5]} shadows={mode === 'first-person' ? 'basic' : false} gl={{ logarithmicDepthBuffer: true }}>
         <color attach="background" args={['#000000']} />
         {!apollo && <StarSphere />}
         {mode === 'first-person' ? (

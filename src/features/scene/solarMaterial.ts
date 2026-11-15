@@ -1,7 +1,13 @@
 /** Receiver-local finite-disk shadows. PCSS is a rendering approximation, not ray tracing.
  * One crop-wide depth map; no camera-visibility switch. See docs/LUNAR_LIGHTING_CORRECTION.md.
+ *
+ * Frame cost: the 64 disk samples are compared against the depth map only where the
+ * filter footprint is mixed. Receivers facing away from the whole disk, footprints
+ * inside one texel cell and footprints that nine probes find uniformly clear or
+ * blocked skip those comparisons. Snapshots rewrite uniform values in place, so a new
+ * instant never recompiles the program, and the depth maps are redrawn on request.
  */
-import { DoubleSide, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, ShaderChunk, Vector3 } from 'three';
+import { DoubleSide, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, ShaderChunk, Vector3, type WebGLRenderer } from 'three';
 import type { SceneBody } from './bodies';
 import type { shadowCoverage } from './solarExposure';
 
@@ -24,6 +30,7 @@ uniform vec3 lunarShadowY;
 uniform vec3 lunarCenter;
 uniform float lunarRadius;
 uniform float lunarSolarRadius;
+uniform float lunarCompleteDisk;
 uniform float lunarEarthRadius;
 uniform float lunarEarthInFront;
 uniform float lunarShadowWidth;
@@ -38,6 +45,11 @@ float lunarSegment(float q) {
   return (acos(-q) + q * sqrt(max(0.0, 1.0-q*q))) / PI;
 }
 
+float lunarDepth(sampler2D map, vec2 uv) {
+  // Explicit level: no screen-space derivatives, so the early exits stay real branches.
+  return textureLod(map, uv, 0.0).r;
+}
+
 float lunarCompare(sampler2D map, vec2 uv, float z, vec2 size, vec2 gradient) {
   // Bilinear comparisons, not bilinear depth: continuous sub-texel transitions.
   vec2 p = uv * size - 0.5;
@@ -45,11 +57,98 @@ float lunarCompare(sampler2D map, vec2 uv, float z, vec2 size, vec2 gradient) {
   vec2 base = (floor(p) + 0.5) / size;
   vec2 t = 1.0 / size;
   float reference = z + dot(gradient, base - uv);
-  float a = step(reference, texture2D(map, base).r);
-  float b = step(reference + gradient.x * t.x, texture2D(map, base + vec2(t.x, 0.0)).r);
-  float c = step(reference + gradient.y * t.y, texture2D(map, base + vec2(0.0, t.y)).r);
-  float d = step(reference + dot(gradient, t), texture2D(map, base + t).r);
+  float a = step(reference, lunarDepth(map, base));
+  float b = step(reference + gradient.x * t.x, lunarDepth(map, base + vec2(t.x, 0.0)));
+  float c = step(reference + gradient.y * t.y, lunarDepth(map, base + vec2(0.0, t.y)));
+  float d = step(reference + dot(gradient, t), lunarDepth(map, base + t));
   return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+float lunarVisible(sampler2D map, vec2 uv, vec3 p, vec2 size, vec2 gradient) {
+  // Coverage is fitted to the complete crop; a sample beyond it is only
+  // the smooth-interior assumption, never evidence of clear regional sky.
+  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) return 1.0;
+  return lunarCompare(map, uv, p.z + dot(gradient, uv - p.xy), size, gradient);
+}
+
+// Disk strip above the clipped horizon: midpoint height, half width, exact area.
+vec3 lunarStrip(float low, int row) {
+  float y0 = mix(low, 1.0, float(row) / 16.0);
+  float y1 = mix(low, 1.0, float(row+1) / 16.0);
+  float y = (y0 + y1) * 0.5;
+  return vec3(y, sqrt(max(0.0, 1.0 - y*y)), lunarSegment(y1) - lunarSegment(y0));
+}
+
+// End of the left and start of the right exposed interval of a strip.
+// Clipping intervals continuously avoids an on/off full-intensity first contact.
+vec2 lunarExposed(vec3 strip, vec2 earth, float er, bool eclipse) {
+  if (eclipse && abs(strip.x-earth.y) < er) {
+    float ew = sqrt(max(0.0, er*er - (strip.x-earth.y)*(strip.x-earth.y)));
+    return vec2(clamp(earth.x-ew, -strip.y, strip.y), clamp(earth.x+ew, -strip.y, strip.y));
+  }
+  return vec2(strip.y);
+}
+
+// 16 exact-area horizontal strips, four midpoint samples per exposed interval,
+// evaluated four columns at a time. shared >= 0 is one visibility for the whole
+// footprint; otherwise each sample is compared against the depth map.
+vec3 lunarSampledDisk(sampler2D map, vec2 size, vec3 p, vec2 gradient, float penumbra, float low,
+    vec3 sx, vec3 sy, vec2 earth, float er, bool eclipse, float shared) {
+  float spread = tan(lunarSolarRadius);
+  // Disk axes in map coordinates, and the facing of a ray as a function of its disk position.
+  vec2 ux = vec2(dot(sx, lunarShadowX), dot(sx, lunarShadowY)) * penumbra;
+  vec2 uy = vec2(dot(sy, lunarShadowX), dot(sy, lunarShadowY)) * penumbra;
+  vec3 facing = vec3(dot(lunarSun, lunarReceiverNormal), dot(sx, lunarReceiverNormal) * spread, dot(sy, lunarReceiverNormal) * spread);
+  vec3 sums = vec3(0.0);
+  for (int row = 0; row < 16; row++) {
+    vec3 strip = lunarStrip(low, row);
+    vec2 exposed = lunarExposed(strip, earth, er, eclipse);
+    for (int side = 0; side < 2; side++) {
+      float a = side == 0 ? -strip.y : exposed.y;
+      float b = side == 0 ? exposed.x : strip.y;
+      if (b <= a) continue;
+      vec4 xs = mix(vec4(a), vec4(b), vec4(0.125, 0.375, 0.625, 0.875));
+      // sx, sy and lunarSun are orthonormal: |lunarSun + offset * spread|^2 = 1 + |offset|^2 * spread^2.
+      vec4 inverseLength = inversesqrt(1.0 + (xs*xs + strip.x*strip.x) * spread*spread);
+      vec4 visible = vec4(shared);
+      if (shared < 0.0) {
+        vec2 origin = p.xy + uy * strip.x;
+        visible = vec4(lunarVisible(map, origin + ux * xs.x, p, size, gradient), lunarVisible(map, origin + ux * xs.y, p, size, gradient),
+          lunarVisible(map, origin + ux * xs.z, p, size, gradient), lunarVisible(map, origin + ux * xs.w, p, size, gradient));
+      }
+      // Rays behind the receiver contribute nothing.
+      vec4 weights = vec4(greaterThan(facing.x + facing.y * xs + facing.z * strip.x, vec4(0.0)))
+        * visible * inverseLength * (strip.z * (b-a) / (2.0*strip.y) * 0.25);
+      float total = dot(weights, vec4(1.0));
+      sums += vec3(total, dot(weights, xs), total * strip.x);
+    }
+  }
+  return lunarSun * sums.x + (sx * sums.y + sy * sums.z) * spread;
+}
+
+// The same strips, midpoints and weights for a receiver that faces the whole disk
+// with one shared visibility: no comparison or facing test is left per sample, so
+// the four columns of an interval reduce to one vector operation. A complete disk
+// needs no loop at all: its sum is lunarSun * lunarCompleteDisk (see completeDiskIntegral).
+vec3 lunarClearDisk(float low, vec3 sx, vec3 sy, vec2 earth, float er, bool eclipse) {
+  float spread = tan(lunarSolarRadius);
+  vec3 integral = vec3(0.0);
+  for (int row = 0; row < 16; row++) {
+    vec3 strip = lunarStrip(low, row);
+    vec2 exposed = lunarExposed(strip, earth, er, eclipse);
+    for (int side = 0; side < 2; side++) {
+      float a = side == 0 ? -strip.y : exposed.y;
+      float b = side == 0 ? exposed.x : strip.y;
+      if (b <= a) continue;
+      vec4 xs = mix(vec4(a), vec4(b), vec4(0.125, 0.375, 0.625, 0.875));
+      // sx, sy and lunarSun are orthonormal: |lunarSun + offset * spread|^2 = 1 + |offset|^2 * spread^2.
+      vec4 inverseLength = inversesqrt(1.0 + (xs*xs + strip.x*strip.x) * spread*spread);
+      float columns = dot(inverseLength, vec4(1.0));
+      integral += (strip.z * (b-a) / (2.0*strip.y) * 0.25)
+        * ((lunarSun + sy * (strip.x*spread)) * columns + sx * (spread * dot(xs, inverseLength)));
+    }
+  }
+  return integral;
 }
 
 float lunarDiskShadow(sampler2D map, vec2 size, float intensity, float bias, vec4 coord, float worldWidth, float worldDepth, bool localMap) {
@@ -71,6 +170,9 @@ float lunarDiskShadow(sampler2D map, vec2 size, float intensity, float bias, vec
   float elevation = asin(clamp(dot(up, lunarSun), -1.0, 1.0));
   float low = clamp((-depression - elevation) / lunarSolarRadius, -1.0, 1.0);
   if (low >= 1.0) return 0.0;
+  // Every ray of the disk is behind this receiver: the integral below is exactly zero.
+  float facing = dot(lunarSun, lunarReceiverNormal);
+  if (facing <= -sin(lunarSolarRadius)) return mix(1.0, 0.0, intensity);
   vec3 sx = cross(lunarSun, up);
   if (length(sx) < 0.00001) sx = lunarShadowX;
   sx = normalize(sx);
@@ -81,62 +183,63 @@ float lunarDiskShadow(sampler2D map, vec2 size, float intensity, float bias, vec
   // PCSS blocker search over the maximum source cone in this orthographic volume.
   float search = tan(lunarSolarRadius) * p.z * worldDepth / worldWidth;
   search = min(search, 0.45);
-  float centralDepth = texture2D(map, p.xy).r;
+  float centralDepth = lunarDepth(map, p.xy);
   float blockers = centralDepth < p.z - 0.0000001 ? 1.0 : 0.0;
   float nearest = blockers * centralDepth;
   for (int i = 0; i < 16; i++) {
     float theta = float(i) * 2.39996323;
     float scale = (float(i)+0.5)/16.0;
     vec2 offset = vec2(cos(theta), sin(theta)) * scale * scale;
-    float z = texture2D(map, p.xy + offset * search).r - dot(gradient, offset * search);
+    float z = lunarDepth(map, p.xy + offset * search) - dot(gradient, offset * search);
     if (z < p.z - 0.000001) { nearest = max(nearest, z); blockers += 1.0; }
   }
   float blocker = centralDepth < p.z - 0.0000001 ? centralDepth : (blockers > 0.0 ? nearest : p.z);
   float penumbra = tan(lunarSolarRadius) * max(0.0, p.z - blocker) * worldDepth / worldWidth;
   float margin = penumbra + 2.0 / size.x;
   if (localMap && (p.x < margin || p.x > 1.0-margin || p.y < margin || p.y > 1.0-margin)) return -1.0;
-  float result = 0.0;
-  vec3 directionIntegral = vec3(0.0);
-  // 16 exact-area horizontal strips, four midpoint samples per exposed interval.
-  // Clipping intervals continuously avoids an on/off full-intensity first contact.
-  for (int row = 0; row < 16; row++) {
-    float y0 = mix(low, 1.0, float(row) / 16.0);
-    float y1 = mix(low, 1.0, float(row+1) / 16.0);
-    float y = (y0 + y1) * 0.5;
-    float width = sqrt(max(0.0, 1.0 - y*y));
-    float weight = lunarSegment(y1) - lunarSegment(y0);
-    float leftEnd = width;
-    float rightStart = width;
-    if (eclipse && abs(y-earth.y) < er) {
-      float ew = sqrt(max(0.0, er*er - (y-earth.y)*(y-earth.y)));
-      leftEnd = clamp(earth.x-ew, -width, width);
-      rightStart = clamp(earth.x+ew, -width, width);
-    }
-    for (int side = 0; side < 2; side++) {
-      float a = side == 0 ? -width : rightStart;
-      float b = side == 0 ? leftEnd : width;
-      if (b <= a) continue;
-      float portion = (b-a) / (2.0*width);
-      for (int column = 0; column < 4; column++) {
-        float x = mix(a, b, (float(column)+0.5)/4.0);
-        vec3 offset = sx*x + sy*y;
-        vec3 ray = normalize(lunarSun + offset * tan(lunarSolarRadius));
-        if (dot(ray, lunarReceiverNormal) <= 0.0) continue;
-        vec2 uv = p.xy + vec2(dot(offset, lunarShadowX), dot(offset, lunarShadowY)) * penumbra;
-        // Coverage is fitted to the complete crop; a sample beyond it is only
-        // the smooth-interior assumption, never evidence of clear regional sky.
-        float visible = (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
-          ? 1.0 : lunarCompare(map, uv, p.z + dot(gradient, uv - p.xy), size, gradient);
-        float contribution = weight * portion * visible * 0.25;
-        result += contribution;
-        directionIntegral += ray * contribution;
+  // Classify the filter footprint before integrating: shared is its single
+  // visibility where it is uniform and -1 where it is mixed. Without a blocker
+  // every sample is the center point, so its comparison is the exact value.
+  bool frontal = facing >= sin(lunarSolarRadius);
+  bool complete = low <= -1.0 && !eclipse;
+  float shared = lunarVisible(map, p.xy, p, size, gradient);
+  if (penumbra > 0.0) {
+    // The comparison is bilinear inside a texel cell and the complete disk is
+    // sampled symmetrically, so a footprint within one cell averages to its
+    // center value (the 16x4 quadrature differs by under 0.5%). The mean
+    // direction stays at the disk center: under a quarter of the solar radius off.
+    vec2 cell = fract(p.xy * size - 0.5);
+    float inset = min(min(cell.x, 1.0 - cell.x), min(cell.y, 1.0 - cell.y));
+    bool oneCell = frontal && complete && inset >= penumbra * max(size.x, size.y)
+      && all(greaterThanEqual(p.xy, vec2(penumbra))) && all(lessThanEqual(p.xy, vec2(1.0 - penumbra)));
+    if (!oneCell) {
+      // Center and eight rim probes. A straight shadow edge that avoids all of
+      // them cuts off less than 1.2% of the disk.
+      float lowest = shared;
+      float highest = shared;
+      for (int i = 0; i < 8; i++) {
+        float theta = float(i) * 0.78539816;
+        float probe = lunarVisible(map, p.xy + vec2(cos(theta), sin(theta)) * penumbra, p, size, gradient);
+        lowest = min(lowest, probe);
+        highest = max(highest, probe);
       }
+      if (lowest < 1.0 && highest > 0.0) shared = -1.0;
     }
   }
-  if (result > 0.0) lunarVisibleDirection = normalize(directionIntegral);
+  if (shared == 0.0) return mix(1.0, 0.0, intensity);
+  vec3 integral;
+  if (shared >= 0.0 && frontal && complete) {
+    integral = lunarSun * (shared * lunarCompleteDisk);
+  } else if (shared >= 0.0 && frontal) {
+    integral = shared * lunarClearDisk(low, sx, sy, earth, er, eclipse);
+  } else {
+    integral = lunarSampledDisk(map, size, p, gradient, penumbra, low, sx, sy, earth, er, eclipse, shared);
+  }
   // Vector magnitude + mean direction preserve the sampled Lambert cosine
   // integral, including a visible upper limb while the center is back-facing.
-  return mix(1.0, clamp(length(directionIntegral), 0.0, 1.0), intensity);
+  float exposure = length(integral);
+  if (exposure > 0.0) lunarVisibleDirection = integral / exposure;
+  return mix(1.0, clamp(exposure, 0.0, 1.0), intensity);
 }
 
 float getShadow(sampler2D map, vec2 size, float intensity, float bias, float unusedRadius, vec4 coord) {
@@ -154,29 +257,89 @@ float getShadow(sampler2D map, vec2 size, float intensity, float bias, float unu
 }
 `;
 
-function solarUniforms(inputs: SolarUniformInputs) {
+/** The shader's 16x4 midpoint quadrature over an unclipped, unoccluded disk.
+ * Its lateral terms cancel by symmetry, so the sum is this factor along the Sun direction.
+ */
+export function completeDiskIntegral(solarRadiusRad: number): number {
+  const segment = (q: number) => (Math.acos(-q) + q * Math.sqrt(Math.max(0, 1 - q * q))) / Math.PI;
+  const spread = Math.tan(solarRadiusRad);
+  let sum = 0;
+  for (let row = 0; row < 16; row++) {
+    const y0 = -1 + row / 8;
+    const y1 = -1 + (row + 1) / 8;
+    const y = (y0 + y1) / 2;
+    for (const column of [0.125, 0.375, 0.625, 0.875]) {
+      const x = (2 * column - 1) * Math.sqrt(Math.max(0, 1 - y * y));
+      sum += (segment(y1) - segment(y0)) * 0.25 / Math.sqrt(1 + (x * x + y * y) * spread * spread);
+    }
+  }
+  return sum;
+}
+
+export type SolarUniforms = ReturnType<typeof emptyUniforms>;
+
+const emptyUniforms = () => ({
+  lunarSun: { value: new Vector3(0, 1, 0) },
+  lunarEarth: { value: new Vector3(0, -1, 0) },
+  lunarShadowX: { value: new Vector3(1, 0, 0) },
+  lunarShadowY: { value: new Vector3(0, 0, 1) },
+  lunarCenter: { value: new Vector3() },
+  lunarRadius: { value: 0 },
+  lunarSolarRadius: { value: 0 },
+  lunarCompleteDisk: { value: 1 },
+  lunarEarthRadius: { value: 0 },
+  lunarEarthInFront: { value: 0 },
+  lunarShadowWidth: { value: 1 },
+  lunarShadowDepth: { value: 1 },
+  lunarDetailWidth: { value: 1 },
+  lunarDetailDepth: { value: 1 },
+});
+
+/** Rewrites the shared uniform values in place: a new snapshot costs no program compilation. */
+export function updateSolarUniforms(uniforms: SolarUniforms, inputs: SolarUniformInputs): void {
   const { sun, earth, coverage, detailCoverage = coverage, sphereCenter, sphereRadius } = inputs;
   const inverse = coverage.view.clone().invert();
-  return {
-    lunarSun: { value: new Vector3(...sun.direction) },
-    lunarEarth: { value: new Vector3(...earth.direction) },
-    lunarShadowX: { value: new Vector3().setFromMatrixColumn(inverse, 0) },
-    lunarShadowY: { value: new Vector3().setFromMatrixColumn(inverse, 1) },
-    lunarCenter: { value: sphereCenter },
-    lunarRadius: { value: sphereRadius },
-    lunarSolarRadius: { value: sun.angularDiameterDeg * Math.PI / 360 },
-    lunarEarthRadius: { value: earth.angularDiameterDeg * Math.PI / 360 },
-    lunarEarthInFront: { value: earth.rangeKm < sun.rangeKm ? 1 : 0 },
-    lunarShadowWidth: { value: coverage.halfSize * 2 },
-    lunarShadowDepth: { value: coverage.far - coverage.near },
-    lunarDetailWidth: { value: detailCoverage.halfSize * 2 },
-    lunarDetailDepth: { value: detailCoverage.far - detailCoverage.near },
+  uniforms.lunarSun.value.set(...sun.direction);
+  uniforms.lunarEarth.value.set(...earth.direction);
+  uniforms.lunarShadowX.value.setFromMatrixColumn(inverse, 0);
+  uniforms.lunarShadowY.value.setFromMatrixColumn(inverse, 1);
+  uniforms.lunarCenter.value.copy(sphereCenter);
+  uniforms.lunarRadius.value = sphereRadius;
+  uniforms.lunarSolarRadius.value = sun.angularDiameterDeg * Math.PI / 360;
+  uniforms.lunarCompleteDisk.value = completeDiskIntegral(uniforms.lunarSolarRadius.value);
+  uniforms.lunarEarthRadius.value = earth.angularDiameterDeg * Math.PI / 360;
+  uniforms.lunarEarthInFront.value = earth.rangeKm < sun.rangeKm ? 1 : 0;
+  uniforms.lunarShadowWidth.value = coverage.halfSize * 2;
+  uniforms.lunarShadowDepth.value = coverage.far - coverage.near;
+  uniforms.lunarDetailWidth.value = detailCoverage.halfSize * 2;
+  uniforms.lunarDetailDepth.value = detailCoverage.far - detailCoverage.near;
+}
+
+/** Uniform holders shared by every patched material of a scene. */
+export function solarUniforms(inputs?: SolarUniformInputs): SolarUniforms {
+  const uniforms = emptyUniforms();
+  if (inputs) updateSolarUniforms(uniforms, inputs);
+  return uniforms;
+}
+
+/** Stops the per-frame depth-map redraw; the returned cleanup restores it. */
+export function holdShadowMaps(renderer: WebGLRenderer): () => void {
+  const automatic = renderer.shadowMap.autoUpdate;
+  renderer.shadowMap.autoUpdate = false;
+  renderer.shadowMap.needsUpdate = true;
+  return () => {
+    renderer.shadowMap.autoUpdate = automatic;
+    renderer.shadowMap.needsUpdate = true;
   };
 }
 
+/** Redraws the held depth maps on the next frame: call after any caster or the Sun moves. */
+export function requestShadowUpdate(renderer: WebGLRenderer): void {
+  renderer.shadowMap.needsUpdate = true;
+}
+
 /** Clone materials so neither GLTF cache nor the alternative view is modified. */
-export function installSolarMaterials(roots: readonly Object3D[], inputs: SolarUniformInputs | null, directOnly: boolean): () => void {
-  const uniforms = inputs ? solarUniforms(inputs) : null;
+export function installSolarMaterials(roots: readonly Object3D[], uniforms: SolarUniforms | null, directOnly: boolean): () => void {
   const restore: (() => void)[] = [];
   for (const root of roots) root.traverse((object) => {
     if (!(object instanceof Mesh)) return;
@@ -201,13 +364,17 @@ export function installSolarMaterials(roots: readonly Object3D[], inputs: SolarU
           ShaderChunk.shadowmap_pars_fragment.replaceAll('float getShadow(', 'float originalShadow(') + '\n#ifdef USE_SHADOWMAP\n' + solarShader + '\n#endif\n');
         shader.fragmentShader = shader.fragmentShader.replace('#include <lights_fragment_begin>',
           ShaderChunk.lights_fragment_begin
+            // Only the first directional light is the Sun; the second one just carries the local map.
+            .replace('UNROLLED_LOOP_INDEX < NUM_DIR_LIGHT_SHADOWS', 'UNROLLED_LOOP_INDEX == 0')
             .replace('getDirectionalLightInfo( directionalLight, directLight );',
               'getDirectionalLightInfo( directionalLight, directLight );\n'
+              // A zero-energy source (unknown inputs, total eclipse, map carrier) integrates nothing.
+              + 'directLight.visible = directLight.color != vec3(0.0);\n'
               + 'lunarReceiverNormal = inverseTransformDirection(geometryNormal, viewMatrix);\nlunarVisibleDirection = lunarSun;')
             .replace('vDirectionalShadowCoord[ i ] ) : 1.0;',
               'vDirectionalShadowCoord[ i ] ) : 1.0;\ndirectLight.direction = transformDirection(lunarVisibleDirection, viewMatrix);'));
       };
-      copy.customProgramCacheKey = () => uniforms ? 'lunar-finite-disk-pcss-v1' : 'lunar-no-solar-data-v1';
+      copy.customProgramCacheKey = () => uniforms ? 'lunar-finite-disk-pcss-v2' : 'lunar-no-solar-data-v1';
       return copy;
     };
     const copies = Array.isArray(original) ? original.map(patch) : patch(original);

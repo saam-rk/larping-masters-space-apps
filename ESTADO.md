@@ -6,7 +6,8 @@
 - Ten asset/observer records have reproducible SHA-256 provenance; unknown terrain remains unknown. New single-instant Horizons responses are checked against observer metadata and epoch. Historical saved samples keep their original altitude.
 - Evidence and precision comparison: `docs/LUNAR_LIGHTING_CORRECTION.md`; raw paired Horizons cases and numerical validation summaries: `docs/lighting-validation/`.
 - Local validation observed: typecheck, lint, 674 tests/60 files and production build; Chromium GPU regressions and all ten production UI scenes in Spanish/English and both modes. No physical accuracy certification, regional terrain coverage or independent frame alignment is claimed.
-- Pending: human diff review and any explicitly authorized commit/PR/integration. This task has not committed, pushed or merged.
+- Frame-cost fix on the same branch (PR #49): the disk is compared against the depth map only where the filter footprint is mixed, depth maps are redrawn on request, snapshots rewrite uniforms without recompiling, and low performance mode draws the 3D view at one pixel per CSS pixel. Recorded GPU regression numbers are unchanged; measured frame times are in `docs/LUNAR_LIGHTING_CORRECTION.md` (Frame cost). Observed: typecheck, lint, 677 tests/60 files, production build, GPU and UI harnesses.
+- Pending: human diff review and integration by the integrator.
 
 ## Implementation update — 2026-11-15
 

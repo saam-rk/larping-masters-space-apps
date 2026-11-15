@@ -57,11 +57,40 @@ Nonfinite/out-of-domain parsed numbers are rejected; missing values remain missi
 
 The implementation is an orthographic, finite-map graphics approximation. Different blockers at different depths, mesh resolution/interpolation, material normals, shadow bias, source quadrature and map boundaries can still produce errors. Directions are parallel across the crop; near-surface parallax and different lunar-frame realizations have not received a certified error budget. Quantitative watts, thermal balance, Earthshine, interreflection, limb darkening and atmospheric eclipse light are not modeled. Apollo props are a reenactment, not surveyed obstacles.
 
+### Frame cost
+
+The first version of this shader compared all 64 disk samples against the depth map for every lit pixel (about 270 depth reads, and twice that where the local map hands over to the crop-wide one), redrew both depth maps on every frame and recompiled the material program for every new snapshot. On an integrated GPU the first-person view fell to roughly 8-11 frames per second in a large window. The method above is unchanged; the work is now done only where it can change the result:
+
+1. **Receivers facing away from the whole disk** return before any depth read. The sampled integral was already exactly zero there.
+2. **Footprint classification.** Without a blocker every sample is the center point, so one comparison is exact. A footprint that lies inside one texel cell, with a complete disk and a receiver facing all of it, uses its center comparison: the comparison is bilinear inside the cell, so the continuous disk average is the center value. The 16x4 quadrature differs from it by less than 0.5%, and the mean direction is left at the disk center, less than a quarter of the solar radius away. Wider footprints are probed at the center and at eight rim points and are treated as uniform only when all nine agree; a straight shadow edge that avoids every probe removes less than 1.2% of the disk. Mixed footprints run the complete 64-sample comparison as before.
+3. **Uniform footprints need no comparisons.** A complete disk uses the same quadrature evaluated once per snapshot (`completeDiskIntegral`); a disk clipped by the smooth horizon or the Earth evaluates the same strips and midpoints arithmetically.
+4. **Only the Sun integrates.** The zero-energy light that carries the local map, and a source with zero intensity (unknown inputs, total eclipse), skip the integration.
+5. **Depth maps are redrawn on request**: a new snapshot, model or lighting mode, or a moved reenactment prop. Nothing else moves a caster.
+6. **A new snapshot rewrites uniform values in place.** Materials and their compiled program stay installed, so playback and updates no longer recompile.
+7. **Low performance mode** draws the 3D view at one pixel per CSS pixel instead of up to 1.5.
+
+Observed after the change:
+
+- `check-lighting-gpu.mjs` reproduces every recorded number without change: ridge 0/187, eclipse 0, fill 86, the seven first-contact readbacks (0, 0, 0, 6, 188, 254, 254) and all nine receiver probes, including Nobile Rim 1 at 46.05086%.
+- Full-frame comparison of the eleven harness renders against the previous shader: at most 0.13% of pixels differ by more than 2/255 and at most 0.02% by more than 8/255 (largest single difference 35/255). They are isolated pixels inside the depth-comparison speckle that both versions show on grazing slopes; the classification changes which pixel of that noise is drawn, not its amount.
+- In the production build, changing the date on an already loaded terrain gives the same image as loading that date directly, so held depth maps and in-place uniforms follow the snapshot.
+
+Median frame time while dragging the first-person view of the production build (Intel UHD Graphics, Chromium 158 through ANGLE/Direct3D 11, each frame forced to complete with a pixel readback; Apollo 11 with the Sun raised to 10.7 deg for load, a timing fixture and not an ephemeris):
+
+| Window and mode | Before | After |
+|---|---:|---:|
+| 1280x720 at 150% scaling, low performance | 33-51 ms | 16 ms (display rate) |
+| 1280x720 at 150% scaling, full effects | 40-47 ms | 16-24 ms |
+| 2560x1440, low performance (1924x1013 view) | 94-118 ms | 29-63 ms |
+| 2560x1440, full effects (1924x1013 view) | 118-133 ms | 54-81 ms |
+
+These are engineering timings of three sites on one machine, not a cross-device or mobile certification. The slowest case is a grazing lit slope whose depth comparison sits at its noise floor (Amundsen Rim, Nobile Rim 2): its speckled pixels are classified as mixed and still pay the complete comparison. Full effects also include the CRT filter, which this change does not touch. `window.lightingReview.timing(id, azimuth, elevation, width, height)` in `tools/lunar-terrain/lighting-review.html` times the shader alone.
+
 ## Observed validation
 
 ### Software and assets
 
-- `npm run check`: TypeScript, ESLint and **674 tests in 60 files**, observed passing during implementation.
+- `npm run check`: TypeScript, ESLint and **677 tests in 60 files**, observed passing after the frame-cost change.
 - `npm run build`: production build passed. Vite's large scene-chunk warning appeared in earlier executions; no warning threshold was raised.
 - `node tools/lunar-terrain/generate-observers.mjs --check`: all **10** asset hashes and observer records reproduced.
 - Existing coordinate/catalog, inverse-search, playback, D-020 and Apollo timeline tests remain enabled.

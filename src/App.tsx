@@ -155,7 +155,7 @@ export function App() {
             >
               <div className="scene-stage" data-jumping={busy || viewSwitch.active} data-warp={warp.kind}>
                 <Suspense fallback={<p className="scene__note">{messages.scene.loading}</p>}>
-                  <SkyScene data={displayedData} mode={view.mode} showHorizon={showCompass} animateReenactment={streaks} busy={busy} playback={playbackActive} />
+                  <SkyScene data={displayedData} mode={view.mode} showHorizon={showCompass} animateReenactment={streaks} lowResolution={!fullEffects} busy={busy} playback={playbackActive} />
                 </Suspense>
                 {streaks && <Hyperspace active={busy || viewSwitch.active} reverse={warp.reverse} tempo={warp.tempo} />}
               </div>

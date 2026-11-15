@@ -4,7 +4,7 @@
  */
 import { Html, Line, PerspectiveCamera, useGLTF } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
-import { Suspense, useEffect, useMemo, useRef, type RefObject } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, type RefObject } from 'react';
 import { AnimationMixer, GreaterDepth, Group, Mesh, SphereGeometry, Vector3, type Material, type Object3D } from 'three';
 import type { EphemerisResponse } from '../../../shared/ephemeris';
 import { APOLLO_11_SITE_ID } from '../../../shared/sites';
@@ -18,6 +18,7 @@ import { EyeLevelRig } from './EyeLevelRig';
 import { horizontalToPosition, type Vector3Tuple } from './geometry';
 import { glowTexture } from './glow';
 import { SurfaceLighting, type LightingMode } from './SurfaceLighting';
+import { requestShadowUpdate } from './solarMaterial';
 import { APOLLO_11_REENACTMENT, APOLLO_11_TERRAIN } from './terrain/apollo11';
 import { polarTerrainForSite } from './terrain/models';
 import { curvedTerrain, disposeTerrain, surfacePoint, terrainGround } from './terrain/curvedTerrain';
@@ -132,18 +133,24 @@ function ApolloTerrain({ data, bodies, controls, phase }: {
   const mixer = useMemo(() => new AnimationMixer(props), [props]);
   const occluder = useRef<Group>(null);
   const invalidate = useThree((state) => state.invalidate);
+  const gl = useThree((state) => state.gl);
+  // The props cast shadows: every new pose also redraws the held depth maps.
+  const redraw = useCallback(() => {
+    requestShadowUpdate(gl);
+    invalidate();
+  }, [gl, invalidate]);
   useEffect(() => {
     mixer.stopAllAction();
     stage.apply(phase);
     for (const clip of clips) mixer.clipAction(clip).play();
     mixer.setTime(0);
-    invalidate();
+    redraw();
     return () => { mixer.stopAllAction(); };
-  }, [mixer, stage, phase, clips, invalidate]);
+  }, [mixer, stage, phase, clips, redraw]);
   useEffect(() => {
     if (!controls.animateReenactment) mixer.setTime(0);
-    invalidate();
-  }, [controls.animateReenactment, mixer, invalidate]);
+    redraw();
+  }, [controls.animateReenactment, mixer, redraw]);
   useEffect(() => {
     if (!moving) return;
     let last = performance.now();
@@ -151,10 +158,10 @@ function ApolloTerrain({ data, bodies, controls, phase }: {
       const now = performance.now();
       mixer.update(Math.min((now - last) / 1000, 1 / 15));
       last = now;
-      invalidate();
+      redraw();
     }, 1000 / REENACTMENT_FPS);
     return () => window.clearInterval(timer);
-  }, [moving, mixer, invalidate]);
+  }, [moving, mixer, redraw]);
   const mode = controls.lightingMode ?? 'direct';
   if (!terrain) return <Html center className="scene__label">{messages.scene.terrainMissing}</Html>;
   return <>

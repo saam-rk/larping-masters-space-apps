@@ -1,11 +1,11 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useLayoutEffect, useMemo } from 'react';
 import { Box3, Object3D, Vector3 } from 'three';
 import { useThree } from '@react-three/fiber';
 import type { EphemerisResponse } from '../../../shared/ephemeris';
 import { LUNAR_REFERENCE_RADIUS_M, terrainObserver } from '../../../shared/observer';
 import type { PlacedBodies } from './bodies';
 import { shadowCoverage, solarLightingState, surfaceSnapshotReady } from './solarExposure';
-import { installSolarMaterials } from './solarMaterial';
+import { holdShadowMaps, installSolarMaterials, requestShadowUpdate, solarUniforms, updateSolarUniforms, type SolarUniformInputs } from './solarMaterial';
 
 export type LightingMode = 'direct' | 'illustrative';
 
@@ -17,6 +17,7 @@ export function SurfaceLighting({ terrain, foreground, bodies, data, mode }: {
   mode: LightingMode;
 }) {
   const invalidate = useThree((state) => state.invalidate);
+  const gl = useThree((state) => state.gl);
   const state = solarLightingState(bodies.placed);
   const direction = state.sun?.direction;
   const bounds = useMemo(() => new Box3().setFromObject(terrain), [terrain]);
@@ -29,16 +30,28 @@ export function SurfaceLighting({ terrain, foreground, bodies, data, mode }: {
     return object;
   }, [coverage]);
   const ground = terrainObserver(data.site)?.groundElevationM ?? 0;
+  const { known, sun, earth } = state;
+  const inputs = useMemo<SolarUniformInputs | null>(() => known && sun && earth ? {
+    sun, earth, coverage, detailCoverage,
+    sphereCenter: new Vector3(0, -LUNAR_REFERENCE_RADIUS_M - ground, 0),
+    // Interior below the entire known crop. Outside coverage is explicitly unknown.
+    sphereRadius: LUNAR_REFERENCE_RADIUS_M + ground + Math.min(0, bounds.min.y) - 1,
+  } : null, [known, sun, earth, coverage, detailCoverage, ground, bounds]);
+  // The holders outlive snapshots: a new instant rewrites their values, and the
+  // patched materials (and their compiled program) stay installed.
+  const solar = inputs !== null;
+  const uniforms = useMemo(() => solar ? solarUniforms() : null, [solar]);
+  useLayoutEffect(() => {
+    if (uniforms && inputs) updateSolarUniforms(uniforms, inputs);
+  }, [uniforms, inputs]);
+  useEffect(() => installSolarMaterials([terrain, foreground], uniforms, mode === 'direct'), [terrain, foreground, uniforms, mode]);
+  // Casters only move with a new snapshot, model or mode: the two depth maps
+  // are drawn on request (see requestShadowUpdate) instead of on every frame.
+  useLayoutEffect(() => holdShadowMaps(gl), [gl]);
   useEffect(() => {
-    const cleanup = installSolarMaterials([terrain, foreground], state.known && state.sun && state.earth ? {
-      sun: state.sun, earth: state.earth, coverage, detailCoverage,
-      sphereCenter: new Vector3(0, -LUNAR_REFERENCE_RADIUS_M - ground, 0),
-      // Interior below the entire known crop. Outside coverage is explicitly unknown.
-      sphereRadius: LUNAR_REFERENCE_RADIUS_M + ground + Math.min(0, bounds.min.y) - 1,
-    } : null, mode === 'direct');
+    requestShadowUpdate(gl);
     invalidate();
-    return cleanup;
-  }, [terrain, foreground, state.sun, state.earth, state.known, coverage, detailCoverage, ground, bounds, mode, invalidate]);
+  }, [gl, invalidate, terrain, foreground, uniforms, inputs, mode]);
   const intensity = surfaceSnapshotReady(data) ? state.intensity : 0;
   return <>
     <ambientLight intensity={mode === 'illustrative' ? 0.3 : 0} />

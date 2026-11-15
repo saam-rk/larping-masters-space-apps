@@ -5,7 +5,7 @@
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { installSolarMaterials } from '/src/features/scene/solarMaterial.ts';
+import { installSolarMaterials, solarUniforms } from '/src/features/scene/solarMaterial.ts';
 import { shadowCoverage, solarLightingState } from '/src/features/scene/solarExposure.ts';
 import { horizontalToDirection } from '/src/features/scene/geometry.ts';
 import { curvedTerrain, terrainGround } from '/src/features/scene/terrain/curvedTerrain.ts';
@@ -46,7 +46,7 @@ function setup(terrain, sun, earth, ground=0, illustrative=false, interiorRadius
   detailLight.shadow.camera.updateProjectionMatrix();detailLight.shadow.normalBias=0.005;detailLight.shadow.bias=-0.00000002;detailLight.shadow.intensity=0;
   scene.add(light,light.target,detailLight,detailLight.target,new THREE.AmbientLight(0xffffff,illustrative?0.3:0));
   const bounds = new THREE.Box3().setFromObject(terrain);
-  cleanup=installSolarMaterials([terrain],{sun,earth,coverage,detailCoverage,sphereCenter:new THREE.Vector3(0,-1737400-ground,0),sphereRadius:interiorRadius??(1737400+ground+Math.min(0,bounds.min.y)-1)},!illustrative);
+  cleanup=installSolarMaterials([terrain],solarUniforms({sun,earth,coverage,detailCoverage,sphereCenter:new THREE.Vector3(0,-1737400-ground,0),sphereRadius:interiorRadius??(1737400+ground+Math.min(0,bounds.min.y)-1)}),!illustrative);
   return { light, coverage, state };
 }
 function draw() {camera.updateMatrixWorld();renderer.render(scene,camera);renderer.render(scene,camera);}
@@ -139,6 +139,38 @@ window.lightingReview = {
       for(const [material,side] of materials)material.side=side;
     }
     document.querySelector('#status').textContent=JSON.stringify(output,null,2);
+    return output;
+  },
+  /** Frame cost of a look-around at the fixed observer; readPixels forces GPU completion.
+   *  Engineering timing on the current machine and GPU, not a cross-device certification. */
+  async timing(id, az, el, width = 1920, height = 1080, frames = 24) {
+    await this.asset(id, az, el);
+    renderer.setSize(width, height);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    const gl = renderer.getContext();
+    const out = new Uint8Array(4);
+    const frame = (yaw) => {
+      camera.position.set(0, 1.7, 0);
+      camera.lookAt(new THREE.Vector3(...horizontalToDirection(az + yaw, -8)).add(camera.position));
+      camera.updateMatrixWorld();
+      const start = performance.now();
+      renderer.render(scene, camera);
+      gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, out);
+      return performance.now() - start;
+    };
+    frame(0);
+    // As in the app, the depth maps are held between snapshots.
+    renderer.shadowMap.autoUpdate = false;
+    const times = Array.from({ length: frames }, (_, i) => frame((i - frames / 2) * 4)).sort((a, b) => a - b);
+    const info = gl.getExtension('WEBGL_debug_renderer_info');
+    const output = { id, width, height, frames, medianMs: times[Math.floor(frames / 2)], maxMs: times.at(-1),
+      gpu: info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : 'unknown' };
+    renderer.shadowMap.autoUpdate = true;
+    renderer.setSize(801, 601);
+    camera.aspect = 801 / 601;
+    camera.updateProjectionMatrix();
+    document.querySelector('#status').textContent = JSON.stringify(output, null, 2);
     return output;
   }
 };
