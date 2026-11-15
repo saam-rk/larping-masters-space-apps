@@ -9,7 +9,7 @@
 - Si la tarea requiere editar archivos, comprueba primero `git status` y la rama actual. Conserva cambios ajenos y no trabajes directamente en la rama base: actualízala y crea una rama propia por tarea antes de editar (`feat/<tema>`, `fix/<tema>` o `docs/<tema>`). Si ya estás en una rama de tarea adecuada, úsala.
 - Si hay cambios previos en el árbol o no está clara la rama base/remoto, no limpies ni adivines: limita el trabajo seguro y consulta al integrador antes de una acción que pueda mezclar o publicar cambios.
 - Mantén la PR acotada. Explica el objetivo, cómo validar, fuentes o métodos científicos afectados (o “no aplica”), límites y checks observados. No marques como pasados checks que no hayas ejecutado.
-- Pide revisión a otra persona. El usuario integrador revisa y hace merge; agentes y autores no hacen merge ni publican por su cuenta. No hagas commit o push salvo que el encargo lo pida explícitamente.
+- Pide revisión a otra persona. El usuario integrador revisa y hace merge; autores no hacen merge ni publican por su cuenta. Agentes SI PUEDEN hacer merge si el autor se lo indica.  No hagas commit o push salvo que el encargo lo pida explícitamente.
 - Sigue el procedimiento y la plantilla de `GIT_WORKFLOW.md`. Si contradice estas instrucciones, consulta al integrador antes de cambiar la rama base o publicar.
 
 ## Idioma del proyecto
