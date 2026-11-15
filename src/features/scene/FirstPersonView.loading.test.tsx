@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { act, useLayoutEffect, type ReactNode, type RefObject } from 'react';
+import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { findSite } from '../../../shared/sites';
@@ -8,11 +8,12 @@ import { SAVED_SAMPLE } from '../../data/savedSample';
 import { MESSAGES } from '../../i18n/messages';
 import { placeBodies } from './bodies';
 import { FirstPersonView } from './FirstPersonView';
+import { SceneLoadingContext } from '../transition/sceneLoadingContext';
 
 const loading = vi.hoisted(() => ({
   canvas: null as HTMLCanvasElement | null,
   connected: null as HTMLElement | null,
-  targets: [] as (HTMLElement | null)[],
+  register: vi.fn(() => vi.fn()),
   requestedUrls: [] as string[],
   pending: new Promise<never>(() => {}),
 }));
@@ -29,12 +30,7 @@ vi.mock('@react-three/drei', () => ({
   PerspectiveCamera: () => null,
   Line: () => null,
   useGLTF: (url: string) => { loading.requestedUrls.push(url); throw loading.pending; },
-  // Mirror Html's target selection and root-effect dependency without requiring WebGL in jsdom.
-  Html: ({ portal, children }: { portal?: RefObject<HTMLElement>; children: ReactNode }) => {
-    const target = portal?.current ?? loading.connected ?? loading.canvas?.parentElement ?? null;
-    useLayoutEffect(() => { loading.targets.push(target); }, [target]);
-    return <div>{children}</div>;
-  },
+  Html: vi.fn(() => null),
 }));
 
 let container: HTMLDivElement;
@@ -43,7 +39,7 @@ let root: Root;
 
 beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-  loading.targets = [];
+  loading.register.mockClear();
   loading.requestedUrls = [];
   loading.connected = null;
   canvasParent = document.createElement('div');
@@ -61,7 +57,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('first-person loading portal', () => {
+describe('first-person model loading', () => {
   it.each(['faustini-rim-a', 'cabeus-exterior-wall-1', 'malapert-crater-1'] as const)('requests the %s terrain asset through the shared polar view', (siteId) => {
     // Synthetic selection for routing only; these are not observations for the selected site.
     const data = { ...SAVED_SAMPLE, site: { ...findSite(siteId), altitudeKm: 0 as const } };
@@ -71,20 +67,24 @@ describe('first-person loading portal', () => {
     ));
     expect(loading.requestedUrls.length).toBeGreaterThan(0);
     expect(new Set(loading.requestedUrls)).toEqual(new Set([`/terrain/${siteId}.glb`]));
-    expect(container.textContent).toContain(MESSAGES.en.scene.terrainLoading);
+    expect(container.textContent).toBe('');
   });
 
-  it('keeps the loading root on the canvas parent when R3F connects its event target', () => {
+  it('keeps the shared jump registered when R3F connects its event target, without a loading portal', () => {
     const render = () => act(() => root.render(
+      <SceneLoadingContext value={loading.register}>
       <FirstPersonView data={SAVED_SAMPLE} bodies={placeBodies(SAVED_SAMPLE)}
-        controls={{ zoom: 0, onZoomChange: vi.fn(), showHorizon: true, showGuides: true, anchor: placeBodies(SAVED_SAMPLE), follow: null }} />,
+        controls={{ zoom: 0, onZoomChange: vi.fn(), showHorizon: true, showGuides: true, anchor: placeBodies(SAVED_SAMPLE), follow: null }} />
+      </SceneLoadingContext>,
     ));
     render();
-    expect(container.textContent).toContain(MESSAGES.en.scene.terrainLoading);
-    expect(loading.targets).toEqual([canvasParent]);
+    expect(container.textContent).toBe('');
+    expect(loading.register).toHaveBeenCalledTimes(1);
     loading.connected = document.createElement('div');
     render();
-    // No target change means no second nested DOM root or racing cleanup for the same portal element.
-    expect(loading.targets).toEqual([canvasParent]);
+    expect(loading.register).toHaveBeenCalledTimes(1);
+    const unregister = loading.register.mock.results[0]!.value;
+    act(() => root.render(null));
+    expect(unregister).toHaveBeenCalledTimes(1);
   });
 });

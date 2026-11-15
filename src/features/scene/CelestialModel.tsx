@@ -9,13 +9,14 @@
  * neither the Earth's rotation nor the Sun's is modeled.
  *
  * While a model loads, `fallback` (the plain sphere the view drew before) is
- * shown instead, so the body never disappears.
+ * kept underneath the shared hyperspace transition until every model is ready.
  */
 
 import { useGLTF } from '@react-three/drei';
 import { Suspense, useMemo, type ReactNode } from 'react';
 import { Color, Mesh, MeshStandardMaterial, type Object3D, type Quaternion } from 'three';
 import type { Vector3Tuple } from './geometry';
+import { SceneLoading } from '../transition/SceneLoading';
 
 const CELESTIAL_MODEL_URL = {
   sun: '/models/celestial/sun.glb',
@@ -80,7 +81,7 @@ export function CelestialModel({
 }) {
   return (
     <group position={position}>
-      <Suspense fallback={fallback}>
+      <Suspense fallback={<><SceneLoading />{fallback}</>}>
         <LoadedModel body={body} radius={radius} quaternion={quaternion} />
       </Suspense>
     </group>

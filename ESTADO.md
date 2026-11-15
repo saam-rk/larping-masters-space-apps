@@ -1,5 +1,23 @@
 # Estado del proyecto
 
+## Implementation update — 2026-11-15 (branch `fix/model-loading-transition`)
+
+- Model loading now holds the shared hyperspace transition until all suspended
+  scene boundaries resolve, including the lazy scene module, first-person
+  terrain/actors and third-person celestial models. Timed view switches no
+  longer reveal an unfinished scene. Cancelled loads release the transition.
+- Removed the relief and 3D-view loading labels in both languages. Scene notes,
+  controls and playback overlays stay hidden while models load. Model loading
+  uses the jump even with decorative effects off; reduced motion remains respected.
+- Validation observed: `npm run check` (typecheck, lint, 706 tests / 67 files),
+  `npm run build` (existing large-chunk warning), and `git diff --check` passed.
+  Regression coverage includes delayed and concurrent loads, cancellation,
+  cached models, Strict Mode, data jumps and reduced motion. Visual browser
+  verification remains pending: the integrated browser timed out connecting
+  to the local Vite server.
+- No scientific methods, sources or assets changed. Pending: integrator diff
+  review and visual verification. No commit, push or merge performed.
+
 ## Implementation update — 2026-11-15 (branch `fix/zoom-resize-performance`)
 
 - PR #57 review: integrated `main` at `c855e67`, retaining the mobile wheel,

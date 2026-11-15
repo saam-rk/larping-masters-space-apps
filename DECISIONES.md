@@ -121,3 +121,14 @@ Registrar acuerdos con fecha, responsable y evidencia. Propuestas y preguntas no
   remembered in the preferences cookie; tools stay mounted while closed.
 - **Limits:** presentation only; scientific methods, sources and terrain
   limitations are unchanged.
+
+### D-024 — Model loading presentation
+
+- **Date:** 2026-11-15.
+- **Status:** confirmed by the user in the implementation request.
+- **Decision:** use the existing Star Wars-style hyperspace transition for
+  3D model loading, without additional loading text, and remove the
+  "Cargando relieve" label. Hold the transition while models are loading.
+- **Implementation detail:** retain the system's reduced-motion preference;
+  hide the unfinished scene and its overlays while loading.
+- **Limits:** presentation only; scientific methods, sources and assets are unchanged.

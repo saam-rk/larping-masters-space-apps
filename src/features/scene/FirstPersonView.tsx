@@ -45,6 +45,7 @@
 import { Html, Line, PerspectiveCamera, useGLTF } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { Suspense, useEffect, useMemo, useRef, type RefObject } from 'react';
+import { SceneLoading } from '../transition/SceneLoading';
 import {
   AnimationMixer,
   BufferAttribute,
@@ -736,23 +737,6 @@ function FarBody({ body, label }: { body: SceneBody; label: string }) {
   );
 }
 
-/**
- * Pin the loading portal to the canvas parent. The default Html target changes
- * when R3F connects its events during startup; recreating its nested DOM root
- * at that point can race with Suspense cleanup.
- */
-function TerrainLoading() {
-  const { messages } = useI18n();
-  const parent = useThree((state) => state.gl.domElement.parentElement);
-  const portal = useMemo(() => (parent ? { current: parent } : undefined), [parent]);
-  if (!portal) return null;
-  return (
-    <Html portal={portal} center className="scene__label">
-      {messages.scene.terrainLoading}
-    </Html>
-  );
-}
-
 /** Contents of the shared canvas for the first-person view (see `SkyScene`). */
 export function FirstPersonView({
   data,
@@ -770,7 +754,7 @@ export function FirstPersonView({
     <>
       {/* Position and orientation are set by `EyeLevelRig` once the terrain is loaded. */}
       {apollo ? <ApolloCamera /> : <PerspectiveCamera makeDefault fov={DEFAULT_FOV_DEG} near={0.05} far={400_000} />}
-      <Suspense fallback={<TerrainLoading />}>
+      <Suspense fallback={<SceneLoading />}>
         {apollo ? <ApolloTerrain bodies={bodies} controls={controls} phase={apolloScenePhase(data.requestedUtc)} /> : model ? (
           <Terrain key={model.siteId} data={data} bodies={bodies} controls={controls} model={model} />
         ) : (
