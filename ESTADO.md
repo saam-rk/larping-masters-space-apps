@@ -1,5 +1,23 @@
 # Estado del proyecto
 
+## Implementation update — branch `fix/preserve-curvature-on-zoom`
+
+- Supersedes the temporary curvature pause described under the zoom-resize
+  performance update below. The CSS no longer removes the curved-glass filter
+  during browser zoom or window resizing; only CRT overlay animations pause.
+- The bounded displacement map now rebuilds at most once per animation frame,
+  with image and filter bounds committed before paint instead of waiting for
+  resize idle. Pointer coordinates, clicks, hover and cursors remain remapped
+  while the filter is visible.
+- Regression tests reproduced the filter becoming `none` and stale filter
+  bounds before the fix. Coverage includes zoom in/out, aspect-ratio changes,
+  coalescing, the 256 px map cap, disabled effects and Strict Mode cleanup.
+- Validation observed: `npm run check` (typecheck, lint, 713 tests / 68 files),
+  `npm run build` (existing large-chunk warning), and `git diff --check` passed.
+  Real browser zoom, visual continuity and frame timings remain unverified.
+- No scientific methods, sources or decisions changed. Pending: integrator
+  diff review and visual verification. Merge remains the integrator's responsibility.
+
 ## Implementation update — 2026-11-15 (branch `fix/model-loading-transition`)
 
 - Model loading now holds the shared hyperspace transition until all suspended
