@@ -4,8 +4,16 @@
  */
 
 import type { ApiError } from '../../shared/ephemeris.js';
-import { parseObserverPayload, parseObserverSeries, type ParsedObserverSeries, type ParsedObserverTable } from './parse.js';
-import { buildObserverRangeUrl, buildObserverUrl, HORIZONS_API_URL, type ObserverQuery, type ObserverRangeQuery } from './query.js';
+import { parseObserverPayload, parseObserverRows, parseObserverSeries, type ParsedObserverSeries, type ParsedObserverTable } from './parse.js';
+import {
+  buildObserverRangeUrl,
+  buildObserverSeriesUrl,
+  buildObserverUrl,
+  HORIZONS_API_URL,
+  type ObserverQuery,
+  type ObserverRangeQuery,
+  type ObserverSeriesQuery,
+} from './query.js';
 
 export type FetchLike = (url: string, init?: RequestInit) => Promise<Response>;
 
@@ -34,6 +42,24 @@ export async function fetchObserverTable(
   const parsed = parseObserverPayload(fetched.payload, query.body);
   if (!parsed.ok) return parsed;
   return { ok: true, table: parsed.table, retrievedAt: fetched.retrievedAt, url };
+}
+
+export type ObserverTablesResult =
+  | { readonly ok: true; readonly tables: readonly ParsedObserverTable[]; readonly retrievedAt: Date; readonly url: string }
+  | { readonly ok: false; readonly error: ApiError };
+
+/** Full observer rows (quantities 4, 13, 20) at equally spaced instants (see `buildObserverSeriesParameters`). */
+export async function fetchObserverTables(
+  query: ObserverSeriesQuery,
+  options: HorizonsClientOptions = {},
+  signal?: AbortSignal,
+): Promise<ObserverTablesResult> {
+  const url = buildObserverSeriesUrl(query, options.baseUrl ?? HORIZONS_API_URL);
+  const fetched = await fetchPayload(url, options, signal);
+  if (!fetched.ok) return fetched;
+  const parsed = parseObserverRows(fetched.payload, query.body);
+  if (!parsed.ok) return parsed;
+  return { ok: true, tables: parsed.tables, retrievedAt: fetched.retrievedAt, url };
 }
 
 export type ObserverSeriesResult =

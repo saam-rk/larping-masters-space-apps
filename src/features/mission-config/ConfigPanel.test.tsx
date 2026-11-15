@@ -4,6 +4,7 @@ import { DEFAULT_SITE_ID, FEATURED_SITES, findSite, REFERENCE_SITES, type SiteId
 import { APOLLO_11_LANDING_UTC as DEFAULT_UTC } from '../../../shared/time';
 import { MESSAGES } from '../../i18n/messages';
 import { ConfigPanel } from './ConfigPanel';
+import { hasFirstPersonView } from '../scene/viewMode';
 
 vi.mock('../../i18n/context', () => ({
   useI18n: () => ({ locale: 'en', messages: MESSAGES.en }),
@@ -76,24 +77,32 @@ function renderPanel(siteId: SiteId): string {
 }
 
 describe('ConfigPanel reference points', () => {
-  it('lists every point in one drop-down: the featured ones first, then the others alphabetically', () => {
+  it('lists every point in two groups: first person (featured first, then alphabetical), then third person only (alphabetical)', () => {
     const html = renderPanel(DEFAULT_SITE_ID);
     expect(html).not.toContain('type="radio"');
-    const options = [...html.matchAll(/role="option"[^>]*>([^<]+)</g)].map((match) => match[1]!.replace(/&#x27;/g, "'"));
+    const options = [...html.matchAll(/role="option"[^>]*><span class="wheel-select__text">([^<]+)</g)].map((match) => match[1]!.replace(/&#x27;/g, "'"));
     expect(options).toHaveLength(REFERENCE_SITES.length);
     expect(options.slice(0, 4)).toEqual(['Apollo 11', 'Nobile Rim 1 · R06', 'Nobile Rim 2 · DM2', 'Shackleton Rim · R04']);
-    expect(options[4]).toBe('Amundsen 1 · NPB');
-    expect(options).toContain('Haworth');
-    expect(options).toContain('Leibnitz Beta Plateau, extended boundaries · Site20v2');
-    const names = options.slice(FEATURED_SITES.length).map((option) => option.split(' · ')[0]!);
-    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' })));
-    expect(html).toMatch(/class="wheel-select__value">Apollo 11</);
+    const groups = [...html.matchAll(/class="wheel-select__section"[^>]*>([^<]+)</g)].map((match) => match[1]);
+    expect(groups).toEqual(['With first person', 'Third person only']);
+    const firstPerson = options.filter((option) => hasFirstPersonView(REFERENCE_SITES.find((site) => option.split(' · ')[0] === site.name)!.id));
+    expect(options.slice(0, firstPerson.length)).toEqual(firstPerson);
+    expect(firstPerson).toContain('Haworth');
+    const alphabetical = (list: string[]) => {
+      const names = list.map((option) => option.split(' · ')[0]!);
+      expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' })));
+    };
+    alphabetical(firstPerson.slice(FEATURED_SITES.length));
+    alphabetical(options.slice(firstPerson.length));
+    expect(options.slice(firstPerson.length)).toContain('Leibnitz Beta Plateau, extended boundaries · Site20v2');
+    expect(html).toMatch(/class="wheel-select__value"><span class="wheel-select__text">Apollo 11<\/span><span class="wheel-select__badge">First landing</);
+    expect(html).toMatch(/>Apollo 11<\/span><span class="wheel-select__badge">First landing</);
   });
 
   it('shows the selected point as the chosen option', () => {
-    expect(renderPanel('shackleton-rim')).toMatch(/aria-selected="true"[^>]*>Shackleton Rim · R04</);
+    expect(renderPanel('shackleton-rim')).toMatch(/aria-selected="true"[^>]*><span class="wheel-select__text">Shackleton Rim · R04</);
     const html = renderPanel('malapert-massif');
-    expect(html).toMatch(/class="wheel-select__value">Malapert Massif · R23</);
-    expect(html).toMatch(/aria-selected="true"[^>]*>Malapert Massif · R23</);
+    expect(html).toMatch(/class="wheel-select__value"><span class="wheel-select__text">Malapert Massif · R23</);
+    expect(html).toMatch(/aria-selected="true"[^>]*><span class="wheel-select__text">Malapert Massif · R23</);
   });
 });

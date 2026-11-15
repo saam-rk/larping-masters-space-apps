@@ -1,8 +1,11 @@
 /**
- * Site and time selection: one drop-down with every reference point (the
- * three featured demo points first, then the others in alphabetical order), a
+ * Site and time selection: one drop-down with every reference point in two
+ * labeled groups (points with a first-person relief model, the featured demo
+ * points first, then the points shown in third person only; each group
+ * alphabetical; Apollo 11 carries a "first landing" badge), a
  * search box for custom coordinates or a point name or code (filled in with
- * the coordinates when a reference point is picked), date and time wheels with a time zone wheel
+ * the coordinates when a reference point is picked), date and time wheels
+ * (`DateTimeWheels`, shared with the horizon playback interval) with a time zone wheel
  * (UTC, the time NASA uses for launches, or the browser's local zone) and the
  * update button. Explanations live in each section's help dialog.
  *
@@ -34,20 +37,10 @@ import { prefersReducedMotion } from '../../preferences/preferences';
 import { Box } from '../../ui/Box';
 import { NumberWheel } from '../../ui/NumberWheel';
 import { WheelSelect } from '../../ui/WheelSelect';
+import { hasFirstPersonView } from '../scene/viewMode';
 import { formatCoordinateQuery, parseCoordinateQuery, type CoordinateQuery } from './coordinateQuery';
-import { DateTimePartPicker } from './DateTimePartPicker';
-import {
-  changeDatePart,
-  changeTimePart,
-  currentUtcMinute,
-  daysInMonth,
-  fieldParts,
-  MAX_YEAR,
-  MIN_YEAR,
-  type DatePart,
-  type DateTimePart,
-  type TimePart,
-} from './dateTimeWheel';
+import { currentUtcMinute } from './dateTimeWheel';
+import { DateTimeWheels } from './DateTimeWheels';
 import {
   fieldsToUtc,
   formatUtcMinute,
@@ -81,41 +74,6 @@ function isUsable(query: CoordinateQuery): boolean {
   return query.kind === 'coordinates' || query.kind === 'site';
 }
 
-/** Range of each wheel and the layout of its exact picker. */
-interface WheelSpec<Part extends DateTimePart = DateTimePart> {
-  readonly part: Part;
-  readonly value: number;
-  readonly min: number;
-  readonly max: number;
-  readonly wrap: boolean;
-  /** Values per row in the exact picker, or null when the part is only set with its wheel (hour, minute). */
-  readonly columns: number | null;
-}
-
-function wheelSpecs(parts: Record<DateTimePart, number>): {
-  readonly date: readonly WheelSpec<DatePart>[];
-  readonly time: readonly WheelSpec<TimePart>[];
-} {
-  const { day, month, year, hour, minute } = parts;
-  return {
-    date: [
-      { part: 'day', value: day, min: 1, max: daysInMonth(year, month), wrap: true, columns: 7 },
-      { part: 'month', value: month, min: 1, max: 12, wrap: true, columns: 4 },
-      { part: 'year', value: year, min: MIN_YEAR, max: MAX_YEAR, wrap: false, columns: 5 },
-    ],
-    time: [
-      { part: 'hour', value: hour, min: 0, max: 23, wrap: true, columns: null },
-      { part: 'minute', value: minute, min: 0, max: 59, wrap: true, columns: null },
-    ],
-  };
-}
-
-function isDatePart(part: DateTimePart): part is DatePart {
-  return part === 'day' || part === 'month' || part === 'year';
-}
-
-const TIME_INDEX: Record<TimePart, 0 | 1> = { hour: 0, minute: 1 };
-
 export function ConfigPanel({
   selection,
   loading,
@@ -135,15 +93,18 @@ export function ConfigPanel({
   const siteTitleId = useId();
   const searchFieldId = useId();
   const searchHintId = useId();
-  const dateFieldId = useId();
-  const timeFieldId = useId();
   const zoneFieldId = useId();
   const timeHintId = useId();
   const siteListHintId = useId();
   const apolloTitleId = useId();
-  const listedSites = useMemo(() => {
+  // Two parts: points with a first-person relief model (the featured demo
+  // points first) and points shown in third person only, each alphabetical.
+  const { listedSites, thirdPersonStart } = useMemo(() => {
     const collator = new Intl.Collator(locale, { sensitivity: 'base' });
-    return [...FEATURED_SITES, ...[...MORE_SITES].sort((a, b) => collator.compare(a.name, b.name))];
+    const others = [...MORE_SITES].sort((a, b) => collator.compare(a.name, b.name));
+    const firstPerson = [...FEATURED_SITES.filter((site) => hasFirstPersonView(site.id)), ...others.filter((site) => hasFirstPersonView(site.id))];
+    const thirdPerson = [...FEATURED_SITES, ...others].filter((site) => !hasFirstPersonView(site.id));
+    return { listedSites: [...firstPerson, ...thirdPerson], thirdPersonStart: firstPerson.length };
   }, [locale]);
   const listedIndex = listedSites.findIndex((site) => site.id === selection.siteId);
   const siteOptions = useMemo(
@@ -154,16 +115,13 @@ export function ConfigPanel({
       }),
     [listedSites],
   );
-  const wheelHintId = useId();
-  const wheelIdBase = useId();
-  const pickerId = useId();
+  const apolloIndex = listedSites.findIndex((site) => site.id === APOLLO_11_SITE_ID);
+  const siteBadges = apolloIndex === -1 ? undefined : { [apolloIndex]: config.siteList.apolloBadge };
   const [searchInput, setSearchInput] = useState(() =>
     formatCoordinateQuery(selection.latitudeDeg, selection.longitudeEastDeg),
   );
   const [zone, setZone] = useState<TimeZoneMode>('utc');
   const [fields, setFields] = useState<DateTimeFields>(() => utcToFields(selection.utc, 'utc'));
-  /** Date part whose exact picker is open; the time is only set with its wheels. */
-  const [pickerPart, setPickerPart] = useState<DatePart | null>(null);
   // Follow instants chosen outside this panel (an inverse search match): when
   // the selected instant changes and the fields do not already show it, the
   // fields are rewritten (to the minute) and the wheels roll to it.
@@ -171,13 +129,8 @@ export function ConfigPanel({
   if (selection.utc !== followedUtc) {
     setFollowedUtc(selection.utc);
     const shown = fieldsToUtc(fields, zone, followedUtc);
-    if (!shown.ok || shown.iso !== selection.utc) {
-      setFields(utcToFields(selection.utc, zone));
-      setPickerPart(null);
-    }
+    if (!shown.ok || shown.iso !== selection.utc) setFields(utcToFields(selection.utc, zone));
   }
-  const wheels = wheelSpecs(fieldParts(fields));
-  const pickerWheel = wheels.date.find((wheel) => wheel.part === pickerPart);
   const query = parseCoordinateQuery(searchInput);
   const parsedTime = fieldsToUtc(fields, zone, selection.utc);
   const custom = selection.siteId === CUSTOM_SITE_ID;
@@ -189,47 +142,12 @@ export function ConfigPanel({
   const valid = parsedTime.ok && isUsable(query);
   const canUpdate = valid && !loading && !upToDate;
 
-  const wheelId = (part: DateTimePart) => `${wheelIdBase}-${part}`;
-
   /** Sets every wheel at once; with effects on, each wheel rolls to its new value by itself. */
   function handleLive() {
     const utc = currentUtcMinute();
-    setPickerPart(null);
     setFields(utcToFields(utc, zone));
     onUtcChange(utc);
   }
-
-  function handlePartChange(part: DateTimePart, value: number) {
-    if (isDatePart(part)) handleFieldsChange({ date: changeDatePart(fields.date, part, value) });
-    else handleFieldsChange({ time: changeTimePart(fields, TIME_INDEX[part], value) });
-  }
-
-  /** The label above a date wheel toggles that part's picker. */
-  function togglePicker(part: DatePart) {
-    setPickerPart((current) => (current === part ? null : part));
-  }
-
-  function closePicker(restoreFocus: boolean) {
-    const part = pickerPart;
-    setPickerPart(null);
-    if (restoreFocus && part) document.getElementById(wheelId(part))?.focus({ preventScroll: true });
-  }
-
-  function handlePickerSelect(value: number) {
-    if (!pickerPart) return;
-    handlePartChange(pickerPart, value);
-    closePicker(true);
-  }
-
-  const monthName = (style: 'short' | 'long') => (month: number) =>
-    new Intl.DateTimeFormat(locale, { month: style, timeZone: 'UTC' }).format(new Date(Date.UTC(2000, month - 1, 1)));
-  /** Month options show the number and the short name, e.g. "02 feb". */
-  const formatMonth = (month: number) => (
-    <>
-      <span className="datetime-picker__month-number">{String(month).padStart(2, '0')}</span>
-      <span className="datetime-picker__month-name">{monthName('short')(month).replace('.', '')}</span>
-    </>
-  );
 
   function handlePresetChange(siteId: SiteId) {
     const site = findSite(siteId);
@@ -251,8 +169,7 @@ export function ConfigPanel({
     setSearchInput(formatCoordinateQuery(site.latitudeDeg, site.longitudeEastDeg));
   }
 
-  function handleFieldsChange(change: Partial<DateTimeFields>) {
-    const next = { ...fields, ...change };
+  function handleFieldsChange(next: DateTimeFields) {
     setFields(next);
     const parsed = fieldsToUtc(next, zone, selection.utc);
     if (parsed.ok) onUtcChange(parsed.iso);
@@ -260,7 +177,6 @@ export function ConfigPanel({
 
   /** Switching zones keeps the same instant: the fields are rewritten in the new zone. */
   function handleZoneChange(next: TimeZoneMode) {
-    setPickerPart(null);
     if (parsedTime.ok) setFields(utcToFields(parsedTime.iso, next));
     setZone(next);
   }
@@ -342,6 +258,11 @@ export function ConfigPanel({
           label={config.siteList.label}
           placeholder={config.siteList.placeholder}
           options={siteOptions}
+          badges={siteBadges}
+          sections={[
+            { label: config.siteList.sections.firstPerson, start: 0 },
+            { label: config.siteList.sections.thirdPerson, start: thirdPersonStart },
+          ]}
           value={listedIndex === -1 ? null : listedIndex}
           describedBy={siteListHintId}
           onChange={(index) => {
@@ -424,62 +345,13 @@ export function ConfigPanel({
         help={config.dateTimeInfo}
         actions={<button type="button" className="text-button" onClick={handleLive} title={config.liveHint}>{config.live}</button>}
       >
-        <div className="datetime">
-          {(['date', 'time'] as const).map((group) => (
-            <div
-              key={group}
-              className="datetime__field"
-              role="group"
-              aria-labelledby={group === 'date' ? dateFieldId : timeFieldId}
-            >
-              <span className="search-field__label" id={group === 'date' ? dateFieldId : timeFieldId}>
-                {group === 'date' ? config.date : config.time}
-              </span>
-              <div className={`datetime__wheels datetime__wheels--${group}`}>
-                {wheels[group].map(({ part, value, min, max, wrap, columns }) => {
-                  // Hour and minute have no exact picker: they are only set with their wheels.
-                  const pickable = isDatePart(part) && columns !== null;
-                  return (
-                    <NumberWheel
-                      key={part}
-                      id={wheelId(part)}
-                      label={config.wheels[part]}
-                      value={value}
-                      min={min}
-                      max={max}
-                      wrap={wrap}
-                      animated={animated}
-                      invalid={!parsedTime.ok}
-                      describedBy={pickable ? `${timeHintId} ${wheelHintId}` : timeHintId}
-                      open={pickable && pickerPart === part}
-                      popupId={pickable ? pickerId : undefined}
-                      onOpen={pickable ? () => togglePicker(part) : undefined}
-                      onChange={(next) => handlePartChange(part, next)}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-          <span id={wheelHintId} className="visually-hidden">
-            {config.wheelPickerHint}
-          </span>
-          {pickerWheel && pickerWheel.columns !== null && (
-            <DateTimePartPicker
-              key={pickerWheel.part}
-              id={pickerId}
-              title={config.picker[pickerWheel.part]}
-              value={pickerWheel.value}
-              min={pickerWheel.min}
-              max={pickerWheel.max}
-              columns={pickerWheel.columns}
-              format={pickerWheel.part === 'month' ? formatMonth : undefined}
-              describe={pickerWheel.part === 'month' ? monthName('long') : undefined}
-              onSelect={handlePickerSelect}
-              onClose={closePicker}
-            />
-          )}
-        </div>
+        <DateTimeWheels
+          fields={fields}
+          onChange={handleFieldsChange}
+          invalid={!parsedTime.ok}
+          animated={animated}
+          describedBy={timeHintId}
+        />
 
         <div className="datetime__zone" role="group" aria-labelledby={zoneFieldId}>
           <span className="search-field__label" id={zoneFieldId}>

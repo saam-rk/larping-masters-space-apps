@@ -108,6 +108,34 @@ export function buildObserverRangeParameters(query: ObserverRangeQuery): Paramet
   ];
 }
 
+export interface ObserverSeriesQuery extends Omit<ObserverQuery, 'instant'> {
+  readonly start: Date;
+  readonly stop: Date;
+  /** Equal intervals between start and stop (Horizons unitless step): `intervals + 1` rows, both ends included. */
+  readonly intervals: number;
+}
+
+/**
+ * The same observer table as `buildObserverParameters` (quantities 4, 13 and
+ * 20, airless, AU), sampled from `start` to `stop` instead of one TLIST
+ * instant: one request returns every sample of a playback interval.
+ */
+export function buildObserverSeriesParameters(query: ObserverSeriesQuery): Parameters {
+  const single = buildObserverParameters({ ...query, instant: query.start }).filter(
+    ([key]) => key !== 'TLIST' && key !== 'TLIST_TYPE',
+  );
+  return [
+    ...single,
+    ['START_TIME', quoted(formatHorizonsCalendarTime(query.start))],
+    ['STOP_TIME', quoted(formatHorizonsCalendarTime(query.stop))],
+    ['STEP_SIZE', quoted(String(query.intervals))],
+  ];
+}
+
+export function buildObserverSeriesUrl(query: ObserverSeriesQuery, baseUrl: string = HORIZONS_API_URL): string {
+  return toUrl(buildObserverSeriesParameters(query), baseUrl);
+}
+
 /**
  * Full request URL. Values are percent-encoded with `%20` for spaces and `%27`
  * for single quotes, as the API documentation recommends.

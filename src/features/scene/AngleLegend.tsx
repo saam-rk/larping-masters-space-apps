@@ -12,13 +12,14 @@ import { angularSeparationDeg, azimuthDifferenceDeg, elevationExaggeration, norm
 import type { SceneBody } from './bodies';
 import { BODY_COLOR } from './bodyColors';
 
-export function AngleLegend({ bodies }: { bodies: readonly SceneBody[] }) {
+export function AngleLegend({ bodies, exaggeration: drawn }: { bodies: readonly SceneBody[]; exaggeration?: number }) {
   const { messages, locale } = useI18n();
   const { legend } = messages.scene.guides;
   const sun = bodies.find((body) => body.body === 'sun');
   const earth = bodies.find((body) => body.body === 'earth');
   if (bodies.length === 0) return null;
-  const exaggeration = elevationExaggeration(bodies.map((body) => body.elevationDeg));
+  // The view's factor when given (it can include a playback course); otherwise from these bodies.
+  const exaggeration = drawn ?? elevationExaggeration(bodies.map((body) => body.elevationDeg));
   return (
     <table className="angle-legend">
       <caption className="visually-hidden">{legend.caption}</caption>

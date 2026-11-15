@@ -14,10 +14,15 @@
  * (an appearance model, not the terrain of the site; the observer stays on the
  * reference sphere); the Earth's and the Sun's rotation are not modeled.
  *
- * The horizon compass (plane, grid, N/E/S/W and each body's azimuth and
- * elevation guides) grows with the camera distance, so it stays a readable
- * reference plane from close to the site out to beyond the Sun. It can be
- * hidden from the view controls.
+ * The horizon compass (plane, grid, ring and N/E/S/W) and the body guides
+ * (each body's dashed line from the observer and its azimuth and elevation
+ * guides) are switched separately ("Compass" and "Guide"). The compass and
+ * the angle guides grow with the camera distance, so they stay a readable
+ * reference plane from close to the site out to beyond the Sun.
+ *
+ * `FollowCamera` keeps a body centered during playback: the camera turns
+ * around the site to the opposite azimuth, keeping its distance and height
+ * angle, so the body stands straight beyond the site.
  *
  * The camera distance is shared with the zoom slider as a level (see
  * `zoom.ts` and `OrbitZoom`).
@@ -27,11 +32,13 @@ import { Html, Line, OrbitControls, PerspectiveCamera } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import { Vector3, type Camera, type Group, type Quaternion } from 'three';
-import type { EphemerisResponse } from '../../../shared/ephemeris';
+import { BODY_IDS, type EphemerisResponse } from '../../../shared/ephemeris';
 import { useI18n } from '../../i18n/context';
 import { BODY_COLOR } from './bodyColors';
-import { MOON_RADIUS_KM, radiusForAngularDiameter, type PlacedBodies, type SceneBody } from './bodies';
+import { MOON_RADIUS_KM, radiusForAngularDiameter, type BodyCourses, type PlacedBodies, type SceneBody } from './bodies';
+import { CourseLine } from './CourseLine';
 import { CelestialModel } from './CelestialModel';
+import { FollowCamera } from './FollowCamera';
 import { moonOrientation, northAlongLunarAxis } from './celestialOrientation';
 import { horizontalToDirection, horizontalToPosition, type Vector3Tuple } from './geometry';
 import { glowTexture } from './glow';
@@ -72,23 +79,25 @@ function keepAboveSurface(camera: Camera) {
   if (offset.length() < minimum) camera.position.copy(center.add(offset.setLength(minimum)));
 }
 
-function Body({ body, label, orientation }: { body: SceneBody; label: string; orientation: Quaternion }) {
+function Body({ body, label, orientation, showGuide }: { body: SceneBody; label: string; orientation: Quaternion; showGuide: boolean }) {
   const position = horizontalToPosition(body.azimuthDeg, body.elevationDeg, body.rangeKm);
   const radius = radiusForAngularDiameter(body.angularDiameterDeg, body.rangeKm);
   const style = BODY_STYLE[body.body];
   const isSun = body.body === 'sun';
   return (
     <group>
-      <Line
-        points={[[0, 0, 0], position]}
-        color={style.color}
-        lineWidth={1.2}
-        dashed
-        dashSize={body.rangeKm / 160}
-        gapSize={body.rangeKm / 320}
-        transparent
-        opacity={0.75}
-      />
+      {showGuide && (
+        <Line
+          points={[[0, 0, 0], position]}
+          color={style.color}
+          lineWidth={1.2}
+          dashed
+          dashSize={body.rangeKm / 160}
+          gapSize={body.rangeKm / 320}
+          transparent
+          opacity={0.75}
+        />
+      )}
       <group position={position}>
         <CelestialModel
           body={body.body}
@@ -126,7 +135,7 @@ const AZIMUTH_GUIDE = 1;
  * Each body gets a line on the plane along its azimuth and an arc from the
  * plane up (or down) to its elevation, so both angles read against the plane.
  */
-function HorizonCompass({ bodies }: { bodies: readonly SceneBody[] }) {
+function HorizonCompass({ bodies, showCompass, showGuides }: { bodies: readonly SceneBody[]; showCompass: boolean; showGuides: boolean }) {
   const { messages } = useI18n();
   const group = useRef<Group>(null);
 
@@ -160,20 +169,24 @@ function HorizonCompass({ bodies }: { bodies: readonly SceneBody[] }) {
 
   return (
     <group ref={group} scale={HORIZON_RADIUS_KM}>
-      {/* Lifted slightly (in compass units) so the plane does not fight with the Moon surface. */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.0006, 0]}>
-        <circleGeometry args={[1, 96]} />
-        <meshBasicMaterial color="#0a3a1c" transparent opacity={0.45} depthWrite={false} />
-      </mesh>
-      <gridHelper args={[2, 18, '#39ff88', '#14532d']} position={[0, 0.0011, 0]} />
-      <Line points={ring} color="#39ff88" lineWidth={1.5} />
-      {guides.map(({ body, azimuth, arc }) => (
+      {showCompass && (
+        <>
+          {/* Lifted slightly (in compass units) so the plane does not fight with the Moon surface. */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.0006, 0]}>
+            <circleGeometry args={[1, 96]} />
+            <meshBasicMaterial color="#0a3a1c" transparent opacity={0.45} depthWrite={false} />
+          </mesh>
+          <gridHelper args={[2, 18, '#39ff88', '#14532d']} position={[0, 0.0011, 0]} />
+          <Line points={ring} color="#39ff88" lineWidth={1.5} />
+        </>
+      )}
+      {showGuides && guides.map(({ body, azimuth, arc }) => (
         <group key={body}>
           <Line points={azimuth} color={BODY_STYLE[body].color} lineWidth={1.5} transparent opacity={0.85} />
           <Line points={arc} color={BODY_STYLE[body].color} lineWidth={1.5} transparent opacity={0.85} />
         </group>
       ))}
-      {compass.map(({ label, az }) => (
+      {showCompass && compass.map(({ label, az }) => (
         <Html key={label} position={horizontalToPosition(az, 0, 1.12)} center className="scene__compass">
           {label}
         </Html>
@@ -187,11 +200,22 @@ export interface ThirdPersonControls {
   /** Zoom level (0..1, see `zoom.ts`). */
   readonly zoom: number;
   readonly onZoomChange: (level: number) => void;
-  /** Draw the horizon compass (plane, grid, ring, N/E/S/W and the angle guides). */
+  /** Draw the horizon compass (plane, grid, ring and N/E/S/W). */
   readonly showHorizon: boolean;
+  /** Draw the body guides (dashed line from the observer, azimuth and elevation guides). */
+  readonly showGuides: boolean;
   /** Visual (schematic, default) or real scale (see `sceneScale.ts`). */
   readonly scale: SceneScale;
+  /** Bodies the starting camera is placed from (held during playback, see `SkyScene`). */
+  readonly anchor: PlacedBodies;
+  /** Body kept centered by the camera, or null. */
+  readonly follow: SceneBody | null;
+  /** Each body's playback course to draw as a dotted line, or null. */
+  readonly courses: BodyCourses | null;
+  /** Vertical exaggeration of the visual scale (see `elevationExaggeration`). */
+  readonly exaggeration: number;
 }
+
 
 /** Contents of the shared canvas for the third-person view (see `SkyScene`). */
 export function ThirdPersonView(props: { data: EphemerisResponse; bodies: PlacedBodies; controls: ThirdPersonControls }) {
@@ -209,7 +233,7 @@ function RealScaleView({
   controls: ThirdPersonControls;
 }) {
   const { messages } = useI18n();
-  const cameraPosition = useMemo(() => initialCamera(bodies.placed), [bodies.placed]);
+  const cameraPosition = useMemo(() => initialCamera(controls.anchor.placed), [controls.anchor.placed]);
   const sun = bodies.placed.find((body) => body.body === 'sun');
   const { latitudeDeg, longitudeEastDeg } = data.site;
   const moonQuaternion = useMemo(() => moonOrientation(latitudeDeg, longitudeEastDeg), [latitudeDeg, longitudeEastDeg]);
@@ -255,10 +279,11 @@ function RealScaleView({
       </mesh>
 
       {bodies.placed.map((body) => (
-        <Body key={body.body} body={body} label={messages.bodies[body.body]} orientation={bodyQuaternion} />
+        <Body key={body.body} body={body} label={messages.bodies[body.body]} orientation={bodyQuaternion} showGuide={controls.showGuides} />
       ))}
 
       <OrbitControls
+        makeDefault
         enablePan={false}
         minDistance={MIN_CAMERA_DISTANCE_KM}
         maxDistance={MAX_CAMERA_DISTANCE_KM}
@@ -275,7 +300,18 @@ function RealScaleView({
         constrain={keepAboveSurface}
       />
       {/* After the controls, so it sizes the compass from this frame's camera. */}
-      {controls.showHorizon && <HorizonCompass bodies={bodies.placed} />}
+      {(controls.showHorizon || controls.showGuides) && (
+        <HorizonCompass bodies={bodies.placed} showCompass={controls.showHorizon} showGuides={controls.showGuides} />
+      )}
+      <FollowCamera body={controls.follow} constrain={keepAboveSurface} />
+      {controls.courses && BODY_IDS.map((body) => {
+        const course = controls.courses![body];
+        const range = course[0]?.rangeKm ?? 1;
+        return (
+          <CourseLine key={body} body={body} dot={range / 300} gap={range / 160}
+            points={course.map((sample) => horizontalToPosition(sample.azimuthDeg, sample.elevationDeg, sample.rangeKm))} />
+        );
+      })}
     </>
   );
 }

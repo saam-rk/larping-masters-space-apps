@@ -8,7 +8,9 @@
  * binoculars, without moving the viewer. Arrow keys and +/- do the same when
  * the canvas has focus. The zoom level is shared with the slider of the view
  * (see `zoom.ts`): the rig follows `zoom` and reports its own changes through
- * `onZoomChange`.
+ * `onZoomChange`. With `follow` (playback), the gaze turns to that body's
+ * azimuth and elevation whenever they change; dragging still looks around
+ * until the next frame.
  */
 
 import { useThree } from '@react-three/fiber';
@@ -35,13 +37,15 @@ interface EyeLevelRigProps {
   readonly zoom: number;
   /** Called when the wheel, a pinch or the keys change the zoom level. */
   readonly onZoomChange: (level: number) => void;
+  /** Direction the gaze stays on (azimuth and elevation, degrees), or null. */
+  readonly follow?: { readonly azimuthDeg: number; readonly elevationDeg: number } | null;
 }
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-export function EyeLevelRig({ eye, initialHeadingDeg, initialPitchDeg, zoom, onZoomChange }: EyeLevelRigProps) {
+export function EyeLevelRig({ eye, initialHeadingDeg, initialPitchDeg, zoom, onZoomChange, follow = null }: EyeLevelRigProps) {
   const get = useThree((state) => state.get);
   const [eyeX, eyeY, eyeZ] = eye;
   // Latest zoom props for the listeners, without re-registering them on every change.
@@ -49,6 +53,16 @@ export function EyeLevelRig({ eye, initialHeadingDeg, initialPitchDeg, zoom, onZ
   const onZoomChangeRef = useRef(onZoomChange);
   /** Sets the field of view from outside the listeners (the slider); null until mounted. */
   const setFovRef = useRef<((fovDeg: number) => void) | null>(null);
+  /** Turns the gaze from outside the listeners (the followed body); null until mounted. */
+  const lookAtRef = useRef<((headingDeg: number, pitchDeg: number) => void) | null>(null);
+  const followAzimuth = follow?.azimuthDeg ?? null;
+  const followElevation = follow?.elevationDeg ?? null;
+  const followRef = useRef<readonly [number, number] | null>(null);
+
+  // Before the rig effect below, so a new eye already knows the followed direction.
+  useEffect(() => {
+    followRef.current = followAzimuth === null || followElevation === null ? null : [followAzimuth, followElevation];
+  }, [followAzimuth, followElevation]);
 
   useEffect(() => {
     onZoomChangeRef.current = onZoomChange;
@@ -101,6 +115,17 @@ export function EyeLevelRig({ eye, initialHeadingDeg, initialPitchDeg, zoom, onZ
       zoomRef.current = level;
       onZoomChangeRef.current(level);
     };
+
+    lookAtRef.current = (headingDeg: number, pitchDeg: number) => {
+      view.heading = ((headingDeg % 360) + 360) % 360;
+      view.pitch = clamp(pitchDeg, MIN_PITCH_DEG, MAX_PITCH_DEG);
+      apply();
+    };
+    // A new eye during playback keeps looking at the followed body.
+    if (followRef.current) {
+      view.heading = ((followRef.current[0] % 360) + 360) % 360;
+      view.pitch = clamp(followRef.current[1], MIN_PITCH_DEG, MAX_PITCH_DEG);
+    }
 
     setFovRef.current = (fovDeg: number) => {
       if (Math.abs(levelForFov(fovDeg) - levelForFov(view.fov)) <= ZOOM_EPSILON) return;
@@ -177,6 +202,7 @@ export function EyeLevelRig({ eye, initialHeadingDeg, initialPitchDeg, zoom, onZ
 
     return () => {
       setFovRef.current = null;
+      lookAtRef.current = null;
       element.removeEventListener('pointerdown', onPointerDown);
       element.removeEventListener('pointermove', onPointerMove);
       element.removeEventListener('pointerup', onPointerUp);
@@ -187,6 +213,10 @@ export function EyeLevelRig({ eye, initialHeadingDeg, initialPitchDeg, zoom, onZ
       element.style.touchAction = '';
     };
   }, [get, eyeX, eyeY, eyeZ, initialHeadingDeg, initialPitchDeg]);
+
+  useEffect(() => {
+    if (followAzimuth !== null && followElevation !== null) lookAtRef.current?.(followAzimuth, followElevation);
+  }, [followAzimuth, followElevation]);
 
   return null;
 }

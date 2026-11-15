@@ -17,19 +17,29 @@
  * between the slider and the camera controls (the two third-person scales
  * keep separate levels, since their distances differ). The top-right corner
  * shows the time left until the Sun and the Earth set or rise after the
- * shown instant (see `HorizonCountdown`). `showHorizon` comes from the
- * "Compass" switch in the box title (see `CompassToggle`) and hides the
- * horizon reference in both views.
+ * shown instant (see `HorizonCountdown`), also while an interval plays.
+ * `showHorizon` comes from the "Compass" switch in the box title (see
+ * `CompassToggle`) and hides the horizon reference in both views;
+ * `showGuides` comes from the "Guide" switch (see `GuideToggle`) and hides
+ * the straight paths toward the Sun and the Earth.
+ *
+ * During playback the starting camera (and the first-person standing point)
+ * stays where the last ordinary result put it (`anchor`), instead of
+ * resetting on every frame; `follow` keeps the camera centered on one body;
+ * with the guides on, `course` (every frame of the sequence) is drawn as a
+ * dotted line per body. At visual scale the vertical exaggeration then also
+ * accounts for the whole course, so it does not change between frames.
  */
 
 import { Canvas } from '@react-three/fiber';
 import { useCallback, useMemo, useState } from 'react';
+import type { BodyId } from '../../../shared/ephemeris';
 import type { EphemerisResponse } from '../../../shared/ephemeris';
 import { APOLLO_11_SITE_ID } from '../../../shared/sites';
 import { useI18n } from '../../i18n/context';
 import { AngleLegend } from './AngleLegend';
 import { elevationExaggeration } from './angles';
-import { placeBodies } from './bodies';
+import { bodyCourses, placeBodies } from './bodies';
 import { FirstPersonView } from './FirstPersonView';
 import { HorizonCountdown } from './HorizonCountdown';
 import { ScaleToggle } from './ScaleToggle';
@@ -64,6 +74,9 @@ export default function SkyScene({
   animateReenactment = false,
   busy = false,
   playback = false,
+  showGuides = true,
+  follow = null,
+  course = null,
 }: {
   data: EphemerisResponse;
   mode: ViewMode;
@@ -73,9 +86,18 @@ export default function SkyScene({
   /** A new result is being queried: the set/rise countdown waits (see `HorizonCountdown`). */
   busy?: boolean;
   playback?: boolean;
+  /** Straight paths toward the Sun and the Earth (both views). */
+  showGuides?: boolean;
+  /** Body the camera stays centered on (playback only), or null. */
+  follow?: BodyId | null;
+  /** Every frame of the playback sequence (each body's course), or null. */
+  course?: readonly EphemerisResponse[] | null;
 }) {
   const { messages, locale } = useI18n();
   const bodies = useMemo(() => placeBodies(data), [data]);
+  // Starting camera: from the shown result, held while an interval is prepared or played.
+  const [anchor, setAnchor] = useState(bodies);
+  if (!playback && anchor !== bodies) setAnchor(bodies);
   const [scale, setScale] = useState<SceneScale>(DEFAULT_SCENE_SCALE);
   const visual = mode === 'third-person' && scale === 'visual';
   const apollo = mode === 'first-person' && data.site.id === APOLLO_11_SITE_ID;
@@ -86,7 +108,17 @@ export default function SkyScene({
     (level: number) => setZoomByKey((current) => (current[zoomKey] === level ? current : { ...current, [zoomKey]: level })),
     [zoomKey],
   );
-  const controls = { zoom, onZoomChange: setZoom, showHorizon, scale, animateReenactment };
+  const courses = useMemo(() => (course ? bodyCourses(course) : null), [course]);
+  const courseElevations = useMemo(
+    () => (courses ? [...courses.sun, ...courses.earth].map((body) => body.elevationDeg) : []),
+    [courses],
+  );
+  const exaggeration = elevationExaggeration([...bodies.placed.map((body) => body.elevationDeg), ...courseElevations]);
+  const followed = follow ? (bodies.placed.find((body) => body.body === follow) ?? null) : null;
+  const controls = {
+    zoom, onZoomChange: setZoom, showHorizon, showGuides, scale, animateReenactment, anchor, follow: followed,
+    courses: showGuides ? courses : null, exaggeration,
+  };
   const zoomText =
     mode === 'first-person'
       ? apollo
@@ -97,7 +129,6 @@ export default function SkyScene({
         : messages.scene.zoom.distance(formatDistanceKm(distanceForLevel(zoom), locale));
   // At visual scale sizes and distances are not drawn from Horizons, so nominal values do not show.
   const nominal = visual ? [] : bodies.placed.filter((body) => body.nominalSize || (mode === 'third-person' && body.nominalRange));
-  const exaggeration = elevationExaggeration(bodies.placed.map((body) => body.elevationDeg));
   const note =
     mode === 'first-person'
       ? apollo ? messages.scene.apolloReenactmentNote : messages.scene.firstPersonNote(cropSizeText(data.site.id, locale))
@@ -136,12 +167,12 @@ export default function SkyScene({
         ))}
       </div>
 
-      {!playback && <HorizonCountdown data={data} bodies={bodies} paused={busy} />}
+      <HorizonCountdown data={data} bodies={bodies} paused={busy} />
 
       {mode === 'third-person' && (
         <div className="scene__overlay">
           <ScaleToggle scale={scale} onChange={setScale} />
-          {visual && showHorizon && <AngleLegend bodies={bodies.placed} />}
+          {visual && showGuides && <AngleLegend bodies={bodies.placed} exaggeration={exaggeration} />}
         </div>
       )}
 

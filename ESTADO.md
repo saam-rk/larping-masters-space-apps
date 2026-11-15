@@ -1,5 +1,25 @@
 # Estado del proyecto
 
+## Implementation update — 2026-11-15 (branch `feat/interval-toolbar-guides`)
+
+- Interval button in the horizon toolbar; player laid over the view; interval
+  dialog with the shared date/time wheels, 16 samples by default (typed), and
+  time per sample (Sun = synodic month, Earth = draconic month, or custom
+  hours/minutes); camera centered on the Sun or Earth during playback.
+- Playback samples now come from `/api/ephemeris-series`: one Horizons range
+  request per body for up to 100 samples (same quantities and method).
+- "Guide" switch for the straight paths to the Sun and Earth in both views;
+  set/rise countdown with ↑/↓ arrows, also during playback.
+- Point list in two groups (with first person / third person only), "First
+  landing" badge on Apollo 11, no view switch for third-person-only points;
+  the "Geometric positions" line under the data table removed.
+- Follow-up: 24 samples by default; Sun/Earth presets cover half a mean
+  synodic/draconic month (half a body's course); "start at the rise of" the
+  Sun or Earth (inverse search); dotted course per body during playback
+  (Guide switch); two-column interval dialog with the Horizons details in an
+  "i"; custom step wheels centered.
+- Details and evidence: `docs/HORIZON_PLAYBACK.md`. Pending: integrator review.
+
 ## Implementation update — 2026-11-15
 
 - Branch `feat/horizon-playback`: local horizon player with a user-defined UTC

@@ -33,6 +33,13 @@
  * astronaut or the assumed horizon are drawn again as a faint translucent
  * "ghost" (see `FarBody`), so the body can always be found while its hidden
  * part does not read as visible.
+ *
+ * With the "Guide" switch on, each body gets its straight path from the
+ * viewer (see `BodyGuide`): a line on the ground plane along its azimuth out
+ * to the horizon and an arc up (or down) to its elevation, drawn over the
+ * relief like the horizon line. During playback the standing point comes
+ * from `anchor` (it does not move with each frame) and `follow` keeps the
+ * gaze on one body.
  */
 
 import { Html, Line, PerspectiveCamera, useGLTF } from '@react-three/drei';
@@ -61,7 +68,9 @@ import { useI18n } from '../../i18n/context';
 import { stageApolloScene } from './apolloScene';
 import { apolloScenePhase, type ApolloScenePhase } from './apolloTimeline';
 import { blobShadowTexture } from './blobShadow';
-import { radiusForAngularDiameter, upperLimbAboveHorizon, type PlacedBodies, type SceneBody } from './bodies';
+import { BODY_COLOR } from './bodyColors';
+import { radiusForAngularDiameter, upperLimbAboveHorizon, type BodyCourses, type PlacedBodies, type SceneBody } from './bodies';
+import { CourseLine } from './CourseLine';
 import { EYE_HEIGHT_M, EyeLevelRig } from './EyeLevelRig';
 import { horizontalToDirection, horizontalToPosition, type Vector3Tuple } from './geometry';
 import { glowTexture } from './glow';
@@ -340,7 +349,15 @@ export interface FirstPersonControls {
   readonly onZoomChange: (level: number) => void;
   /** Draw the geometric horizon line, its ticks and the compass labels. */
   readonly showHorizon: boolean;
+  /** Draw the straight paths toward the Sun and the Earth. */
+  readonly showGuides: boolean;
   readonly animateReenactment?: boolean;
+  /** Bodies the standing point and the starting gaze come from (held during playback, see `SkyScene`). */
+  readonly anchor: PlacedBodies;
+  /** Body the gaze stays on, or null. */
+  readonly follow: SceneBody | null;
+  /** Each body's playback course to draw as a dotted line, or null. */
+  readonly courses?: BodyCourses | null;
 }
 
 function Terrain({
@@ -363,7 +380,7 @@ function Terrain({
   const terrainMesh = useMemo(() => firstMesh(terrainScene), [terrainScene]);
   const frame = useTerrainFrame(terrainMesh, model, data.site.latitudeDeg, data.site.longitudeEastDeg);
 
-  const bearing = initialBearing(bodies.placed);
+  const bearing = initialBearing(controls.anchor.placed);
   // The viewer stands still on the terrain, VIEWER_DISTANCE_M from the figure along `bearing`.
   const view = useMemo(() => {
     if (!frame || !terrainMesh) return null;
@@ -404,8 +421,10 @@ function Terrain({
         initialPitchDeg={START_PITCH_DEG}
         zoom={controls.zoom}
         onZoomChange={controls.onZoomChange}
+        follow={controls.follow}
       />
-      <Sky eye={eye} floor={view.floor} bodies={bodies} showHorizon={controls.showHorizon} occluder={astronautRef} />
+      <Sky eye={eye} floor={view.floor} bodies={bodies} showHorizon={controls.showHorizon} showGuides={controls.showGuides}
+        courses={controls.courses ?? null} occluder={astronautRef} />
     </>
   );
 }
@@ -492,9 +511,9 @@ function ApolloTerrain({
       <primitive object={terrain} />
       <group ref={occluder}><primitive object={props} /></group>
       <EyeLevelRig eye={eye} initialHeadingDeg={heading} initialPitchDeg={pitch}
-        zoom={controls.zoom} onZoomChange={controls.onZoomChange} />
+        zoom={controls.zoom} onZoomChange={controls.onZoomChange} follow={controls.follow} />
       {floor && <Sky eye={eye} floor={floor} bodies={bodies} showHorizon={controls.showHorizon}
-        occluder={occluder} surfaceReenactment />}
+        showGuides={controls.showGuides} courses={controls.courses ?? null} occluder={occluder} surfaceReenactment />}
     </>
   );
 }
@@ -512,6 +531,8 @@ function Sky({
   floor,
   bodies,
   showHorizon,
+  showGuides,
+  courses,
   occluder,
   surfaceReenactment = false,
 }: {
@@ -519,6 +540,8 @@ function Sky({
   floor: BufferGeometry;
   bodies: PlacedBodies;
   showHorizon: boolean;
+  showGuides: boolean;
+  courses: BodyCourses | null;
   occluder: RefObject<Object3D | null>;
   surfaceReenactment?: boolean;
 }) {
@@ -611,10 +634,56 @@ function Sky({
         </>
       )}
 
+      {showGuides && bodies.placed.map((body) => <BodyGuide key={body.body} body={body} />)}
+      {/* Playback course: over the relief like the horizon line, so its hidden part can be followed. */}
+      {courses && (['sun', 'earth'] as const).map((body) => (
+        <CourseLine key={body} body={body} dot={260} gap={520} overTerrain renderOrder={HORIZON_RENDER_ORDER}
+          points={courses[body].map((sample) => horizontalToPosition(sample.azimuthDeg, sample.elevationDeg, HORIZON_RADIUS_M * 0.97))} />
+      ))}
       {bodies.placed.map((body) => (
         <FarBody key={body.body} body={body} label={messages.bodies[body.body]} />
       ))}
     </group>
+    </>
+  );
+}
+
+/** Nearest point of the ground guide line in front of the viewer's feet (m). */
+const GUIDE_NEAR_M = 1.5;
+/** Points of the ground guide line, spaced geometrically from near the feet to the horizon line. */
+const GUIDE_GROUND_POINTS = 48;
+
+/**
+ * Straight path toward a body from the viewer, relative to the eye: a line
+ * on the level plane through the ground under the eye, along the
+ * body's azimuth from just ahead of the feet out to the horizon radius, where
+ * it meets the horizon line, then an arc at that radius from elevation 0 to
+ * the body's elevation. Drawn over the relief (no depth test), like the
+ * horizon line: it shows a direction, not a walkable route over the terrain.
+ */
+function BodyGuide({ body }: { body: SceneBody }) {
+  const color = BODY_COLOR[body.body];
+  const ground = useMemo(() => {
+    // Level with the ground below the eye: the eye height is EYE_HEIGHT_M above it.
+    const y = -EYE_HEIGHT_M;
+    const [dx, , dz] = horizontalToDirection(body.azimuthDeg, 0);
+    const far = HORIZON_RADIUS_M * 0.98;
+    // At the far end the plane is only hundredths of a degree below the horizon line, where the arc starts.
+    return Array.from({ length: GUIDE_GROUND_POINTS + 1 }, (_, i): Vector3Tuple => {
+      const distance = GUIDE_NEAR_M * (far / GUIDE_NEAR_M) ** (i / GUIDE_GROUND_POINTS);
+      return [dx * distance, y, dz * distance];
+    });
+  }, [body.azimuthDeg]);
+  const arc = useMemo(() => {
+    const steps = Math.max(2, Math.ceil(Math.abs(body.elevationDeg) / 1.5));
+    return Array.from({ length: steps + 1 }, (_, i) =>
+      horizontalToPosition(body.azimuthDeg, (body.elevationDeg * i) / steps, HORIZON_RADIUS_M * 0.98),
+    );
+  }, [body.azimuthDeg, body.elevationDeg]);
+  return (
+    <>
+      <Line points={ground} color={color} lineWidth={1.6} transparent opacity={0.85} depthTest={false} renderOrder={HORIZON_RENDER_ORDER} />
+      <Line points={arc} color={color} lineWidth={1.6} transparent opacity={0.85} depthTest={false} renderOrder={HORIZON_RENDER_ORDER} />
     </>
   );
 }

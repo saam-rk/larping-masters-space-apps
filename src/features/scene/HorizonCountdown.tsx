@@ -1,33 +1,52 @@
 /**
  * Top-right corner of the local horizon view: time left until the Sun and the
  * Earth set (or rise, when below the horizon) after the shown site and
- * instant. Definition and method in `horizonEvents.ts`; each body needs one
- * inverse search, made when the shown result changes. Answers are kept for
- * the session, so switching views or going back to an instant does not ask
- * again; failed searches are not kept.
+ * instant. Definition and method in `horizonEvents.ts`. ↓ marks a set and ↑ a
+ * rise, in each body's color.
+ *
+ * Each body's side of the horizon is read from the shown result, so once a
+ * body has gone below its threshold the row switches to the time until it
+ * rises (and back). What a search establishes is kept for the session as a
+ * `CountdownRecord`: a later instant before the found event (e.g. the next
+ * frames of a horizon playback) is answered from it without asking again, and
+ * switching views or going back to an instant does not ask again either.
+ * Failed searches are not kept.
  *
  * JPL asks for one Horizons request at a time (see
- * `docs/LUNAR_RELIABILITY_AUDIT.md`), so the searches wait while `paused`
- * (the page's own ephemeris query is running) and run one after another,
- * not in parallel.
+ * `docs/LUNAR_RELIABILITY_AUDIT.md`), so searches run one after another and
+ * wait while `paused` (the page's own ephemeris query is running). A search
+ * already running is not restarted when the shown instant changes (playback
+ * frames); when it ends, the instant shown then is checked again.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { EphemerisResponse } from '../../../shared/ephemeris';
 import { fetchSkySearch } from '../../api/skySearchClient';
 import { formatDuration, formatUtc } from '../../format';
 import { useI18n } from '../../i18n/context';
 import type { PlacedBodies } from './bodies';
-import { countdownConditions, countdownOutcome, countdownPlan, type CountdownOutcome, type CountdownPlan } from './horizonEvents';
+import {
+  countdownConditions,
+  countdownPlan,
+  countdownRecord,
+  recallCountdown,
+  type CountdownOutcome,
+  type CountdownPlan,
+  type CountdownRecord,
+} from './horizonEvents';
 
 type Entry = CountdownOutcome | { readonly status: 'error' };
 
-/** Answers by search key, for the session. */
-const answered = new Map<string, CountdownOutcome>();
+/** What the searches established, for the session. */
+const records: CountdownRecord[] = [];
 
-function searchKey(data: EphemerisResponse, plan: CountdownPlan): string {
-  const { site, requestedUtc } = data;
-  return [site.id, site.latitudeDeg, site.longitudeEastDeg, requestedUtc, plan.body, plan.afterEvent.min, plan.afterEvent.max].join('|');
+function siteKey(data: EphemerisResponse): string {
+  return [data.site.id, data.site.latitudeDeg, data.site.longitudeEastDeg].join('|');
+}
+
+/** Identifies a failed search: site, instant, body and event. */
+function failureKey(data: EphemerisResponse, plan: CountdownPlan): string {
+  return [siteKey(data), data.requestedUtc, plan.body, plan.event].join('|');
 }
 
 export function HorizonCountdown({
@@ -42,43 +61,57 @@ export function HorizonCountdown({
 }) {
   const { messages, locale } = useI18n();
   const text = messages.scene.countdown;
-  const plans = useMemo(
-    () =>
-      bodies.placed.map((body) => {
-        const plan = countdownPlan(body, data.site);
-        return { plan, key: searchKey(data, plan) };
-      }),
-    [bodies, data],
-  );
-  const [entries, setEntries] = useState<Readonly<Record<string, Entry>>>({});
+  const site = siteKey(data);
+  const atMs = Date.parse(data.requestedUtc);
+  const plans = useMemo(() => bodies.placed.map((body) => countdownPlan(body, data.site)), [bodies, data.site]);
+  // Bumped when a search ends, so the shown instant is checked again.
+  const [version, setVersion] = useState(0);
+  const [failed, setFailed] = useState<ReadonlySet<string>>(() => new Set());
+  const running = useRef<AbortController | null>(null);
+
+  const entryFor = (plan: CountdownPlan): Entry | undefined =>
+    recallCountdown(records, site, plan, atMs) ?? (failed.has(failureKey(data, plan)) ? { status: 'error' } : undefined);
+
+  // The next body without an answer at the shown instant (none while a search runs).
+  const next = plans.find((plan) => !plan.never && entryFor(plan) === undefined);
 
   useEffect(() => {
-    if (paused) return;
+    if (paused || !next || running.current) return;
     const controller = new AbortController();
+    running.current = controller;
+    const plan = next;
+    const shown = data;
     const selection = {
-      siteId: data.site.id,
-      latitudeDeg: data.site.latitudeDeg,
-      longitudeEastDeg: data.site.longitudeEastDeg,
-      utc: data.requestedUtc,
+      siteId: shown.site.id,
+      latitudeDeg: shown.site.latitudeDeg,
+      longitudeEastDeg: shown.site.longitudeEastDeg,
+      utc: shown.requestedUtc,
     };
-    const pending = plans.filter(({ plan, key }) => !plan.never && !answered.has(key));
     void (async () => {
-      // One search at a time (JPL's serial-request policy).
-      for (const { plan, key } of pending) {
-        const result = await fetchSkySearch({ selection, direction: 'after', conditions: countdownConditions(plan) }, controller.signal);
-        if (controller.signal.aborted) return;
-        if (result.ok) {
-          const outcome = countdownOutcome(result.data);
-          answered.set(key, outcome);
-          setEntries((current) => ({ ...current, [key]: outcome }));
-        } else {
-          console.error('[horizon-countdown]', result.error.key, result.error.detail);
-          setEntries((current) => ({ ...current, [key]: { status: 'error' } }));
-        }
+      const result = await fetchSkySearch({ selection, direction: 'after', conditions: countdownConditions(plan) }, controller.signal);
+      if (controller.signal.aborted) return;
+      running.current = null;
+      if (result.ok) {
+        records.push(countdownRecord(siteKey(shown), plan, result.data));
+      } else {
+        console.error('[horizon-countdown]', result.error.key, result.error.detail);
+        setFailed((current) => new Set(current).add(failureKey(shown, plan)));
       }
+      setVersion((value) => value + 1);
     })();
-    return () => controller.abort();
-  }, [data, plans, paused]);
+    // The search keeps running across new instants; it is only cancelled below.
+  }, [paused, next, data, version]);
+
+  // Pausing or leaving the view cancels the running search.
+  useEffect(() => {
+    if (!paused) return;
+    running.current?.abort();
+    running.current = null;
+  }, [paused]);
+  useEffect(() => () => {
+    running.current?.abort();
+    running.current = null;
+  }, []);
 
   if (plans.length === 0) return null;
 
@@ -95,12 +128,15 @@ export function HorizonCountdown({
 
   return (
     <div className="scene__countdown" role="group" aria-label={text.label} title={text.detail}>
-      {plans.map(({ plan, key }) => {
-        const entry = answered.get(key) ?? entries[key];
-        const at = !plan.never && entry?.status === 'found' ? text.at(formatUtc(entry.utc)) : undefined;
+      {plans.map((plan) => {
+        const entry = plan.never ? undefined : entryFor(plan);
+        const at = entry?.status === 'found' ? text.at(formatUtc(entry.utc)) : undefined;
         return (
-          <p key={plan.body} className="scene__countdown-row" data-body={plan.body} data-pending={!plan.never && !entry}>
-            <span className="scene__countdown-event">{text.events[plan.body][plan.event]}</span>
+          <p key={plan.body} className="scene__countdown-row" data-body={plan.body} data-event={plan.event} data-pending={!plan.never && !entry}>
+            <span className="scene__countdown-event">
+              <span className="scene__countdown-arrow" aria-hidden="true">{plan.event === 'rise' ? '↑' : '↓'}</span>
+              {text.events[plan.body][plan.event]}
+            </span>
             <span className="scene__countdown-value" title={at}>
               {valueText(plan, entry)}
             </span>

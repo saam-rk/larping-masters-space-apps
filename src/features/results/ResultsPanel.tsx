@@ -88,7 +88,6 @@ export function ResultsPanel({ data, error, busy, status }: ResultsPanelProps) {
         {data.warnings.includes('PARTIAL_RESULT') && <p className="callout">{results.partial}</p>}
         {data.warnings.includes('HORIZONS_API_VERSION_UNVERIFIED') && <p className="callout">{results.versionUnverified}</p>}
 
-        <p className="terrain-note">{results.terrainWarning}</p>
       </div>
     </Box>
   );

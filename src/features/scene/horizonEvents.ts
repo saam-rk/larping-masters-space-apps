@@ -71,3 +71,71 @@ export function countdownOutcome(response: SkySearchResponse): CountdownOutcome 
   const days = Math.floor((Date.parse(response.searched.endUtc) - Date.parse(response.referenceUtc)) / 86_400_000);
   return { status: 'beyond', days: Math.max(0, days) };
 }
+
+/**
+ * What one search established, kept to answer later instants without asking
+ * again (horizon playback): from `fromUtc` on, the body stays on the same
+ * side of its threshold until the event (`found`), or through the searched
+ * span (`beyond`).
+ */
+export interface CountdownRecord {
+  /** Site identity (id and coordinates). */
+  readonly site: string;
+  readonly body: BodyId;
+  readonly event: HorizonEvent;
+  readonly fromMs: number;
+  readonly outcome: CountdownOutcome;
+  /** End of the searched span, for `beyond`. */
+  readonly untilMs: number;
+}
+
+export function countdownRecord(site: string, plan: CountdownPlan, response: SkySearchResponse): CountdownRecord {
+  return {
+    site,
+    body: plan.body,
+    event: plan.event,
+    fromMs: Date.parse(response.referenceUtc),
+    outcome: countdownOutcome(response),
+    untilMs: Date.parse(response.searched.endUtc),
+  };
+}
+
+/**
+ * The countdown at `atMs` from an earlier search of the same body and event
+ * at the same site, when that search covers it: before a found event (the
+ * first crossing after the searched instant is also the first after any
+ * later instant before it), or inside a span with no crossing. A search
+ * that ran out of budget only answers its own instant. As for single
+ * results, the threshold is the one of the searched instant (radius changes
+ * between instants are not followed). Undefined when no record covers it.
+ */
+export function recallCountdown(
+  records: readonly CountdownRecord[],
+  site: string,
+  plan: CountdownPlan,
+  atMs: number,
+): CountdownOutcome | undefined {
+  let best: CountdownOutcome | undefined;
+  let bestFrom = -Infinity;
+  for (const record of records) {
+    if (record.site !== site || record.body !== plan.body || record.event !== plan.event) continue;
+    if (record.fromMs > atMs || record.fromMs <= bestFrom) continue;
+    const { outcome } = record;
+    let answer: CountdownOutcome | undefined;
+    if (outcome.status === 'found') {
+      const eventMs = Date.parse(outcome.utc);
+      if (atMs < eventMs || (atMs === eventMs && record.fromMs === atMs)) {
+        answer = { ...outcome, seconds: Math.round((eventMs - atMs) / 1000) };
+      }
+    } else if (outcome.status === 'beyond') {
+      if (atMs < record.untilMs) answer = { status: 'beyond', days: Math.max(0, Math.floor((record.untilMs - atMs) / 86_400_000)) };
+    } else if (record.fromMs === atMs) {
+      answer = outcome;
+    }
+    if (answer) {
+      best = answer;
+      bestFrom = record.fromMs;
+    }
+  }
+  return best;
+}
