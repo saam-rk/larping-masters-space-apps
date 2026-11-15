@@ -1,0 +1,47 @@
+{
+  "id": "haworth",
+  "displayName": "Haworth",
+  "sourceUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Haworth/Haworth_final_adj_5mpp_surf.tif",
+  "sourceCatalogUrl": "https://pgda.gsfc.nasa.gov/products/78",
+  "sourceReadmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+  "siteSource": "docs/LUNAR_ADDITIONAL_SITES_RESEARCH.md catalog row 2 (Haworth), NASA Lunar Surface Data Book M2M-30044 Table A2.1-1. PGDA/Data Book reference point, not a verified IAU crater center; center of an original candidate-region polygon; not an approved landing site.",
+  "frame": "MOON_ME / DE421",
+  "referenceRadiusM": 1737400,
+  "site": {"latitudeDeg": -86.7639, "longitudeEastDeg": -22.777},
+  "ridge": {"latitudeDeg": -86.42970749479974, "longitudeEastDeg": -22.59941492452436},
+  "third": {"latitudeDeg": -86.82153064574551, "longitudeEastDeg": -21.42603472459378},
+  "cropCenterProjectedM": [-39500, 95500],
+  "cropSizeM": [12000, 14000],
+  "originProjectedM": [-38000, 90501, 1629],
+  "targetVertices": 40400,
+  "baseStridePixels": 20,
+  "candidateStridePixels": 4,
+  "refinementBatchSize": 2500,
+  "ridgePriorityMultiplier": 2.5,
+  "ridgePriorityRadiusM": 1800,
+  "maxGlbBytes": 2097152,
+  "nearDetail": {
+    "centerProjectedM": [-37977.5, 90507.5],
+    "seedBandsRadiusMStridePixels": [[35, 1], [150, 2], [500, 4]],
+    "residualPriorityBoost": 10,
+    "residualPriorityRadiusM": 550,
+    "textureSquareSizeM": 50,
+    "textureFullDetailRadiusM": 15,
+    "textureFadeEndRadiusM": 24,
+    "cameraHorizontalDirection": [-0.3420201433256687, 0.9396926207859084],
+    "cameraHeightAboveMeshM": 1.65,
+    "astronautDistanceAheadM": 5,
+    "astronautSideOffsetM": 0.65,
+    "initialMovementRadiusM": 2
+  },
+  "featureNotes": {
+    "ridge": "Highest source pixel within 250 m of the sampled skyline at grid bearing 340 degrees from the viewpoint: a crest on the north flank of the massif that dominates the grid-northwest of the crop, about 10.1 km from the site and 1,082 m above it. Descriptive label from numeric Haworth elevation and illustrative hillshade; not an IAU feature name.",
+    "third": "Off-grid holdout on the gentle terrain grid-east of the site, about 2.9 km away; no mission significance.",
+    "nearDetail": "Gentlest 25 m window (about 2.2 degree plane-fit slope) within 45 m of the saved point, about 24 m grid-east of it. Selected for scale-figure footing, not landing suitability.",
+    "crop": "12 x 14 km, shifted grid-north and grid-west of the saved point so that the massif skyline seen from the initial view (9-12 km away) lies inside the crop. A 24-bearing scan from the viewpoint found every sampled skyline point at least 990 m inside the crop boundary."
+  },
+  "siteLimitations": [
+    "The saved point lies on a broad surface that descends gently grid-east; the crop omits terrain beyond 12 x 14 km, including the lowest ground grid-southeast of the site.",
+    "The astronaut stands on a gently sloping triangle selected for footing; no claim of walkability, safe footing or landing suitability."
+  ]
+}
