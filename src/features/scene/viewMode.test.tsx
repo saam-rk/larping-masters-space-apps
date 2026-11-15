@@ -5,6 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MORE_SITES, type ObserverSiteId } from '../../../shared/sites';
 import { MESSAGES } from '../../i18n/messages';
+import { terrainForSite } from './terrain/models';
 import { ViewToggle } from './ViewToggle';
 import { useViewMode } from './viewMode';
 
@@ -47,7 +48,7 @@ function expectMode(firstPerson: boolean) {
 }
 
 describe('view selection and terrain availability', () => {
-  it.each<ObserverSiteId>(['nobile-rim-1', 'nobile-rim-2', 'shackleton-rim'])('starts in first person at %s', (siteId) => {
+  it.each<ObserverSiteId>(['nobile-rim-1', 'nobile-rim-2', 'shackleton-rim', 'amundsen-rim'])('starts in first person at %s', (siteId) => {
     render(siteId);
     expectMode(true);
     expect(option(0).getAttribute('aria-disabled')).toBe('false');
@@ -88,9 +89,18 @@ describe('view selection and terrain availability', () => {
     expectMode(true);
   });
 
-  it.each(MORE_SITES.map((site) => site.id))('shows %s in third person only (no terrain model yet)', (siteId) => {
-    render(siteId);
-    expectMode(false);
-    expect(option(0).getAttribute('aria-disabled')).toBe('true');
+  it('offers first person at a drop-down site with a terrain model (Amundsen Rim)', () => {
+    render('amundsen-rim');
+    expectMode(true);
+    expect(option(0).getAttribute('aria-disabled')).toBe('false');
   });
+
+  it.each(MORE_SITES.filter((site) => terrainForSite(site.id) === null).map((site) => site.id))(
+    'shows %s in third person only (no terrain model yet)',
+    (siteId) => {
+      render(siteId);
+      expectMode(false);
+      expect(option(0).getAttribute('aria-disabled')).toBe('true');
+    },
+  );
 });
