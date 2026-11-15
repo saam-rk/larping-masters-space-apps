@@ -1,0 +1,175 @@
+{
+  "status": "passed",
+  "method": "22-step binary ray search per sampled screen column, actual reimported terrain",
+  "limitations": "14 columns in two saved landscape cameras; not an exhaustive horizon calculation or unrestricted-camera guarantee",
+  "samples": [
+    {
+      "camera": "Initial | 1.65 m above final mesh.007",
+      "screenU": 0.05,
+      "skylineV": 0.7515313625335693,
+      "distanceM": 336.8115611740169,
+      "hitBlenderM": [
+        231.053466796875,
+        -254.94650268554688,
+        22.02304458618164
+      ],
+      "within100MOfCropBoundary": false
+    },
+    {
+      "camera": "Initial | 1.65 m above final mesh.007",
+      "screenU": 0.2,
+      "skylineV": 0.7463071346282959,
+      "distanceM": 6065.3223520580505,
+      "hitBlenderM": [
+        3830.61572265625,
+        -4702.482421875,
+        376.50262451171875
+      ],
+      "within100MOfCropBoundary": false
+    },
+    {
+      "camera": "Initial | 1.65 m above final mesh.007",
+      "screenU": 0.35,
+      "skylineV": 0.7750296592712402,
+      "distanceM": 4118.7779551403355,
+      "hitBlenderM": [
+        2006.1658935546875,
+        -3598.495361328125,
+        366.5477294921875
+      ],
+      "within100MOfCropBoundary": false
+    },
+    {
+      "camera": "Initial | 1.65 m above final mesh.007",
+      "screenU": 0.5,
+      "skylineV": 0.7762246131896973,
+      "distanceM": 3353.8542170725013,
+      "hitBlenderM": [
+        1072.9012451171875,
+        -3187.14404296875,
+        307.0874938964844
+      ],
+      "within100MOfCropBoundary": false
+    },
+    {
+      "camera": "Initial | 1.65 m above final mesh.007",
+      "screenU": 0.65,
+      "skylineV": 0.7674813270568848,
+      "distanceM": 3595.903045263804,
+      "hitBlenderM": [
+        515.5078125,
+        -3574.49609375,
+        297.7917175292969
+      ],
+      "within100MOfCropBoundary": false
+    },
+    {
+      "camera": "Initial | 1.65 m above final mesh.007",
+      "screenU": 0.8,
+      "skylineV": 0.7566416263580322,
+      "distanceM": 3867.7470505541482,
+      "hitBlenderM": [
+        -105.9427261352539,
+        -3888.302734375,
+        272.3201904296875
+      ],
+      "within100MOfCropBoundary": false
+    },
+    {
+      "camera": "Initial | 1.65 m above final mesh.007",
+      "screenU": 0.95,
+      "skylineV": 0.7576100826263428,
+      "distanceM": 1904.6391049532685,
+      "hitBlenderM": [
+        -350.534423828125,
+        -1902.48974609375,
+        127.07608795166016
+      ],
+      "within100MOfCropBoundary": false
+    },
+    {
+      "camera": "Shifted | movement and transition check.007",
+      "screenU": 0.05,
+      "skylineV": 0.739300012588501,
+      "distanceM": 215.10610763696278,
+      "hitBlenderM": [
+        163.49972534179688,
+        -140.92947387695312,
+        15.965346336364746
+      ],
+      "within100MOfCropBoundary": false
+    },
+    {
+      "camera": "Shifted | movement and transition check.007",
+      "screenU": 0.2,
+      "skylineV": 0.7252998352050781,
+      "distanceM": 213.50909511660097,
+      "hitBlenderM": [
+        143.4999542236328,
+        -166.69119262695312,
+        14.532899856567383
+      ],
+      "within100MOfCropBoundary": false
+    },
+    {
+      "camera": "Shifted | movement and transition check.007",
+      "screenU": 0.35,
+      "skylineV": 0.7173874378204346,
+      "distanceM": 283.93025737361296,
+      "hitBlenderM": [
+        163.4957733154297,
+        -246.339111328125,
+        17.882999420166016
+      ],
+      "within100MOfCropBoundary": false
+    },
+    {
+      "camera": "Shifted | movement and transition check.007",
+      "screenU": 0.5,
+      "skylineV": 0.7508485317230225,
+      "distanceM": 4105.768786491149,
+      "hitBlenderM": [
+        2022.6470947265625,
+        -3573.75,
+        362.55322265625
+      ],
+      "within100MOfCropBoundary": false
+    },
+    {
+      "camera": "Shifted | movement and transition check.007",
+      "screenU": 0.65,
+      "skylineV": 0.7565832138061523,
+      "distanceM": 3374.005869789648,
+      "hitBlenderM": [
+        1097.4356689453125,
+        -3199.37060546875,
+        309.2508850097656
+      ],
+      "within100MOfCropBoundary": false
+    },
+    {
+      "camera": "Shifted | movement and transition check.007",
+      "screenU": 0.8,
+      "skylineV": 0.7519736289978027,
+      "distanceM": 3471.0037734512043,
+      "hitBlenderM": [
+        553.7492065429688,
+        -3441.85498046875,
+        290.74517822265625
+      ],
+      "within100MOfCropBoundary": false
+    },
+    {
+      "camera": "Shifted | movement and transition check.007",
+      "screenU": 0.95,
+      "skylineV": 0.7462332248687744,
+      "distanceM": 3960.127220560893,
+      "hitBlenderM": [
+        33.40306091308594,
+        -3980.048095703125,
+        292.23516845703125
+      ],
+      "within100MOfCropBoundary": false
+    }
+  ]
+}

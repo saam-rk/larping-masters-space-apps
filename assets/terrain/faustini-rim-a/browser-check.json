@@ -1,0 +1,51 @@
+{
+  "status": "passed",
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+  "threeRevision": "187",
+  "deviceClass": "Desktop embedded browser, NOT a physical mobile device",
+  "viewport": [
+    390,
+    844
+  ],
+  "siteId": "faustini-rim-a",
+  "terrainVertices": 40400,
+  "terrainTriangles": 80290,
+  "imageDecode": {
+    "color": [
+      512,
+      512
+    ],
+    "normal": [
+      2048,
+      2048
+    ],
+    "roughness": [
+      256,
+      256
+    ]
+  },
+  "standardPbrChannels": true,
+  "clampToEdge": true,
+  "astronautHeightM": 1.6999999580117995,
+  "maxSoleGapM": 6.824796727755711e-9,
+  "controls": [
+    {
+      "name": "site",
+      "heightM": 46.56743014114397
+    },
+    {
+      "name": "ridge",
+      "heightM": 460.0908813476228
+    },
+    {
+      "name": "third",
+      "heightM": -167.061528442758
+    }
+  ],
+  "movementCases": 102,
+  "fullBodyFramingFailures": [],
+  "renderedDrawCalls": 14,
+  "renderedTriangles": 81190,
+  "webglError": 0,
+  "mobilePerformance": "Pending: no physical device, throttled-network or FPS claim"
+}
