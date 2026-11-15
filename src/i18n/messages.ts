@@ -13,6 +13,7 @@ import type { PresenceState } from '../../shared/presence.js';
 import type { SkySearchDirection } from '../../shared/skySearch.js';
 import type { SkySearchExample } from '../features/sky-search/examples';
 import type { SourceId } from '../features/results/sourceCatalog';
+import type { SceneScale } from '../features/scene/sceneScale';
 import type { ViewMode } from '../features/scene/viewMode';
 import type { EffectMode } from '../preferences/preferences';
 
@@ -90,9 +91,8 @@ export interface Messages {
       readonly label: string;
       /** Shown while no option is chosen. */
       readonly placeholder: string;
-      readonly options: readonly string[];
-      /** States that the options are placeholders without coordinates. */
-      readonly hint: string;
+      /** Read with the drop-down: what its points are and how they are computed. */
+      readonly hint: (count: number) => string;
     };
     readonly searchErrors: {
       readonly empty: string;
@@ -169,9 +169,40 @@ export interface Messages {
       readonly fieldOfView: (degrees: string) => string;
       /** Slider value in third person: camera distance to the site in km. */
       readonly distance: (km: string) => string;
+      /** Slider value in third person at visual scale (distances carry no meaning): level in percent. */
+      readonly level: (percent: string) => string;
+    };
+    /** Visual/real scale switch of the third-person view. */
+    readonly scale: {
+      readonly label: string;
+      readonly names: Readonly<Record<SceneScale, string>>;
+      /** Tooltip of each option. */
+      readonly titles: Readonly<Record<SceneScale, string>>;
+    };
+    /** Angle guides of the visual scale: 3D labels (value already formatted with its degree sign) and the legend table. */
+    readonly guides: {
+      readonly azimuth: (value: string) => string;
+      readonly elevation: (value: string) => string;
+      readonly separation: (value: string) => string;
+      readonly azimuthDifference: (value: string) => string;
+      readonly legend: {
+        readonly caption: string;
+        readonly azimuth: string;
+        readonly elevation: string;
+        /** Row header of the Earth − Sun difference; short. */
+        readonly difference: string;
+        readonly differenceTitle: string;
+        readonly separation: string;
+        /** Footer: vertical exaggeration factor of the drawn elevations (e.g. `10`). */
+        readonly exaggeration: (factor: string) => string;
+      };
     };
     readonly firstPersonNote: string;
-    readonly thirdPersonNote: string;
+    readonly thirdPersonNote: {
+      /** `exaggeration`: vertical exaggeration factor of the drawn elevations, or null when drawn true. */
+      readonly visual: (exaggeration: string | null) => string;
+      readonly real: string;
+    };
     readonly moon: string;
     readonly loading: string;
     readonly terrainLoading: string;
@@ -195,6 +226,8 @@ export interface Messages {
     readonly sources: string;
     readonly siteSource: string;
     readonly siteSourceCustom: string;
+    /** Note for an entry that shares another site's coordinates (Site20v2). */
+    readonly siteVariant: (baseName: string) => string;
     readonly coordinates: string;
     readonly positionSource: string;
     readonly partial: string;
@@ -346,20 +379,21 @@ const es: Messages = {
     site: 'Punto de referencia',
     siteInfo: [
       'Elige el punto del polo sur lunar desde el que se calcula el cielo.',
-      'Son los centros de regiones candidatas publicadas por NASA (Lunar Surface Data Book). No son lugares de aterrizaje aprobados.',
-      'También puedes escribir unas coordenadas en grados (latitud, longitud; sur y oeste en negativo o con S/O) o buscar un punto por su nombre. Un punto personalizado se calcula con el mismo método, a altura 0 km y sin relieve, y no tiene fuente publicada.',
-      'La lista «Más puntos de referencia» tiene valores provisionales: aún no tienen coordenadas y elegirlos no cambia el cálculo.',
+      'Son los centros de regiones candidatas publicadas por NASA (Lunar Surface Data Book, tabla A2.1-1). No son lugares de aterrizaje aprobados.',
+      'Arriba están los tres puntos principales de la demo. El desplegable «Más puntos de referencia» tiene el resto de puntos documentados, en orden alfabético; se calculan con el mismo método y se muestran en la vista en tercera persona (la vista en primera persona con relieve solo existe para algunos puntos).',
+      'También puedes escribir unas coordenadas en grados (latitud, longitud; sur y oeste en negativo o con S/O) o buscar un punto por su nombre o código (p. ej. «Haworth», «DM1», «Site20v2»). Un punto personalizado se calcula con el mismo método, a altura 0 km y sin relieve, y no tiene fuente publicada.',
+      '«Leibnitz Beta Plateau, extended boundaries» (Site20v2) es una variante del producto de terreno de PGDA con las mismas coordenadas que Leibnitz Beta Plateau (Site20): su cálculo es idéntico.',
     ],
     customTag: 'PERSONALIZADO',
     customName: 'Punto personalizado',
     search: 'Coordenadas o nombre',
-    searchPlaceholder: '-85.4381, 37.36667 · Shackleton',
+    searchPlaceholder: '-85.4381, 37.36667 · Haworth',
     searchReading: (coordinates) => `Punto personalizado: ${coordinates}`,
     morePoints: {
       label: 'Más puntos de referencia',
-      placeholder: 'Elegir un punto (provisional)…',
-      options: ['Punto de ejemplo A', 'Punto de ejemplo B', 'Punto de ejemplo C'],
-      hint: 'Valores provisionales: aún no tienen coordenadas y no cambian el cálculo.',
+      placeholder: 'Elegir otro punto…',
+      hint: (count) =>
+        `${count} puntos más del Lunar Surface Data Book, en orden alfabético. Se calculan con el mismo método y se muestran en tercera persona.`,
     },
     searchErrors: {
       empty: 'Escribe unas coordenadas o el nombre de un punto.',
@@ -408,10 +442,10 @@ const es: Messages = {
         'El astronauta es una figura de escala ilustrativa. Las estrellas son decorativas y no reproducen el cielo real.',
       ],
       'third-person': [
-        'Arrastra para girar la vista; usa la rueda, pellizca o mueve el control de zoom (+, barra y −) para acercar o alejar. Puedes alejarte hasta más allá del Sol. El botón Brújula, junto a 1ª P y 3ª P, muestra u oculta el plano del horizonte, su cuadrícula y las guías; el botón de las esquinas abre la vista a pantalla completa.',
-        'A escala, en kilómetros: la Luna es una esfera de 1737,4 km de radio y el Sol y la Tierra están a la distancia y con el tamaño que da JPL Horizons. Por eso se ven pequeños: alejarte muestra el sistema Tierra-Luna.',
-        'El plano verde es el horizonte local de referencia (elevación 0), tangente en el lugar, con la brújula N/E/S/O; crece al alejarte para seguir sirviendo de referencia. Para el Sol y la Tierra, una línea de color sobre el plano marca su azimut y un arco, su elevación; las líneas discontinuas van del observador a cada uno. La línea gris es el eje de rotación lunar.',
-        'No están a escala el marcador del observador, los halos que ayudan a localizar el Sol y la Tierra ni el tamaño del plano. La Luna no tiene relieve y las estrellas son decorativas.',
+        'Arrastra para girar la vista; usa la rueda, pellizca o mueve el control de zoom (+, barra y −) para acercar o alejar. El selector Escala, arriba a la izquierda, cambia entre la escala visual y la real. El botón Brújula, junto a 1ª P y 3ª P, muestra u oculta el plano del horizonte, su cuadrícula y las guías de ángulos; el botón de las esquinas abre la vista a pantalla completa.',
+        'Escala visual (predeterminada): un esquema del cielo local que no está a escala. El Sol y la Tierra aparecen en su azimut real (el de JPL Horizons que muestra el panel de datos), sobre una cúpula de radio fijo y con un tamaño ampliado: en esta escala, la distancia y el tamaño no significan nada. Cerca del polo sur suelen estar a pocos grados del horizonte, así que la elevación se dibuja ampliada en vertical (×2 a ×10, indicado en la nota y en la tabla); las etiquetas dan siempre el valor real. Sobre el plano verde (elevación 0), un arco de color va del norte al azimut de cada uno y otro vertical sube del plano a su elevación, con su valor. La línea blanca discontinua une el Sol y la Tierra e indica su separación angular; el arco blanco sobre el plano, su diferencia de azimut. La tabla resume los valores y la diferencia Tierra − Sol. La separación se calcula con trigonometría esférica a partir del azimut y la elevación reales.',
+        'Escala real, en kilómetros: la Luna es una esfera de 1737,4 km de radio y el Sol y la Tierra están a la distancia y con el tamaño que da JPL Horizons. Por eso se ven pequeños: al alejarte se ve el sistema Tierra-Luna, y puedes ir más allá del Sol. El plano verde es el horizonte local de referencia, tangente en el lugar, con la brújula N/E/S/O; crece al alejarte para seguir sirviendo de referencia. Las líneas y arcos de color marcan el azimut y la elevación; la línea gris es el eje de rotación lunar.',
+        'En ninguna de las dos escalas están a escala el marcador del observador, los halos que ayudan a localizar el Sol y la Tierra ni el tamaño del plano. La Luna no tiene relieve y las estrellas son decorativas. No es un análisis de visibilidad, energía, comunicaciones ni idoneidad de aterrizaje.',
       ],
     },
     views: {
@@ -433,9 +467,39 @@ const es: Messages = {
       out: 'Alejar',
       fieldOfView: (degrees) => `Campo de visión vertical: ${degrees}°`,
       distance: (km) => `Distancia de la cámara al lugar: ${km} km`,
+      level: (percent) => `Zoom de la escala visual: ${percent} %`,
+    },
+    scale: {
+      label: 'Escala',
+      names: { visual: 'Visual', real: 'Real' },
+      titles: {
+        visual: 'Escala visual: azimut real, elevación ampliada si es pequeña y guías de ángulos; tamaños y distancias no a escala',
+        real: 'Escala real: la Luna, la Tierra y el Sol a escala, en kilómetros',
+      },
+    },
+    guides: {
+      azimuth: (value) => `Az ${value}`,
+      elevation: (value) => `El ${value}`,
+      separation: (value) => `Separación ${value}`,
+      azimuthDifference: (value) => `ΔAz ${value}`,
+      legend: {
+        caption: 'Azimut y elevación del Sol y la Tierra desde el lugar, su diferencia y su separación angular',
+        azimuth: 'Az',
+        elevation: 'El',
+        difference: 'Δ T − S',
+        differenceTitle: 'Diferencia Tierra − Sol. En azimut, el giro más corto; positivo hacia el este (sentido horario).',
+        separation: 'Separación',
+        exaggeration: (factor) => `Elevación dibujada ×${factor}`,
+      },
     },
     firstPersonNote: 'Relieve LOLA 10 × 10 km · luz ilustrativa · figura 1,70 m',
-    thirdPersonNote: 'A escala · marcador y halos no a escala',
+    thirdPersonNote: {
+      visual: (exaggeration) =>
+        exaggeration
+          ? `Escala visual · azimut real, elevación dibujada ×${exaggeration}; tamaños y distancias no a escala`
+          : 'Escala visual · direcciones reales; tamaños y distancias no a escala',
+      real: 'A escala · marcador, halos, brújula y eje lunar no a escala',
+    },
     moon: 'Luna',
     loading: 'Cargando vista 3D…',
     terrainLoading: 'Cargando relieve…',
@@ -462,6 +526,8 @@ const es: Messages = {
     sources: 'Fuentes',
     siteSource: 'Punto de referencia',
     siteSourceCustom: 'coordenadas introducidas a mano, sin fuente publicada',
+    siteVariant: (baseName) =>
+      `Variante de terreno ampliada (PGDA, producto 78) con las mismas coordenadas que ${baseName}; el cálculo es idéntico.`,
     coordinates: 'Coordenadas',
     positionSource: 'Posiciones',
     partial: 'Resultado incompleto: uno de los objetos no se pudo calcular.',
@@ -471,11 +537,11 @@ const es: Messages = {
     sourcesResearch: 'Consultadas en la investigación (no integradas ni validadas en la app)',
     sourceReasons: {
       lunarSurfaceDataBook:
-        'Nombres y coordenadas de los tres puntos de referencia; son centros de regiones candidatas, no lugares de aterrizaje aprobados.',
+        'Nombres y coordenadas de todos los puntos de referencia predefinidos; son centros de regiones candidatas, no lugares de aterrizaje aprobados.',
       horizonsApi: 'Calcula azimut, elevación, tamaño angular y distancia del Sol y la Tierra desde el punto lunar elegido.',
       horizonsManual: 'Define las cantidades del observador y los marcadores de presencia que traducimos a los estados del panel.',
       jplApiPolicy: 'Normas de uso y política CORS: por eso la consulta pasa por nuestra ruta de servidor y se guarda en caché.',
-      pgda78: 'Relieve LOLA de 5 m/píxel del que salen las mallas 3D de 10 × 10 km de Nobile Rim 1, Nobile Rim 2 y Shackleton Rim en primera persona.',
+      pgda78: 'Relieve LOLA de 5 m/píxel del que salen las mallas 3D de 10 × 10 km de Nobile Rim 1, Nobile Rim 2 y Shackleton Rim en primera persona; también documenta la variante ampliada Site20v2.',
       pgda78Readme: 'Unidades, marco MOON_ME/DE421 y proyección estereográfica polar con los que situamos el punto sobre la malla.',
       barker2021: 'Cita del producto DM2: método de los mapas LOLA mejorados, sus errores y el cálculo de horizontes.',
       spaceAppsChallenge: 'Enunciado del reto que define el alcance del proyecto.',
@@ -714,20 +780,21 @@ const en: Messages = {
     site: 'Reference point',
     siteInfo: [
       'Choose the lunar south-pole point the sky is computed from.',
-      'They are the centers of candidate regions published by NASA (Lunar Surface Data Book). They are not approved landing sites.',
-      'You can also type coordinates in degrees (latitude, longitude; south and west negative or with S/W) or search a point by name. A custom point is computed with the same method, at 0 km height and without terrain, and has no published source.',
-      'The "More reference points" list has placeholder values: they have no coordinates yet and choosing one does not change the calculation.',
+      'They are the centers of candidate regions published by NASA (Lunar Surface Data Book, table A2.1-1). They are not approved landing sites.',
+      'The three main demo points are listed first. The "More reference points" drop-down has the other documented points, in alphabetical order; they are computed with the same method and shown in the third-person view (the first-person terrain view only exists for some points).',
+      'You can also type coordinates in degrees (latitude, longitude; south and west negative or with S/W) or search a point by name or code (e.g. "Haworth", "DM1", "Site20v2"). A custom point is computed with the same method, at 0 km height and without terrain, and has no published source.',
+      '"Leibnitz Beta Plateau, extended boundaries" (Site20v2) is a PGDA terrain-product variant with the same coordinates as Leibnitz Beta Plateau (Site20): its calculation is identical.',
     ],
     customTag: 'CUSTOM',
     customName: 'Custom point',
     search: 'Coordinates or name',
-    searchPlaceholder: '-85.4381, 37.36667 · Shackleton',
+    searchPlaceholder: '-85.4381, 37.36667 · Haworth',
     searchReading: (coordinates) => `Custom point: ${coordinates}`,
     morePoints: {
       label: 'More reference points',
-      placeholder: 'Choose a point (placeholder)…',
-      options: ['Sample point A', 'Sample point B', 'Sample point C'],
-      hint: 'Placeholder values: they have no coordinates yet and do not change the calculation.',
+      placeholder: 'Choose another point…',
+      hint: (count) =>
+        `${count} more points from the Lunar Surface Data Book, in alphabetical order. They are computed with the same method and shown in third person.`,
     },
     searchErrors: {
       empty: 'Type coordinates or the name of a point.',
@@ -776,10 +843,10 @@ const en: Messages = {
         'The astronaut is an illustrative scale figure. The stars are decorative and do not reproduce the real sky.',
       ],
       'third-person': [
-        'Drag to rotate the view; use the wheel, a pinch or the zoom control (+, bar and −) to zoom in or out. You can zoom out beyond the Sun. The Compass button, next to 1ST and 3RD, shows or hides the horizon plane, its grid and the guides; the corners button opens the view full screen.',
-        'To scale, in kilometers: the Moon is a sphere of 1,737.4 km radius and the Sun and the Earth are at the distance and size given by JPL Horizons. That is why they look small: zoom out to see the Earth–Moon system.',
-        'The green plane is the local reference horizon (elevation 0), tangent at the site, with the N/E/S/W compass; it grows as you zoom out so it stays a reference. For the Sun and the Earth, a colored line on the plane marks the azimuth and an arc the elevation; the dashed lines run from the observer to each one. The gray line is the lunar spin axis.',
-        'Not to scale: the observer marker, the glows that help find the Sun and the Earth, and the plane size. The Moon has no relief and the stars are decorative.',
+        'Drag to rotate the view; use the wheel, a pinch or the zoom control (+, bar and −) to zoom in or out. The Scale switch at the top left changes between the visual and the real scale. The Compass button, next to 1ST and 3RD, shows or hides the horizon plane, its grid and the angle guides; the corners button opens the view full screen.',
+        'Visual scale (default): a schematic local sky, not to scale. The Sun and the Earth are at their true azimuth (the JPL Horizons value shown in the data panel), on a dome of fixed radius and enlarged: at this scale, distance and size mean nothing. Near the south pole they are usually a few degrees from the horizon, so elevation is drawn with a vertical exaggeration (×2 to ×10, shown in the note and the table); the labels always give the true value. On the green plane (elevation 0), a colored arc runs from north to each azimuth and a vertical one rises from the plane to each elevation, with its value. The dashed white line joins the Sun and the Earth and gives their angular separation; the white arc on the plane, their azimuth difference. The table sums up the values and the Earth − Sun difference. The separation is computed with spherical trigonometry from the true azimuth and elevation.',
+        'Real scale, in kilometers: the Moon is a sphere of 1,737.4 km radius and the Sun and the Earth are at the distance and size given by JPL Horizons. That is why they look small: zoom out to see the Earth–Moon system, and on beyond the Sun. The green plane is the local reference horizon, tangent at the site, with the N/E/S/W compass; it grows as you zoom out so it stays a reference. The colored lines and arcs mark the azimuth and elevation; the gray line is the lunar spin axis.',
+        'At neither scale are the observer marker, the glows that help find the Sun and the Earth, or the plane size to scale. The Moon has no relief and the stars are decorative. This is not a visibility, power, communications or landing-suitability analysis.',
       ],
     },
     views: {
@@ -801,9 +868,39 @@ const en: Messages = {
       out: 'Zoom out',
       fieldOfView: (degrees) => `Vertical field of view: ${degrees}°`,
       distance: (km) => `Camera distance to the site: ${km} km`,
+      level: (percent) => `Visual scale zoom: ${percent}%`,
+    },
+    scale: {
+      label: 'Scale',
+      names: { visual: 'Visual', real: 'Real' },
+      titles: {
+        visual: 'Visual scale: true azimuth, elevation stretched when low, and angle guides; sizes and distances not to scale',
+        real: 'Real scale: the Moon, the Earth and the Sun to scale, in kilometers',
+      },
+    },
+    guides: {
+      azimuth: (value) => `Az ${value}`,
+      elevation: (value) => `El ${value}`,
+      separation: (value) => `Separation ${value}`,
+      azimuthDifference: (value) => `ΔAz ${value}`,
+      legend: {
+        caption: 'Azimuth and elevation of the Sun and the Earth from the site, their difference and their angular separation',
+        azimuth: 'Az',
+        elevation: 'El',
+        difference: 'Δ E − S',
+        differenceTitle: 'Earth − Sun difference. In azimuth, the shortest turn; positive toward east (clockwise).',
+        separation: 'Separation',
+        exaggeration: (factor) => `Elevation drawn ×${factor}`,
+      },
     },
     firstPersonNote: 'LOLA relief 10 × 10 km · illustrative light · 1.70 m figure',
-    thirdPersonNote: 'To scale · marker and glows not to scale',
+    thirdPersonNote: {
+      visual: (exaggeration) =>
+        exaggeration
+          ? `Visual scale · true azimuth, elevation drawn ×${exaggeration}; sizes and distances not to scale`
+          : 'Visual scale · true directions; sizes and distances not to scale',
+      real: 'To scale · marker, glows, compass and lunar axis not to scale',
+    },
     moon: 'Moon',
     loading: 'Loading 3D view…',
     terrainLoading: 'Loading relief…',
@@ -830,6 +927,8 @@ const en: Messages = {
     sources: 'Sources',
     siteSource: 'Reference point',
     siteSourceCustom: 'coordinates typed by hand, no published source',
+    siteVariant: (baseName) =>
+      `Extended terrain-product variant (PGDA product 78) with the same coordinates as ${baseName}; the calculation is identical.`,
     coordinates: 'Coordinates',
     positionSource: 'Positions',
     partial: 'Incomplete result: one of the objects could not be computed.',
@@ -839,11 +938,11 @@ const en: Messages = {
     sourcesResearch: 'Consulted during research (not integrated or validated in the app)',
     sourceReasons: {
       lunarSurfaceDataBook:
-        'Names and coordinates of the three reference points; they are centers of candidate regions, not approved landing sites.',
+        'Names and coordinates of every predefined reference point; they are centers of candidate regions, not approved landing sites.',
       horizonsApi: 'Computes azimuth, elevation, angular size and range of the Sun and the Earth from the chosen lunar point.',
       horizonsManual: 'Defines the observer quantities and the presence markers we turn into the panel states.',
       jplApiPolicy: 'Usage rules and CORS policy: the reason the query goes through our server route and is cached.',
-      pgda78: 'LOLA 5 m/pixel terrain behind the 10 × 10 km 3D meshes of Nobile Rim 1, Nobile Rim 2 and Shackleton Rim in first person.',
+      pgda78: 'LOLA 5 m/pixel terrain behind the 10 × 10 km 3D meshes of Nobile Rim 1, Nobile Rim 2 and Shackleton Rim in first person; it also documents the extended Site20v2 variant.',
       pgda78Readme: 'Units, MOON_ME/DE421 frame and polar stereographic projection used to place the point on the mesh.',
       barker2021: 'Citation for the DM2 product: method of the improved LOLA maps, their errors and horizon computation.',
       spaceAppsChallenge: 'Challenge statement that defines the project scope.',

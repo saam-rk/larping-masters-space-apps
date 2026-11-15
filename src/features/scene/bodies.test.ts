@@ -14,9 +14,11 @@ describe('placeBodies', () => {
     expect(sun?.angularDiameterDeg).toBeCloseTo(1941.825 / 3600, 9);
     expect(sun?.rangeKm).toBeCloseTo(0.98796880248943 * AU_KM, 3);
     expect(sun?.nominalSize || sun?.nominalRange).toBe(false);
-    // Physical radii recovered from diameter and range: about 695,700 km and 6,378 km.
-    expect(radiusForAngularDiameter(sun!.angularDiameterDeg, sun!.rangeKm)).toBeCloseTo(695_700, -3);
-    expect(radiusForAngularDiameter(earth!.angularDiameterDeg, earth!.rangeKm)).toBeCloseTo(6378, -1);
+    // Physical radii recovered from diameter and range match the "Target radii" of the
+    // Horizons headers (Sun 695,700.0 km; Earth equatorial 6,378.137 km), within the
+    // rounding of the printed diameter.
+    expect(radiusForAngularDiameter(sun!.angularDiameterDeg, sun!.rangeKm)).toBeCloseTo(695_700, 0);
+    expect(radiusForAngularDiameter(earth!.angularDiameterDeg, earth!.rangeKm)).toBeCloseTo(6378.137, 2);
   });
 
   it('flags the Earth upper limb above the plane while its center is below', () => {
@@ -40,6 +42,8 @@ describe('placeBodies', () => {
     expect(placed[0]?.nominalSize).toBe(true);
     expect(placed[0]?.nominalRange).toBe(true);
     expect(placed[0]?.angularDiameterDeg).toBeCloseTo(0.533, 2);
+    // The nominal diameter and the radius formula invert each other.
+    expect(radiusForAngularDiameter(placed[0]!.angularDiameterDeg, placed[0]!.rangeKm)).toBeCloseTo(695_700, 6);
   });
 });
 

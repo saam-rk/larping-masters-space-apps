@@ -42,7 +42,7 @@ server/              Backend logic, framework-independent            backend
 shared/              Contract shared by browser and server            backend + science
   ephemeris.ts         API request/response types and error codes
   skySearch.ts         inverse search contract and 4-decimal range matching
-  sites.ts             the three reference sites, their source, custom points
+  sites.ts             27 reference sites (3 featured), their source, custom points
   time.ts              UTC input parsing and the supported range
   presence.ts          meaning of the Horizons sky-presence markers
   samples/             saved sample derived from the fixtures
@@ -171,8 +171,12 @@ route.
   positive elevation does not prove visibility from the ground, solar power,
   or a communication link.
 - Range and range-rate are returned but not shown in the main summary.
-- The three points are reference points from the NASA Lunar Surface Data
-  Book, not approved landing sites. Custom points are user input with no
+- The 27 predefined points are reference points from the NASA Lunar Surface
+  Data Book (table A2.1-1), not approved landing sites. Three are featured
+  in the selector; the other 24 (docs/LUNAR_ADDITIONAL_SITES_RESEARCH.md)
+  are in a drop-down and use the third-person view only, since they have no
+  terrain model. "Leibnitz Beta Plateau, extended boundaries" (PGDA Site20v2)
+  shares the Site20 coordinates; typed coordinates resolve to Site20. Custom points are user input with no
   source; they are not checked against any terrain or landing data.
 
 ## Deployment

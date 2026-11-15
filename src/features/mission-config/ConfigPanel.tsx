@@ -1,9 +1,9 @@
 /**
- * Site and time selection: the three reference points (a terminal-style
- * radio list with their coordinates), a search box for custom coordinates or
- * a point name (filled in when a reference point is picked), a drop-down of
- * further reference points (placeholder options for now; choosing one does
- * not change the calculation), date and time wheels with a time zone wheel
+ * Site and time selection: the three featured reference points (a
+ * terminal-style radio list with their coordinates), a search box for custom
+ * coordinates or a point name or code (filled in when a reference point is
+ * picked), a drop-down with the other reference points in alphabetical order
+ * (choosing one selects it exactly like a featured point), date and time wheels with a time zone wheel
  * (UTC, the time NASA uses for launches, or the browser's local zone) and the
  * update button. Explanations live in each section's help dialog.
  *
@@ -13,8 +13,8 @@
  * (D-020). Saved samples, failed requests and partial results remain retryable.
  */
 
-import { useId, useState, type FormEvent } from 'react';
-import { CUSTOM_SITE_ID, findSite, REFERENCE_SITES, type SiteId } from '../../../shared/sites';
+import { useId, useMemo, useState, type FormEvent } from 'react';
+import { CUSTOM_SITE_ID, FEATURED_SITES, findSite, MORE_SITES, siteCode, type SiteId } from '../../../shared/sites';
 import type { EphemerisSelection } from '../../api/ephemerisClient';
 import { formatCoordinates } from '../../format';
 import { useI18n } from '../../i18n/context';
@@ -58,6 +58,9 @@ interface ConfigPanelProps {
   readonly onUtcChange: (utc: string) => void;
   readonly onUpdate: () => void;
 }
+
+/** Names listed in the "several points match" hint before it is cut short. */
+const MAX_AMBIGUOUS_NAMES = 6;
 
 function isUsable(query: CoordinateQuery): boolean {
   return query.kind === 'coordinates' || query.kind === 'site';
@@ -119,8 +122,19 @@ export function ConfigPanel({
   const zoneFieldId = useId();
   const timeHintId = useId();
   const morePointsHintId = useId();
-  // Placeholder drop-down: the choice is only shown, it is not part of the selection.
-  const [morePoint, setMorePoint] = useState<number | null>(null);
+  const moreSites = useMemo(() => {
+    const collator = new Intl.Collator(locale, { sensitivity: 'base' });
+    return [...MORE_SITES].sort((a, b) => collator.compare(a.name, b.name));
+  }, [locale]);
+  const moreIndex = moreSites.findIndex((site) => site.id === selection.siteId);
+  const moreOptions = useMemo(
+    () =>
+      moreSites.map((site) => {
+        const code = siteCode(site);
+        return code ? `${site.name} · ${code}` : site.name;
+      }),
+    [moreSites],
+  );
   const wheelHintId = useId();
   const wheelIdBase = useId();
   const pickerId = useId();
@@ -237,7 +251,9 @@ export function ConfigPanel({
   if (query.kind === 'empty') searchHint = { text: config.searchErrors.empty, error: true };
   else if (query.kind === 'invalid') searchHint = { text: config.searchErrors[query.reason], error: true };
   else if (query.kind === 'ambiguous') {
-    searchHint = { text: config.searchErrors.ambiguous(query.matches.map((site) => site.name).join(', ')), error: true };
+    const names = query.matches.slice(0, MAX_AMBIGUOUS_NAMES).map((site) => site.name);
+    if (query.matches.length > MAX_AMBIGUOUS_NAMES) names.push('…');
+    searchHint = { text: config.searchErrors.ambiguous(names.join(', ')), error: true };
   } else if (custom) {
     const coordinates = formatCoordinates(selection.latitudeDeg, selection.longitudeEastDeg, locale, messages.hemisphere);
     searchHint = { text: config.searchReading(coordinates), error: false };
@@ -293,7 +309,7 @@ export function ConfigPanel({
         tagTone="warning"
       >
         <div className="site-list" role="radiogroup" aria-labelledby={siteTitleId}>
-          {REFERENCE_SITES.map((option) => (
+          {FEATURED_SITES.map((option) => (
             <label key={option.id} className="site-option">
               <input
                 type="radio"
@@ -345,14 +361,17 @@ export function ConfigPanel({
         <WheelSelect
           label={config.morePoints.label}
           placeholder={config.morePoints.placeholder}
-          options={config.morePoints.options}
-          value={morePoint}
+          options={moreOptions}
+          value={moreIndex === -1 ? null : moreIndex}
           describedBy={morePointsHintId}
-          onChange={setMorePoint}
+          onChange={(index) => {
+            const site = moreSites[index];
+            if (site) handlePresetChange(site.id);
+          }}
         />
-        {/* Also in the help dialog; read with the drop-down so its placeholder nature is not missed. */}
+        {/* Also in the help dialog; read with the drop-down. */}
         <p id={morePointsHintId} className="visually-hidden">
-          {config.morePoints.hint}
+          {config.morePoints.hint(moreSites.length)}
         </p>
       </Box>
 

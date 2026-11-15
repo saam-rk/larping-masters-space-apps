@@ -1142,6 +1142,10 @@ input[aria-invalid='true'] {
   border: 0.0625rem solid var(--line-dim);
   background: var(--panel-solid);
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.6);
+  /* About eight rows; longer lists scroll. */
+  max-height: 16.75rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .wheel-select__list[hidden] {
@@ -1298,6 +1302,8 @@ input[aria-invalid='true'] {
   position: relative;
   flex: 1;
   min-height: 0;
+  /* Size queries for the overlays; every child is absolutely positioned, so containment does not change the layout. */
+  container: scene / size;
   /* Keep 3D labels (HTML overlays) inside the view. */
   overflow: hidden;
   transition: opacity 0.55s ease;
@@ -1364,6 +1370,93 @@ input[aria-invalid='true'] {
 
 .scene__label--small {
   font-size: 0.8em;
+}
+
+/* Angle values of the visual-scale guides: a dark halo keeps them legible over the grid. */
+.scene__label--guide {
+  text-shadow:
+    0 0 0.25rem #000,
+    0 0 0.5rem #000;
+}
+
+/* Third-person scale switch and, at visual scale, the angle legend: top left over the view. */
+.scene__overlay {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  max-width: calc(100% - 3.5rem);
+  pointer-events: none;
+}
+
+.scale-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-size: 0.85em;
+  pointer-events: auto;
+}
+
+.scale-toggle__label {
+  color: var(--muted);
+  letter-spacing: var(--title-spacing);
+  text-transform: var(--title-case);
+}
+
+.angle-legend {
+  border-collapse: collapse;
+  font-family: var(--font-ui);
+  font-size: 0.8em;
+  font-variant-numeric: tabular-nums;
+  background: rgba(0, 0, 0, 0.62);
+  border: 0.0625rem solid rgba(62, 232, 255, 0.35);
+}
+
+.angle-legend th,
+.angle-legend td {
+  padding: 0.05rem 0.45rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.angle-legend thead th {
+  color: var(--muted);
+  font-weight: normal;
+}
+
+.angle-legend tbody th {
+  text-align: left;
+  font-weight: normal;
+}
+
+.angle-legend__difference {
+  color: #f4f1e8;
+}
+
+tr:not(.angle-legend__difference) + .angle-legend__difference th,
+tr:not(.angle-legend__difference) + .angle-legend__difference td {
+  border-top: 0.0625rem solid rgba(244, 241, 232, 0.25);
+}
+
+/* Too little room for the table over a short or narrow view: the 3D labels carry the values (full screen shows it). */
+@container scene (max-height: 20rem) or (max-width: 26rem) {
+  .angle-legend,
+  .scale-toggle__label {
+    display: none;
+  }
+}
+
+.angle-legend tfoot td {
+  text-align: left;
+  color: var(--amber);
+}
+
+.angle-legend__difference th[title] {
+  cursor: help;
+  text-decoration: underline dotted;
 }
 
 .scene__label--muted {

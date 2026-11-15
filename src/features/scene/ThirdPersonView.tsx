@@ -1,5 +1,7 @@
 /**
- * Third-person view to scale, in kilometers: the Moon as a sphere under the
+ * Third-person view. With the visual scale (default) it shows the schematic
+ * sky of `VisualScaleView`; with the real scale, everything to scale in
+ * kilometers: the Moon as a sphere under the
  * observer, the local horizon plane tangent at the site, and the Sun and
  * Earth at their Horizons range along the same azimuth/elevation as the
  * results panel, with radii from the Horizons angular diameter.
@@ -15,24 +17,26 @@
  * hidden from the view controls.
  *
  * The camera distance is shared with the zoom slider as a level (see
- * `zoom.ts`): `OrbitZoom` moves the camera when the level changes and reports
- * the distance after the wheel, a pinch or a new result moves it.
+ * `zoom.ts` and `OrbitZoom`).
  */
 
 import { Html, Line, OrbitControls, PerspectiveCamera } from '@react-three/drei';
-import { useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useMemo, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
+import { useMemo, useRef } from 'react';
 import { Vector3, type Camera, type Group } from 'three';
 import type { EphemerisResponse } from '../../../shared/ephemeris';
 import { useI18n } from '../../i18n/context';
+import { BODY_COLOR } from './bodyColors';
 import { MOON_RADIUS_KM, radiusForAngularDiameter, type PlacedBodies, type SceneBody } from './bodies';
 import { horizontalToDirection, horizontalToPosition, type Vector3Tuple } from './geometry';
 import { glowTexture } from './glow';
+import { OrbitZoom } from './OrbitZoom';
+import type { SceneScale } from './sceneScale';
+import { VisualScaleView } from './VisualScaleView';
 import {
   MAX_CAMERA_DISTANCE_KM,
   MIN_CAMERA_DISTANCE_KM,
   START_CAMERA_DISTANCE_KM,
-  ZOOM_EPSILON,
   distanceForLevel,
   levelForDistance,
 } from './zoom';
@@ -45,8 +49,8 @@ const MOON_CENTER: Vector3Tuple = [0, -MOON_RADIUS_KM, 0];
 const MIN_CAMERA_ALTITUDE_KM = 20;
 
 const BODY_STYLE = {
-  sun: { color: '#ffc233', glow: 0.07 },
-  earth: { color: '#3ee8ff', glow: 0.035 },
+  sun: { color: BODY_COLOR.sun, glow: 0.07 },
+  earth: { color: BODY_COLOR.earth, glow: 0.035 },
 } as const;
 
 /** Camera above and behind the site, looking toward the Earth (or the Sun) so it shows past the horizon. */
@@ -166,36 +170,6 @@ function HorizonCompass({ bodies }: { bodies: readonly SceneBody[] }) {
   );
 }
 
-/**
- * Keeps the camera distance and the zoom level in step. The orbit target is
- * the site (the origin, panning is off), so the distance is the length of the
- * camera position.
- */
-function OrbitZoom({ zoom, onZoomChange }: { zoom: number; onZoomChange: (level: number) => void }) {
-  const get = useThree((state) => state.get);
-  const reported = useRef<number | null>(null);
-
-  // Runs only on rendered frames (on-demand loop): after each camera change.
-  useFrame(({ camera }) => {
-    const level = levelForDistance(camera.position.length());
-    if (reported.current === null || Math.abs(level - reported.current) > ZOOM_EPSILON) {
-      reported.current = level;
-      onZoomChange(level);
-    }
-  });
-
-  useEffect(() => {
-    if (reported.current !== null && Math.abs(zoom - reported.current) <= ZOOM_EPSILON) return;
-    const { camera, invalidate } = get();
-    camera.position.setLength(distanceForLevel(zoom));
-    keepAboveSurface(camera);
-    reported.current = levelForDistance(camera.position.length());
-    invalidate();
-  }, [zoom, get]);
-
-  return null;
-}
-
 /** Settings of the third-person view shared with the DOM controls (see `SkyScene`). */
 export interface ThirdPersonControls {
   /** Zoom level (0..1, see `zoom.ts`). */
@@ -203,10 +177,17 @@ export interface ThirdPersonControls {
   readonly onZoomChange: (level: number) => void;
   /** Draw the horizon compass (plane, grid, ring, N/E/S/W and the angle guides). */
   readonly showHorizon: boolean;
+  /** Visual (schematic, default) or real scale (see `sceneScale.ts`). */
+  readonly scale: SceneScale;
 }
 
 /** Contents of the shared canvas for the third-person view (see `SkyScene`). */
-export function ThirdPersonView({
+export function ThirdPersonView(props: { data: EphemerisResponse; bodies: PlacedBodies; controls: ThirdPersonControls }) {
+  return props.controls.scale === 'visual' ? <VisualScaleView bodies={props.bodies} controls={props.controls} /> : <RealScaleView {...props} />;
+}
+
+/** Third-person view to scale, in kilometers. */
+function RealScaleView({
   data,
   bodies,
   controls,
@@ -263,7 +244,13 @@ export function ThirdPersonView({
           if (event) keepAboveSurface(event.target.object);
         }}
       />
-      <OrbitZoom zoom={controls.zoom} onZoomChange={controls.onZoomChange} />
+      <OrbitZoom
+        zoom={controls.zoom}
+        onZoomChange={controls.onZoomChange}
+        distanceForLevel={distanceForLevel}
+        levelForDistance={levelForDistance}
+        constrain={keepAboveSurface}
+      />
       {/* After the controls, so it sizes the compass from this frame's camera. */}
       {controls.showHorizon && <HorizonCompass bodies={bodies.placed} />}
     </>

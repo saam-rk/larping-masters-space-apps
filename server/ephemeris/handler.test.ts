@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { isApiErrorResponse, type EphemerisResponse } from '../../shared/ephemeris.js';
+import { findSite, SITE_IDS } from '../../shared/sites.js';
 import { createEphemerisHandler, parseEphemerisQuery } from './handler.js';
 import { fixtureFetch } from './testing.js';
 
@@ -81,6 +82,16 @@ describe('parseEphemerisQuery', () => {
       longitudeEastDeg: -159.75,
       source: null,
     });
+  });
+
+  it.each(SITE_IDS)('accepts the reference site id %s', (id) => {
+    const result = parseEphemerisQuery(`${BASE}?site=${id}&utc=2030-01-02T03:04:05Z`);
+    expect(result.ok && result.site).toEqual(findSite(id));
+  });
+
+  it('keeps the Site20v2 variant when it is requested by id', () => {
+    const result = parseEphemerisQuery(`${BASE}?site=leibnitz-beta-plateau-extended&utc=2030-01-02T03:04:05Z`);
+    expect(result.ok && result.site.id).toBe('leibnitz-beta-plateau-extended');
   });
 
   it('resolves coordinates equal to a reference site to that site', () => {
