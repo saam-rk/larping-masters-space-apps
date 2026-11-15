@@ -5,11 +5,12 @@
  * Every model is a crop of NASA GSFC PGDA product 78 (LRO/LOLA 5 m/pixel
  * adjusted surface), south polar stereographic projection on a 1,737,400 m
  * sphere, MOON_ME/DE421 frame, meters, vertical exaggeration 1:1. Crops are
- * 10 x 10 km, except Haworth (12 x 14 km, see `cropSizeKm`). Per-site values
- * come from each model's README and metadata (see `nobileRim1.ts`,
- * `nobileRim2.ts`, `shackletonRim.ts`, `amundsenRim.ts` and `haworth.ts`).
- * Mesh density differs by model: Shackleton Rim, Amundsen Rim and Haworth are
- * densest around the viewer and coarser toward the crop edges.
+ * 10 x 10 km, except Haworth (12 x 14 km) and Shoemaker Rim A (12 x 12 km),
+ * see `cropSizeKm`. Per-site values come from each model's README and
+ * metadata (see `nobileRim1.ts`, `nobileRim2.ts`, `shackletonRim.ts`,
+ * `amundsenRim.ts`, `haworth.ts` and `shoemakerRimA.ts`). Mesh density
+ * differs by model: Shackleton Rim, Amundsen Rim, Haworth and Shoemaker Rim A
+ * are densest around the viewer and coarser toward the crop edges.
  * Apollo 11 instead uses an equirectangular LROC DTM.
  *
  * GLB axes: x = X - X0 (grid east), y = h - h0 (radial height), z = -(Y - Y0).
