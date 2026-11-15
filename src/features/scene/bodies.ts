@@ -99,3 +99,14 @@ export function radiusForAngularDiameter(angularDiameterDeg: number, distance: n
 export function upperLimbAboveHorizon(body: SceneBody): boolean {
   return body.elevationDeg + body.angularDiameterDeg / 2 > 0;
 }
+
+/** Each body's placed positions over a playback sequence, in time order (frames where it is missing are skipped). */
+export type BodyCourses = Readonly<Record<BodyId, readonly SceneBody[]>>;
+
+export function bodyCourses(frames: readonly EphemerisResponse[]): BodyCourses {
+  const courses: Record<BodyId, SceneBody[]> = { sun: [], earth: [] };
+  for (const frame of frames) {
+    for (const body of placeBodies(frame).placed) courses[body.body].push(body);
+  }
+  return courses;
+}

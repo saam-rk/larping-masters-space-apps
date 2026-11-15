@@ -5,7 +5,7 @@ import { findSite } from '../../../shared/sites';
 import type { SkySearchResponse } from '../../../shared/skySearch';
 import { formatDuration } from '../../format';
 import { placeBodies, type SceneBody } from './bodies';
-import { countdownConditions, countdownOutcome, countdownPlan, horizonThresholdDeg } from './horizonEvents';
+import { countdownConditions, countdownOutcome, countdownPlan, countdownRecord, horizonThresholdDeg, recallCountdown } from './horizonEvents';
 
 const NOBILE_SAMPLE = nobileSample as EphemerisResponse;
 const nobile = findSite('nobile-rim-1');
@@ -84,5 +84,37 @@ describe('formatDuration', () => {
     expect(formatDuration(3 * 3600 + 5)).toBe('3 h 0 min 5 s');
     expect(formatDuration(65)).toBe('1 min 5 s');
     expect(formatDuration(0)).toBe('0 s');
+  });
+});
+
+describe('recallCountdown', () => {
+  const sunset = { body: 'sun', event: 'set', afterEvent: { min: -90, max: -0.2697 }, never: false } as const;
+  const sunrise = { ...sunset, event: 'rise' } as const;
+  const record = countdownRecord('nobile', sunset, {
+    referenceUtc: '2026-11-14T12:00:00Z',
+    searched: { startUtc: '2026-11-14T12:00:00Z', endUtc: '2027-11-15T12:00:00Z' },
+    outcome: { status: 'found', complete: true, match: { utc: '2026-11-16T12:00:00Z', offsetSeconds: 172_800, values: {} } },
+  } as unknown as SkySearchResponse);
+
+  it('answers later instants before the event from the same search', () => {
+    expect(recallCountdown([record], 'nobile', sunset, Date.parse('2026-11-14T12:00:00Z'))).toMatchObject({ seconds: 172_800 });
+    expect(recallCountdown([record], 'nobile', sunset, Date.parse('2026-11-15T12:00:00Z'))).toMatchObject({ status: 'found', seconds: 86_400 });
+  });
+
+  it('needs a new search once the event has passed, for another event, site or an earlier instant', () => {
+    expect(recallCountdown([record], 'nobile', sunset, Date.parse('2026-11-16T12:00:01Z'))).toBeUndefined();
+    expect(recallCountdown([record], 'nobile', sunrise, Date.parse('2026-11-15T12:00:00Z'))).toBeUndefined();
+    expect(recallCountdown([record], 'shackleton', sunset, Date.parse('2026-11-15T12:00:00Z'))).toBeUndefined();
+    expect(recallCountdown([record], 'nobile', sunset, Date.parse('2026-11-14T11:59:59Z'))).toBeUndefined();
+  });
+
+  it('keeps a span without crossings for later instants inside it', () => {
+    const beyond = countdownRecord('nobile', sunset, {
+      referenceUtc: '2026-11-14T12:00:00Z',
+      searched: { startUtc: '2026-11-14T12:00:00Z', endUtc: '2026-11-24T12:00:00Z' },
+      outcome: { status: 'not-found', reason: 'no-match' },
+    } as unknown as SkySearchResponse);
+    expect(recallCountdown([beyond], 'nobile', sunset, Date.parse('2026-11-20T00:00:00Z'))).toEqual({ status: 'beyond', days: 4 });
+    expect(recallCountdown([beyond], 'nobile', sunset, Date.parse('2026-11-24T12:00:00Z'))).toBeUndefined();
   });
 });

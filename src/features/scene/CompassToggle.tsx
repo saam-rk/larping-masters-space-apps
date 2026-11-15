@@ -3,7 +3,8 @@
  * geometric horizon line, ticks and compass labels; third person: horizon
  * plane, grid, compass and angle guides). Shown in the title rule of the
  * local horizon box, left of the first/third-person switch, and styled like
- * it; it applies to both views.
+ * it; it applies to both views. On narrow screens it shows a glyph (◎) and
+ * keeps its text for assistive technology.
  */
 
 import { useI18n } from '../../i18n/context';
@@ -23,7 +24,8 @@ export function CompassToggle({ shown, onChange }: CompassToggleProps) {
       title={shown ? compassToggle.hide : compassToggle.show}
       onClick={() => onChange(!shown)}
     >
-      {compassToggle.label}
+      <span className="toolbar-label">{compassToggle.label}</span>
+      <span className="toolbar-glyph" aria-hidden="true">◎</span>
     </button>
   );
 }

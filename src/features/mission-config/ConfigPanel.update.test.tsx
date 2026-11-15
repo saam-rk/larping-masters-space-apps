@@ -91,7 +91,7 @@ function keyWheel(name: string, key: string) {
 function chooseSite(id: SiteId) {
   const { name } = findSite(id);
   const option = [...container.querySelectorAll<HTMLElement>('[role="option"]')].find(
-    (element) => element.textContent?.split(' · ')[0] === name,
+    (element) => element.querySelector('.wheel-select__text')?.textContent?.split(' · ')[0] === name,
   )!;
   act(() => option.click());
 }

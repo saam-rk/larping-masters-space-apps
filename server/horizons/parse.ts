@@ -1,6 +1,7 @@
 /**
  * Parses Horizons API JSON payloads with CSV observer tables: a single row
- * (`parseObserverPayload`) or an Az/El series (`parseObserverSeries`); see
+ * (`parseObserverPayload`), several full rows (`parseObserverRows`) or an Az/El
+ * series (`parseObserverSeries`); see
  * `query.ts`. Anything unexpected is reported as an error instead of
  * being guessed; "n.a." values become `null`, never zero.
  */
@@ -92,11 +93,38 @@ function readHeaderMetadata(result: string) {
 export function parseObserverPayload(payload: unknown, body: BodyId): ParseResult {
   const raw = readRawTable(payload);
   if (!raw.ok) return raw;
-  const { result, apiVersion, header, rows } = raw.table;
-  if (rows.length !== 1) {
-    return formatError(`expected exactly 1 table row, found ${rows.length}`);
+  if (raw.table.rows.length !== 1) {
+    return formatError(`expected exactly 1 table row, found ${raw.table.rows.length}`);
   }
-  const cells = (rows[0] as string).split(',');
+  return parseRow(raw.table, raw.table.rows[0] as string, body);
+}
+
+export type RowsParseResult =
+  | { readonly ok: true; readonly tables: readonly ParsedObserverTable[] }
+  | { readonly ok: false; readonly error: ApiError };
+
+/**
+ * Every row of a full observer table sampled at several instants (see
+ * `buildObserverSeriesParameters`): each row is read exactly like the single
+ * row of `parseObserverPayload`, with the same header metadata.
+ */
+export function parseObserverRows(payload: unknown, body: BodyId): RowsParseResult {
+  const raw = readRawTable(payload);
+  if (!raw.ok) return raw;
+  if (raw.table.rows.length === 0) return formatError('table has no rows');
+  const tables: ParsedObserverTable[] = [];
+  for (const row of raw.table.rows) {
+    const parsed = parseRow(raw.table, row, body);
+    if (!parsed.ok) return parsed;
+    tables.push(parsed.table);
+  }
+  return { ok: true, tables };
+}
+
+/** One CSV row with quantities 4, 13 and 20; "n.a." stays `null`. */
+function parseRow(table: RawTable, row: string, body: BodyId): ParseResult {
+  const { result, apiVersion, header } = table;
+  const cells = row.split(',');
 
   // Column 0 is the time tag; columns 1 and 2 are the sky-presence markers.
   const timeCell = cells[0]?.trim() ?? '';

@@ -14,7 +14,7 @@
 
 import { lazy, Suspense, useCallback, useRef, useState } from 'react';
 import type { EphemerisResponse } from '../shared/ephemeris';
-import { HorizonPlayback } from './features/scene/HorizonPlayback';
+import { HorizonPlayback, type CameraFollow } from './features/scene/HorizonPlayback';
 import { APOLLO_11_SITE_ID } from '../shared/sites';
 import { Backdrop } from './features/backdrop/Backdrop';
 import { CrtCurvature } from './features/backdrop/CrtCurvature';
@@ -22,6 +22,8 @@ import { ConfigPanel } from './features/mission-config/ConfigPanel';
 import { ResultsPanel } from './features/results/ResultsPanel';
 import { CompassToggle } from './features/scene/CompassToggle';
 import { FullscreenToggle } from './features/scene/FullscreenToggle';
+import { GuideToggle } from './features/scene/GuideToggle';
+import { IntervalButton } from './features/scene/IntervalButton';
 import { useFullscreen } from './features/scene/useFullscreen';
 import { useViewMode } from './features/scene/viewMode';
 import { ViewToggle } from './features/scene/ViewToggle';
@@ -75,17 +77,26 @@ export function App() {
     ephemeris.selection.longitudeEastDeg, ephemeris.selection.utc].join('|');
   const [preview, setPreview] = useState<{ selection: string; frame: EphemerisResponse } | null>(null);
   const [playbackSession, setPlaybackSession] = useState<string | null>(null);
+  const [intervalOpen, setIntervalOpen] = useState(false);
+  const [follow, setFollow] = useState<CameraFollow>(null);
+  // Every frame of the loaded playback sequence, for the course lines.
+  const [sequence, setSequence] = useState<{ selection: string; frames: readonly EphemerisResponse[] } | null>(null);
   const [followedSelection, setFollowedSelection] = useState(selectionKey);
   if (followedSelection !== selectionKey) {
     setFollowedSelection(selectionKey);
     setPreview(null);
     setPlaybackSession(null);
+    setFollow(null);
+    setSequence(null);
   }
   const playbackActive = playbackSession === selectionKey;
   const previewFrame = preview?.selection === selectionKey ? preview.frame : null;
   const displayedData = previewFrame ?? ephemeris.data;
   const onPlaybackFrame = useCallback((frame: EphemerisResponse | null) => {
     setPreview(frame ? { selection: selectionKey, frame } : null);
+  }, [selectionKey]);
+  const onPlaybackSequence = useCallback((frames: readonly EphemerisResponse[] | null) => {
+    setSequence(frames ? { selection: selectionKey, frames } : null);
   }, [selectionKey]);
   const onPlaybackActive = useCallback((active: boolean) => {
     setPlaybackSession(active ? selectionKey : null);
@@ -106,15 +117,24 @@ export function App() {
   const warp = viewSwitch.warp;
   // "Compass" switch: horizon line (first person) and grid (third person), one for both views. On by default.
   const [showCompass, setShowCompass] = useState(true);
+  // "Guide" switch: straight paths toward the Sun and the Earth, in both views. On by default.
+  const [showGuides, setShowGuides] = useState(true);
   // Full screen for the local horizon box, in both views.
   const sceneBoxRef = useRef<HTMLElement>(null);
   const fullscreen = useFullscreen(sceneBoxRef);
   // Where `ConfigPanel` renders its update button (see `.update-bar` in styles.css).
   const [updateSlot, setUpdateSlot] = useState<HTMLDivElement | null>(null);
 
-  function handleUpdate() {
+  function resetPlayback() {
     setPreview(null);
     setPlaybackSession(null);
+    setIntervalOpen(false);
+    setFollow(null);
+    setSequence(null);
+  }
+
+  function handleUpdate() {
+    resetPlayback();
     viewSwitch.resetWarp();
     transition.start();
     ephemeris.update();
@@ -122,8 +142,7 @@ export function App() {
 
   /** An inverse search match or an Apollo 11 moment: select its instant and show it on the horizon view. */
   function handleShowMatch(utc: string) {
-    setPreview(null);
-    setPlaybackSession(null);
+    resetPlayback();
     viewSwitch.resetWarp();
     transition.start();
     ephemeris.showUtc(utc);
@@ -147,22 +166,44 @@ export function App() {
               help={messages.scene.info[view.mode]}
               actions={
                 <>
+                  <IntervalButton active={playbackActive} disabled={busy} onOpen={() => setIntervalOpen(true)} />
+                  <GuideToggle shown={showGuides} onChange={setShowGuides} />
                   <CompassToggle shown={showCompass} onChange={setShowCompass} />
-                  <ViewToggle mode={viewSwitch.selected} firstPersonAvailable={view.firstPersonAvailable} onChange={viewSwitch.request} />
+                  {/* Third-person-only points need no view switch. */}
+                  {view.firstPersonAvailable && (
+                    <ViewToggle mode={viewSwitch.selected} firstPersonAvailable onChange={viewSwitch.request} />
+                  )}
                   <FullscreenToggle active={fullscreen.active} onToggle={fullscreen.toggle} />
                 </>
               }
             >
-              <div className="scene-stage" data-jumping={busy || viewSwitch.active} data-warp={warp.kind}>
+              <div className="scene-stage" data-jumping={busy || viewSwitch.active} data-warp={warp.kind} data-player={previewFrame !== null}>
                 <Suspense fallback={<p className="scene__note">{messages.scene.loading}</p>}>
-                  <SkyScene data={displayedData} mode={view.mode} showHorizon={showCompass} animateReenactment={streaks} busy={busy} playback={playbackActive} />
+                  <SkyScene
+                    data={displayedData}
+                    mode={view.mode}
+                    showHorizon={showCompass}
+                    showGuides={showGuides}
+                    animateReenactment={streaks}
+                    busy={busy}
+                    playback={playbackActive}
+                    follow={previewFrame ? follow : null}
+                    course={previewFrame && sequence?.selection === selectionKey ? sequence.frames : null}
+                  />
                 </Suspense>
                 {streaks && <Hyperspace active={busy || viewSwitch.active} reverse={warp.reverse} tempo={warp.tempo} />}
+                {!busy && <HorizonPlayback
+                  key={selectionKey}
+                  selection={ephemeris.selection}
+                  open={intervalOpen}
+                  onClose={() => setIntervalOpen(false)}
+                  onFrame={onPlaybackFrame}
+                  onActive={onPlaybackActive}
+                  onSequence={onPlaybackSequence}
+                  follow={follow}
+                  onFollowChange={setFollow}
+                />}
               </div>
-              {!busy && <HorizonPlayback
-                key={selectionKey}
-                selection={ephemeris.selection} onFrame={onPlaybackFrame} onActive={onPlaybackActive}
-              />}
             </Box>
             <ResultsPanel
               data={displayedData}

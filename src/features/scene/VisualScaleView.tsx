@@ -14,11 +14,13 @@
  * models of `CelestialModel` (rotation not modeled). The Moon is not drawn;
  * the green disc is the local horizon plane (elevation 0) tangent at the site.
  *
- * With the compass on, each body gets an azimuth arc on the plane from north
- * to its direction, a vertical elevation arc from the plane to the body, and
- * both labeled in degrees; between the Sun and the Earth, a dashed
- * great-circle arc with their angular separation and an arc on the plane with
- * the azimuth difference (see `angles.ts`).
+ * The compass switch draws the plane, grid, ticks, elevation circles and
+ * N/E/S/W. With the guides on, each body gets a dashed line from the
+ * observer, an azimuth arc on the plane from north to its direction, a
+ * vertical elevation arc from the plane to the body, and both labeled in
+ * degrees; between the Sun and the Earth, a dashed great-circle arc with their
+ * angular separation and an arc on the plane with the azimuth difference (see
+ * `angles.ts`). `FollowCamera` keeps a body centered during playback.
  *
  * Scene frame as in `geometry.ts` (-Z north, +X east, +Y up at the site).
  */
@@ -26,7 +28,7 @@
 import { Html, Line, OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { useMemo } from 'react';
 import type { Quaternion } from 'three';
-import type { BodyId } from '../../../shared/ephemeris';
+import { BODY_IDS, type BodyId } from '../../../shared/ephemeris';
 import { formatAngle } from '../../format';
 import { useI18n } from '../../i18n/context';
 import {
@@ -34,7 +36,6 @@ import {
   azimuthArc,
   azimuthDifferenceDeg,
   elevationArc,
-  elevationExaggeration,
   exaggerateElevation,
   meanAzimuthDeg,
   midpoint,
@@ -44,11 +45,13 @@ import {
 import type { PlacedBodies, SceneBody } from './bodies';
 import { BODY_COLOR } from './bodyColors';
 import { CelestialModel } from './CelestialModel';
+import { CourseLine } from './CourseLine';
 import { northAlongLunarAxis } from './celestialOrientation';
 import { horizontalToPosition, type Vector3Tuple } from './geometry';
 import { glowTexture } from './glow';
 import { BODY_DOME_RADIUS, BODY_RADIUS, LABELS_APART_DEG } from './visualBodies';
 import { OrbitZoom } from './OrbitZoom';
+import { FollowCamera } from './FollowCamera';
 import type { ThirdPersonControls } from './ThirdPersonView';
 import {
   MAX_VISUAL_DISTANCE,
@@ -159,8 +162,11 @@ function VisualBody({
   label,
   orientation,
   labelBelow = false,
+  showGuide,
 }: {
   body: SceneBody;
+  /** Dashed straight line from the observer to the body. */
+  showGuide: boolean;
   drawnElevation: number;
   label: string;
   orientation: Quaternion;
@@ -172,7 +178,9 @@ function VisualBody({
   const color = BODY_COLOR[body.body];
   return (
     <group>
-      <Line points={[[0, 0, 0], position]} color={color} lineWidth={1.2} dashed dashSize={0.3} gapSize={0.18} transparent opacity={0.7} />
+      {showGuide && (
+        <Line points={[[0, 0, 0], position]} color={color} lineWidth={1.2} dashed dashSize={0.3} gapSize={0.18} transparent opacity={0.7} />
+      )}
       <group position={position}>
         <CelestialModel
           body={body.body}
@@ -283,10 +291,10 @@ export function VisualScaleView({
 }) {
   const { messages } = useI18n();
   const orientation = useMemo(() => northAlongLunarAxis(latitudeDeg), [latitudeDeg]);
-  const cameraPosition = useMemo(() => initialCamera(bodies.placed), [bodies.placed]);
+  const cameraPosition = useMemo(() => initialCamera(controls.anchor.placed), [controls.anchor.placed]);
   const sun = bodies.placed.find((body) => body.body === 'sun');
   const earth = bodies.placed.find((body) => body.body === 'earth');
-  const exaggeration = elevationExaggeration(bodies.placed.map((body) => body.elevationDeg));
+  const exaggeration = controls.exaggeration;
   const drawn = (body: SceneBody) => exaggerateElevation(body.elevationDeg, exaggeration);
   // Lined up on screen (e.g. a solar eclipse): the Earth, in front, takes its label below.
   const aligned =
@@ -318,18 +326,25 @@ export function VisualScaleView({
           label={messages.bodies[body.body]}
           orientation={orientation}
           labelBelow={aligned && body.body === 'earth'}
+          showGuide={controls.showGuides}
         />
       ))}
-      {controls.showHorizon && bodies.placed.map((body) => <BodyGuides key={body.body} body={body} drawnElevation={drawn(body)} />)}
-      {controls.showHorizon && sun && earth && <DifferenceGuides from={sun} to={earth} exaggeration={exaggeration} />}
+      {controls.showGuides && bodies.placed.map((body) => <BodyGuides key={body.body} body={body} drawnElevation={drawn(body)} />)}
+      {controls.showGuides && sun && earth && <DifferenceGuides from={sun} to={earth} exaggeration={exaggeration} />}
 
-      <OrbitControls enablePan={false} minDistance={MIN_VISUAL_DISTANCE} maxDistance={MAX_VISUAL_DISTANCE} zoomSpeed={1.2} />
+      <OrbitControls makeDefault enablePan={false} minDistance={MIN_VISUAL_DISTANCE} maxDistance={MAX_VISUAL_DISTANCE} zoomSpeed={1.2} />
       <OrbitZoom
         zoom={controls.zoom}
         onZoomChange={controls.onZoomChange}
         distanceForLevel={visualDistanceForLevel}
         levelForDistance={levelForVisualDistance}
       />
+      <FollowCamera body={controls.follow} />
+      {controls.courses && BODY_IDS.map((body) => (
+        <CourseLine key={body} body={body} dot={0.12} gap={0.22}
+          points={controls.courses![body].map((sample) =>
+            horizontalToPosition(sample.azimuthDeg, exaggerateElevation(sample.elevationDeg, exaggeration), BODY_DOME_RADIUS[body]))} />
+      ))}
     </>
   );
 }

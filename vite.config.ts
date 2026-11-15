@@ -3,11 +3,13 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type Connect, type Plugin } from 'vite';
 import { handleEphemerisRequest } from './server/ephemeris/handler.js';
+import { handleEphemerisSeriesRequest } from './server/ephemeris/series.js';
 import { handleSkySearchRequest } from './server/skySearch/handler.js';
 
 /** Local routes and the handlers of their Vercel functions (`api/*.ts`). */
 const LOCAL_ROUTES: ReadonlyArray<readonly [string, (request: Request) => Promise<Response>]> = [
   ['/api/ephemeris', handleEphemerisRequest],
+  ['/api/ephemeris-series', handleEphemerisSeriesRequest],
   ['/api/sky-search', handleSkySearchRequest],
 ];
 

@@ -31,13 +31,41 @@ type Paragraphs = readonly string[];
 export interface Messages {
   readonly playback: {
     readonly title: string;
+    /** Button in the title rule of the local horizon box that opens the interval dialog. */
     readonly interval: string;
+    readonly intervalHint: string;
     readonly start: string;
     readonly end: string;
     readonly samples: string;
+    /** Time per sample: a preset per body (one cycle over the samples) or a custom hours/minutes step. */
+    readonly step: {
+      readonly label: string;
+      readonly presets: Readonly<Record<'sun' | 'earth' | 'custom', string>>;
+      readonly hours: string;
+      readonly minutes: string;
+      readonly customHint: (step: string) => string;
+    };
+    /** Explains a preset: step, samples and the span (days, half the mean cycle) they cover. */
+    readonly presetHint: Readonly<Record<'sun' | 'earth', (step: string, samples: string, days: string) => string>>;
+    /** Sets the start at the next rise of a body after the chosen start (see `nextRise.ts`). */
+    readonly rise: {
+      readonly label: string;
+      readonly bodies: Readonly<Record<'sun' | 'earth', string>>;
+      readonly searching: Readonly<Record<'sun' | 'earth', string>>;
+      /** `event` is the countdown's rise name, e.g. "Sunrise". */
+      readonly found: (event: string, utc: string) => string;
+      readonly alwaysUp: Readonly<Record<'sun' | 'earth', string>>;
+      readonly alwaysDown: Readonly<Record<'sun' | 'earth', string>>;
+      readonly notFound: Readonly<Record<'sun' | 'earth', string>>;
+      readonly error: Readonly<Record<'sun' | 'earth', string>>;
+    };
+    /** Total span of the interval, already formatted. */
+    readonly span: (duration: string) => string;
     readonly description: string;
-    readonly detail: string;
+    /** Help paragraphs of the dialog's "i": queries to JPL Horizons, playback and limits. */
+    readonly info: Paragraphs;
     readonly invalid: string;
+    readonly invalidSamples: (min: number, max: number) => string;
     readonly error: string;
     readonly cancel: string;
     readonly prepare: string;
@@ -46,6 +74,8 @@ export interface Messages {
     readonly pause: string;
     readonly timeline: string;
     readonly speed: string;
+    /** Camera centered on a body while the interval plays. */
+    readonly follow: { readonly label: string; readonly free: string; readonly sun: string; readonly earth: string };
     readonly exit: string;
     readonly preview: string;
     readonly loading: (done: number, total: number) => string;
@@ -124,6 +154,10 @@ export interface Messages {
       readonly placeholder: string;
       /** Read with the drop-down: what its points are, their order and how they are computed. */
       readonly hint: (count: number, featured: number) => string;
+      /** Headings of the two parts of the open list: points with a first-person relief model, then the rest. */
+      readonly sections: { readonly firstPerson: string; readonly thirdPerson: string };
+      /** Badge next to the Apollo 11 point. */
+      readonly apolloBadge: string;
     };
     readonly searchErrors: {
       readonly empty: string;
@@ -184,6 +218,12 @@ export interface Messages {
     /** "Compass" show/hide switch for the horizon line (first person) and grid (third person). */
     readonly compassToggle: {
       /** Visible text and accessible name of the switch (pressed = shown); fits in the title rule. */
+      readonly label: string;
+      readonly show: string;
+      readonly hide: string;
+    };
+    /** "Guide" show/hide switch: straight lines from the observer toward the Sun and the Earth, in both views. */
+    readonly guideToggle: {
       readonly label: string;
       readonly show: string;
       readonly hide: string;
@@ -275,7 +315,6 @@ export interface Messages {
     readonly state: string;
     readonly noValue: string;
     readonly bodyError: string;
-    readonly terrainWarning: string;
     readonly provenanceSample: (retrievedAt: string) => string;
     readonly provenanceLive: (retrievedAt: string) => string;
     readonly sources: string;
@@ -397,24 +436,57 @@ const ES_TERRESTRIAL_ECLIPSE = String(TERRESTRIAL_ECLIPSE_MIN_SEPARATION_DEG).re
 
 const es: Messages = {
   playback: {
-    title: "Reproductor del horizonte",
-    interval: "Intervalo",
-    start: "Inicio (UTC)",
-    end: "Fin (UTC)",
-    samples: "Número de muestras",
-    description: "Explora el movimiento del Sol y la Tierra desde el lugar lunar seleccionado.",
-    detail: "Se consultan muestras equidistantes de Horizons antes de reproducir. 1× muestra dos instantes por segundo; no se interpolan posiciones. Más muestras requieren más tiempo de carga. No se evalúa la visibilidad sobre el relieve.",
-    invalid: "Introduce fechas válidas entre 1969 y 2099, con el fin posterior al inicio.",
-    error: "No se pudo completar el intervalo con datos de ambos cuerpos. Reintenta o cambia el intervalo; se conserva la secuencia anterior.",
-    cancel: "Cancelar carga",
-    prepare: "Preparar intervalo",
-    restart: "Volver al inicio",
-    play: "Reproducir",
-    pause: "Pausar",
-    timeline: "Instante del intervalo",
-    speed: "Velocidad de reproducción",
-    exit: "Salir del reproductor",
-    preview: "REPRODUCCIÓN",
+    title: 'Reproductor del horizonte',
+    interval: 'Intervalo',
+    intervalHint: 'Crear un intervalo para reproducir el movimiento del Sol y la Tierra',
+    start: 'Inicio (UTC)',
+    end: 'Fin (UTC)',
+    samples: 'Número de muestras',
+    step: {
+      label: 'Tiempo por muestra',
+      presets: { sun: 'Sol', earth: 'Tierra', custom: 'Personalizado' },
+      hours: 'Horas',
+      minutes: 'Minutos',
+      customHint: (step) => `${step} entre muestras.`,
+    },
+    presetHint: {
+      sun: (step, samples, days) =>
+        `${step} entre muestras: ${samples} muestras cubren medio recorrido del Sol (${days} d, medio mes sinódico medio), unas horas de luz lunares si empiezas en su salida.`,
+      earth: (step, samples, days) =>
+        `${step} entre muestras: ${samples} muestras cubren medio recorrido de la Tierra (${days} d, medio mes dracónico medio, el ciclo de libración que la sube y la baja sobre el horizonte).`,
+    },
+    rise: {
+      label: 'Empezar en la salida de',
+      bodies: { sun: 'Sol', earth: 'Tierra' },
+      searching: { sun: 'Buscando la salida del Sol después del inicio…', earth: 'Buscando la salida de la Tierra después del inicio…' },
+      found: (event, utc) => `${event}: ${utc}. El intervalo empieza en el minuto siguiente.`,
+      alwaysUp: { sun: 'Aquí el Sol nunca se pone: no tiene salida.', earth: 'Aquí la Tierra nunca se pone: no tiene salida.' },
+      alwaysDown: { sun: 'Aquí el Sol nunca sale.', earth: 'Aquí la Tierra nunca sale.' },
+      notFound: { sun: 'No se encontró la salida del Sol en el periodo buscado.', earth: 'No se encontró la salida de la Tierra en el periodo buscado.' },
+      error: { sun: 'No se pudo buscar la salida del Sol. Reintenta.', earth: 'No se pudo buscar la salida de la Tierra. Reintenta.' },
+    },
+    span: (duration) => `duración ${duration}`,
+    description: 'Explora el movimiento del Sol y la Tierra desde el lugar lunar seleccionado.',
+    info: [
+      'Las muestras equidistantes se consultan a JPL Horizons antes de reproducir: una consulta por cuerpo cada 100 muestras, una tras otra. Son las mismas observaciones que la vista principal (tabla de observador, sin atmósfera, altura 0 km); la reproducción y el desplazamiento por la línea de tiempo no vuelven a consultar.',
+      '1× muestra dos instantes por segundo. No se calculan posiciones entre muestras: un paso largo puede saltarse sucesos.',
+      'Los ajustes Sol y Tierra reparten medio mes medio entre las muestras (sinódico para el Sol, 29,530589 d; dracónico para la Tierra, 27,212220 d; NASA GSFC). Cada mes real varía unas horas, así que el medio recorrido es aproximado.',
+      '«Empezar en la salida de» busca con JPL Horizons (búsqueda inversa, resolución 1 s) el primer momento después del inicio en que el borde superior del cuerpo cruza hacia arriba el horizonte de referencia, con el tamaño aparente del cuerpo en el inicio.',
+      'No se evalúa la visibilidad sobre el relieve, ni la energía, las comunicaciones o la idoneidad de aterrizaje.',
+    ],
+    invalid: 'El intervalo debe empezar en 1969 o después y terminar antes de 2100, con al menos 1 minuto por muestra.',
+    invalidSamples: (min, max) => `Escribe un número entero de muestras entre ${min} y ${max}.`,
+    error: 'No se pudo completar el intervalo con datos de ambos cuerpos. Reintenta o cambia el intervalo; se conserva la secuencia anterior.',
+    cancel: 'Cancelar carga',
+    prepare: 'Preparar intervalo',
+    restart: 'Volver al inicio',
+    play: 'Reproducir',
+    pause: 'Pausar',
+    timeline: 'Instante del intervalo',
+    speed: 'Velocidad de reproducción',
+    follow: { label: 'Centrar la cámara durante la reproducción', free: 'Cámara libre', sun: 'Cámara: Sol', earth: 'Cámara: Tierra' },
+    exit: 'Salir del reproductor',
+    preview: 'REPRODUCCIÓN',
     loading: (done, total) => `Preparando ${done}/${total} muestras…`,
   },
   app: { title: 'CLPS Lunar Mission Browser' },
@@ -462,7 +534,7 @@ const es: Messages = {
     siteInfo: [
       'Elige el punto del polo sur lunar desde el que se calcula el cielo.',
       'Son los centros de regiones candidatas publicadas por NASA (Lunar Surface Data Book, tabla A2.1-1). No son lugares de aterrizaje aprobados.',
-      'El desplegable «Lista de puntos» empieza por el Apolo 11 y los tres puntos originales de la demo (Nobile Rim 1, Nobile Rim 2 y Shackleton Rim) y sigue con el resto de puntos documentados, en orden alfabético. Todos se calculan con el mismo método; la vista en primera persona con relieve solo existe para algunos puntos y el resto se muestra en tercera persona.',
+      'El desplegable «Lista de puntos» tiene dos grupos. «Con primera persona» reúne los puntos con modelo de relieve: empieza por el Apolo 11 (primer alunizaje) y los tres puntos originales de la demo (Nobile Rim 1, Nobile Rim 2 y Shackleton Rim) y sigue en orden alfabético. «Solo tercera persona» reúne el resto de puntos documentados, en orden alfabético; en ellos no se ofrece el selector de vista. Todos se calculan con el mismo método.',
       'También puedes escribir unas coordenadas en grados (latitud, longitud; sur y oeste en negativo o con S/O) o buscar un punto por su nombre o código (p. ej. «Haworth», «DM1», «Site20v2»). Un punto personalizado se calcula con el mismo método, a altura 0 km y sin relieve, y no tiene fuente publicada.',
       '«Leibnitz Beta Plateau, extended boundaries» (Site20v2) es una variante del producto de terreno de PGDA con las mismas coordenadas que Leibnitz Beta Plateau (Site20): su cálculo es idéntico.',
     ],
@@ -482,7 +554,9 @@ const es: Messages = {
       label: 'Lista de puntos',
       placeholder: 'Elegir un punto de la lista…',
       hint: (count, featured) =>
-        `${count} puntos del Lunar Surface Data Book: primero los ${featured} principales de la demo y después el resto, en orden alfabético. Todos se calculan con el mismo método.`,
+        `${count} puntos del Lunar Surface Data Book, en dos grupos: con primera persona (primero los ${featured} principales de la demo) y solo tercera persona, cada grupo en orden alfabético. Todos se calculan con el mismo método.`,
+      sections: { firstPerson: 'Con primera persona', thirdPerson: 'Solo tercera persona' },
+      apolloBadge: 'Primer alunizaje',
     },
     searchErrors: {
       empty: 'Escribe unas coordenadas o el nombre de un punto.',
@@ -547,6 +621,11 @@ const es: Messages = {
       label: 'Brújula',
       show: 'Mostrar la brújula: línea y cuadrícula del horizonte',
       hide: 'Ocultar la brújula: línea y cuadrícula del horizonte',
+    },
+    guideToggle: {
+      label: 'Guía',
+      show: 'Mostrar las guías: camino recto hacia el Sol y la Tierra',
+      hide: 'Ocultar las guías: camino recto hacia el Sol y la Tierra',
     },
     fullscreen: { enter: 'Ver el horizonte local a pantalla completa', exit: 'Salir de pantalla completa' },
     countdown: {
@@ -628,7 +707,6 @@ const es: Messages = {
     state: 'Estado',
     noValue: 'Sin dato',
     bodyError: 'No se pudo obtener este dato.',
-    terrainWarning: 'Posiciones geométricas. El modelo no incluye montañas ni cráteres del lugar.',
     provenanceSample: (date) => `Muestra guardada de JPL Horizons (obtenida el ${date}). No es una consulta en vivo.`,
     provenanceLive: (date) => `Consulta a JPL Horizons obtenida el ${date}.`,
     sources: 'Fuentes',
@@ -869,24 +947,57 @@ const es: Messages = {
 
 const en: Messages = {
   playback: {
-    title: "Horizon player",
-    interval: "Interval",
-    start: "Start (UTC)",
-    end: "End (UTC)",
-    samples: "Number of samples",
-    description: "Explore the motion of the Sun and Earth from the selected lunar site.",
-    detail: "Equally spaced Horizons samples are loaded before playback. 1× shows two instants per second; positions are not interpolated. More samples take longer to load. Terrain visibility is not evaluated.",
-    invalid: "Enter valid dates between 1969 and 2099, with the end after the start.",
-    error: "Could not complete the interval with data for both bodies. Retry or change the interval; the previous sequence is retained.",
-    cancel: "Cancel loading",
-    prepare: "Prepare interval",
-    restart: "Back to start",
-    play: "Play",
-    pause: "Pause",
-    timeline: "Interval instant",
-    speed: "Playback speed",
-    exit: "Exit player",
-    preview: "PLAYBACK",
+    title: 'Horizon player',
+    interval: 'Interval',
+    intervalHint: 'Create an interval to play the motion of the Sun and Earth',
+    start: 'Start (UTC)',
+    end: 'End (UTC)',
+    samples: 'Number of samples',
+    step: {
+      label: 'Time per sample',
+      presets: { sun: 'Sun', earth: 'Earth', custom: 'Custom' },
+      hours: 'Hours',
+      minutes: 'Minutes',
+      customHint: (step) => `${step} between samples.`,
+    },
+    presetHint: {
+      sun: (step, samples, days) =>
+        `${step} between samples: ${samples} samples cover half the Sun's course (${days} d, half a mean synodic month), about a lunar daytime if you start at its rise.`,
+      earth: (step, samples, days) =>
+        `${step} between samples: ${samples} samples cover half the Earth's course (${days} d, half a mean draconic month, the libration cycle that raises and lowers it over the horizon).`,
+    },
+    rise: {
+      label: 'Start at the rise of',
+      bodies: { sun: 'Sun', earth: 'Earth' },
+      searching: { sun: 'Searching for the sunrise after the start…', earth: 'Searching for the Earthrise after the start…' },
+      found: (event, utc) => `${event}: ${utc}. The interval starts at the next minute.`,
+      alwaysUp: { sun: 'Here the Sun never sets: it has no rise.', earth: 'Here the Earth never sets: it has no rise.' },
+      alwaysDown: { sun: 'Here the Sun never rises.', earth: 'Here the Earth never rises.' },
+      notFound: { sun: 'No sunrise found in the searched period.', earth: 'No Earthrise found in the searched period.' },
+      error: { sun: 'Could not search for the sunrise. Retry.', earth: 'Could not search for the Earthrise. Retry.' },
+    },
+    span: (duration) => `span ${duration}`,
+    description: 'Explore the motion of the Sun and Earth from the selected lunar site.',
+    info: [
+      'Equally spaced samples are queried from JPL Horizons before playback: one query per body for every 100 samples, one after another. They are the same observations as the main view (observer table, airless, 0 km height); playing and moving along the timeline do not query again.',
+      '1× shows two instants per second. Positions between samples are not calculated: a long step can miss events.',
+      'The Sun and Earth presets spread half a mean month over the samples (synodic for the Sun, 29.530589 d; draconic for the Earth, 27.212220 d; NASA GSFC). Each real month varies by hours, so the half course is approximate.',
+      '"Start at the rise of" searches JPL Horizons (inverse search, 1 s resolution) for the first instant after the start at which the body\'s upper limb crosses the reference horizon upward, using the body\'s apparent size at the start.',
+      'Terrain visibility, energy, communications and landing suitability are not evaluated.',
+    ],
+    invalid: 'The interval must start in 1969 or later and end before 2100, with at least 1 minute per sample.',
+    invalidSamples: (min, max) => `Enter a whole number of samples between ${min} and ${max}.`,
+    error: 'Could not complete the interval with data for both bodies. Retry or change the interval; the previous sequence is retained.',
+    cancel: 'Cancel loading',
+    prepare: 'Prepare interval',
+    restart: 'Back to start',
+    play: 'Play',
+    pause: 'Pause',
+    timeline: 'Interval instant',
+    speed: 'Playback speed',
+    follow: { label: 'Center the camera during playback', free: 'Free camera', sun: 'Camera: Sun', earth: 'Camera: Earth' },
+    exit: 'Exit player',
+    preview: 'PLAYBACK',
     loading: (done, total) => `Preparing ${done}/${total} samples…`,
   },
   app: { title: 'CLPS Lunar Mission Browser' },
@@ -934,7 +1045,7 @@ const en: Messages = {
     siteInfo: [
       'Choose the lunar south-pole point the sky is computed from.',
       'They are the centers of candidate regions published by NASA (Lunar Surface Data Book, table A2.1-1). They are not approved landing sites.',
-      'The "Point list" drop-down starts with Apollo 11 and the three original demo points (Nobile Rim 1, Nobile Rim 2 and Shackleton Rim) and continues with the other documented points, in alphabetical order. All are computed with the same method; the first-person terrain view only exists for some points, and the others are shown in third person.',
+      'The "Point list" drop-down has two groups. "With first person" holds the points with a relief model: it starts with Apollo 11 (first landing) and the three original demo points (Nobile Rim 1, Nobile Rim 2 and Shackleton Rim) and continues in alphabetical order. "Third person only" holds the other documented points, in alphabetical order; the view switch is not offered for them. All are computed with the same method.',
       'You can also type coordinates in degrees (latitude, longitude; south and west negative or with S/W) or search a point by name or code (e.g. "Haworth", "DM1", "Site20v2"). A custom point is computed with the same method, at 0 km height and without terrain, and has no published source.',
       '"Leibnitz Beta Plateau, extended boundaries" (Site20v2) is a PGDA terrain-product variant with the same coordinates as Leibnitz Beta Plateau (Site20): its calculation is identical.',
     ],
@@ -954,7 +1065,9 @@ const en: Messages = {
       label: 'Point list',
       placeholder: 'Choose a point from the list…',
       hint: (count, featured) =>
-        `${count} points from the Lunar Surface Data Book: the ${featured} main demo points first, then the others in alphabetical order. All are computed with the same method.`,
+        `${count} points from the Lunar Surface Data Book in two groups: with first person (the ${featured} main demo points first) and third person only, each group in alphabetical order. All are computed with the same method.`,
+      sections: { firstPerson: 'With first person', thirdPerson: 'Third person only' },
+      apolloBadge: 'First landing',
     },
     searchErrors: {
       empty: 'Type coordinates or the name of a point.',
@@ -1019,6 +1132,11 @@ const en: Messages = {
       label: 'Compass',
       show: 'Show the compass: horizon line and grid',
       hide: 'Hide the compass: horizon line and grid',
+    },
+    guideToggle: {
+      label: 'Guide',
+      show: 'Show the guides: straight path toward the Sun and the Earth',
+      hide: 'Hide the guides: straight path toward the Sun and the Earth',
     },
     fullscreen: { enter: 'Show the local horizon full screen', exit: 'Exit full screen' },
     countdown: {
@@ -1100,7 +1218,6 @@ const en: Messages = {
     state: 'State',
     noValue: 'No data',
     bodyError: 'This value could not be retrieved.',
-    terrainWarning: 'Geometric positions. The model does not include the mountains or craters of the site.',
     provenanceSample: (date) => `Saved JPL Horizons sample (retrieved ${date}). Not a live query.`,
     provenanceLive: (date) => `JPL Horizons query retrieved ${date}.`,
     sources: 'Sources',

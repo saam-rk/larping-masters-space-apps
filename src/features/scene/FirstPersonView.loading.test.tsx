@@ -67,7 +67,7 @@ describe('first-person loading portal', () => {
     const data = { ...SAVED_SAMPLE, site: { ...findSite(siteId), altitudeKm: 0 as const } };
     act(() => root.render(
       <FirstPersonView data={data} bodies={{ placed: [], missing: [] }}
-        controls={{ zoom: 0, onZoomChange: vi.fn(), showHorizon: true }} />,
+        controls={{ zoom: 0, onZoomChange: vi.fn(), showHorizon: true, showGuides: true, anchor: { placed: [], missing: [] }, follow: null }} />,
     ));
     expect(loading.requestedUrls.length).toBeGreaterThan(0);
     expect(new Set(loading.requestedUrls)).toEqual(new Set([`/terrain/${siteId}.glb`]));
@@ -77,7 +77,7 @@ describe('first-person loading portal', () => {
   it('keeps the loading root on the canvas parent when R3F connects its event target', () => {
     const render = () => act(() => root.render(
       <FirstPersonView data={SAVED_SAMPLE} bodies={placeBodies(SAVED_SAMPLE)}
-        controls={{ zoom: 0, onZoomChange: vi.fn(), showHorizon: true }} />,
+        controls={{ zoom: 0, onZoomChange: vi.fn(), showHorizon: true, showGuides: true, anchor: placeBodies(SAVED_SAMPLE), follow: null }} />,
     ));
     render();
     expect(container.textContent).toContain(MESSAGES.en.scene.terrainLoading);
