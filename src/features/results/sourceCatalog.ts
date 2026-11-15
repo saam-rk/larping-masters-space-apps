@@ -10,6 +10,9 @@
  * `shared/time.ts`, `src/features/scene/playback.ts`, `shared/missionAssessment.ts`
  * and `DECISIONES.md`.
  *
+ * Historical references are limited to Apollo 11, the only historical scene
+ * integrated in the application; research on other missions stays in `docs/`.
+ *
  * Direct file downloads (single rasters, ZIPs, labels) are not listed one by
  * one: the product page that publishes them is listed instead.
  *
@@ -573,42 +576,12 @@ export const SOURCE_CATALOG = [
     url: 'https://ntrs.nasa.gov/citations/20110003001',
   },
 
-  // ── Research: historic landings ──
-  {
-    id: 'nssdcaApolloLandings',
-    section: 'historic',
-    title: 'NASA/NSSDCA Apollo landings summary',
-    url: 'https://nssdc.gsfc.nasa.gov/planetary/lunar/apolloland.html',
-  },
-  {
-    id: 'apolloMissionRecords',
-    section: 'historic',
-    title: 'NASA/NSSDCA Apollo 12 mission record',
-    url: 'https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo12info.html',
-    links: [
-      { label: 'Apollo 14', url: 'https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo14info.html' },
-      { label: 'Apollo 15', url: 'https://www.nasa.gov/mission/apollo-15/' },
-      { label: 'Apollo 16', url: 'https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo16info.html' },
-      { label: 'Apollo 17', url: 'https://www.nasa.gov/mission/apollo-17/' },
-    ],
-  },
+  // ── Research: Apollo 11 historical context ──
   {
     id: 'sp4029Landing',
     section: 'historic',
     title: 'NASA SP-4029: Apollo LM lunar landing table',
     url: 'https://www.nasa.gov/wp-content/uploads/static/history/SP-4029/Apollo_18-27_LM_Lunar_Landing.htm',
-  },
-  {
-    id: 'lrocApolloDtms',
-    section: 'historic',
-    title: 'LROC NAC_DTM_APOLLO12',
-    url: 'https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_DTM_APOLLO12',
-    links: [
-      { label: 'APOLLO14', url: 'https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_DTM_APOLLO14' },
-      { label: 'APOLLO15', url: 'https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_DTM_APOLLO15' },
-      { label: 'APOLLO16', url: 'https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_DTM_APOLLO16' },
-      { label: 'APOLLO17', url: 'https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_DTM_APOLLO17' },
-    ],
   },
   {
     id: 'lrocApollo11Mapping',
@@ -627,113 +600,6 @@ export const SOURCE_CATALOG = [
     section: 'historic',
     title: 'NASA spacecraft dimensions reference (NTRS 19940023701)',
     url: 'https://ntrs.nasa.gov/api/citations/19940023701/downloads/19940023701.pdf',
-  },
-  {
-    id: 'nssdcaImpactSites',
-    section: 'historic',
-    title: 'NASA/NSSDCA lunar spacecraft and impact sites',
-    url: 'https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html',
-  },
-  {
-    id: 'luna2History',
-    section: 'historic',
-    title: 'NASA History: 60 years ago, Luna 2 makes impact in Moon race',
-    url: 'https://www.nasa.gov/history/60-years-ago-luna-2-makes-impact-in-moon-race/',
-  },
-  {
-    id: 'roboticExplorationHistory',
-    section: 'historic',
-    title: 'NASA APPEL: robotic lunar exploration history (Huntress presentation)',
-    url: 'https://appel.nasa.gov/wp-content/uploads/2013/04/643333main_huntress_presentation.pdf',
-  },
-  {
-    id: 'nssdcaSovietMissions',
-    section: 'historic',
-    title: 'NASA/NSSDCA Soviet lunar missions',
-    url: 'https://nssdc.gsfc.nasa.gov/planetary/lunar/lunarussr.html',
-  },
-  {
-    id: 'lrocLuna17',
-    section: 'historic',
-    title: 'LROC exhibit: Luna 17',
-    url: 'https://lroc.im-ldi.com/visit/exhibits/1/gallery/10',
-  },
-  {
-    id: 'jplLunarConstants',
-    section: 'historic',
-    title: 'JPL D-32296: Lunar Constants and Models Document (2005)',
-    url: 'https://planetarydata.jpl.nasa.gov/img/data/m3/CH1M3_0002/EXTRAS/LunConstantsModels_2005_jpl_d32296.pdf',
-  },
-  {
-    id: 'nssdcaSurveyor',
-    section: 'historic',
-    title: 'NASA/NSSDCA Surveyor programme',
-    url: 'https://nssdc.gsfc.nasa.gov/planetary/lunar/surveyor.html',
-  },
-  {
-    id: 'surveyor1',
-    section: 'historic',
-    title: 'NASA Science: Surveyor 1',
-    url: 'https://science.nasa.gov/mission/surveyor-1/',
-    links: [{ label: 'University of Arizona: Surveyor I digitization', url: 'https://sic.lpl.arizona.edu/surveyor-digitization/surveyor-i' }],
-  },
-  {
-    id: 'nasaMoonMissions',
-    section: 'historic',
-    title: 'NASA Science: Moon missions',
-    url: 'https://science.nasa.gov/moon/missions/',
-  },
-  {
-    id: 'change3Terrain',
-    section: 'historic',
-    title: "Liu et al. (2014), ISPRS Archives XL-4: Chang'e-3 terrain reconstruction",
-    url: 'https://isprs-archives.copernicus.org/articles/XL-4/149/2014/isprsarchives-XL-4-149-2014.html',
-  },
-  {
-    id: 'change4',
-    section: 'historic',
-    title: "China NSSDC: Chang'e-4 mission record",
-    url: 'https://vsso.nssdc.ac.cn/mobile/nssdc_en/html/task/change4.html',
-    links: [{ label: 'Li et al. (2019), Nature Communications', url: 'https://www.nature.com/articles/s41467-019-12278-3' }],
-  },
-  {
-    id: 'change5',
-    section: 'historic',
-    title: "China NSSDC: Chang'e-5 mission record",
-    url: 'https://www.nssdc.ac.cn/mobile/nssdc_en/html/task/change5.html',
-  },
-  {
-    id: 'change6',
-    section: 'historic',
-    title: "Chinese Academy of Sciences: Chang'e-6 landing",
-    url: 'https://english.cas.cn/bcas/2024_2/202508/P020250813589311076398.pdf',
-    links: [{ label: "CAS: Chang'e-6 sample return", url: 'https://english.cas.cn/bcas/2025_1/202508/P020250813611333345559.pdf' }],
-  },
-  {
-    id: 'chandrayaan3',
-    section: 'historic',
-    title: 'UNOOSA registration document ST/SG/SER.E/1198 (Chandrayaan-3)',
-    url: 'https://www.unoosa.org/res/osoindex/data/documents/in/st/stsgser_e1198_html/ser1198E.pdf',
-    links: [{ label: 'ISRO Chandrayaan-3', url: 'https://www.isro.gov.in/ISRO_EN/Chandrayaan3_Details.html' }],
-  },
-  {
-    id: 'slim',
-    section: 'historic',
-    title: 'JAXA DARTS: SLIM',
-    url: 'https://darts.isas.jaxa.jp/en/missions/slim',
-    links: [{ label: 'JAXA press release 2024-01-25', url: 'https://global.jaxa.jp/press/2024/01/file/jaxa_doc01_20240125_e.pdf' }],
-  },
-  {
-    id: 'im1Navigation',
-    section: 'historic',
-    title: 'IM-1 Odysseus navigation paper (NTRS 20250007036)',
-    url: 'https://ntrs.nasa.gov/api/citations/20250007036/downloads/aasimndl.pdf',
-  },
-  {
-    id: 'blueGhost',
-    section: 'historic',
-    title: "NASA: Touchdown! Firefly's Blue Ghost lands on the Moon",
-    url: 'https://www.nasa.gov/news-release/touchdown-carrying-nasa-science-fireflys-blue-ghost-lands-on-moon/',
   },
 ] as const satisfies readonly SourceEntry[];
 
