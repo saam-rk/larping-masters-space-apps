@@ -47,6 +47,7 @@ function mount(onUpdate: () => void) {
         onCoordinatesChange={() => {}}
         onUtcChange={() => {}}
         onUpdate={onUpdate}
+        onShowUtc={vi.fn()}
         updateTarget={slot}
       />,
     ),

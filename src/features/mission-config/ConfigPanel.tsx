@@ -11,6 +11,11 @@
  * this form through its `form` attribute, so it still submits it and Enter in
  * the search box still triggers it.
  *
+ * While Apollo 11 is selected, the site box is tagged as historic and offers
+ * two instants (landing and the flag erected); each one selects that
+ * instant and queries it right away (`onShowUtc`), so the exact landing time
+ * does not have to be dialed on the wheels.
+ *
  * The update button is available for valid selections while idle unless a
  * complete live result already matches the selected coordinates and UTC instant.
  * It then reads "Updated" and stays disabled until the point or date/time changes
@@ -19,9 +24,10 @@
 
 import { useId, useMemo, useState, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { CUSTOM_SITE_ID, FEATURED_SITES, findSite, MORE_SITES, siteCode, type SiteId } from '../../../shared/sites';
+import { APOLLO_11_SITE_ID, CUSTOM_SITE_ID, FEATURED_SITES, findSite, MORE_SITES, siteCode, type SiteId } from '../../../shared/sites';
+import { APOLLO_11_FLAG_UTC, APOLLO_11_LANDING_UTC } from '../../../shared/time';
 import type { EphemerisSelection } from '../../api/ephemerisClient';
-import { formatCoordinates } from '../../format';
+import { formatCoordinates, formatUtc } from '../../format';
 import { useI18n } from '../../i18n/context';
 import { usePreferences } from '../../preferences/context';
 import { prefersReducedMotion } from '../../preferences/preferences';
@@ -62,6 +68,8 @@ interface ConfigPanelProps {
   readonly onCoordinatesChange: (latitudeDeg: number, longitudeEastDeg: number) => void;
   readonly onUtcChange: (utc: string) => void;
   readonly onUpdate: () => void;
+  /** Selects an instant and queries it right away (the Apollo 11 moments). */
+  readonly onShowUtc: (utc: string) => void;
   /** Element where the update button is rendered; inside the form when absent. */
   readonly updateTarget?: HTMLElement | null;
 }
@@ -116,6 +124,7 @@ export function ConfigPanel({
   onCoordinatesChange,
   onUtcChange,
   onUpdate,
+  onShowUtc,
   updateTarget,
 }: ConfigPanelProps) {
   const { locale, messages } = useI18n();
@@ -131,6 +140,7 @@ export function ConfigPanel({
   const zoneFieldId = useId();
   const timeHintId = useId();
   const siteListHintId = useId();
+  const apolloTitleId = useId();
   const listedSites = useMemo(() => {
     const collator = new Intl.Collator(locale, { sensitivity: 'base' });
     return [...FEATURED_SITES, ...[...MORE_SITES].sort((a, b) => collator.compare(a.name, b.name))];
@@ -171,6 +181,11 @@ export function ConfigPanel({
   const query = parseCoordinateQuery(searchInput);
   const parsedTime = fieldsToUtc(fields, zone, selection.utc);
   const custom = selection.siteId === CUSTOM_SITE_ID;
+  const apollo = selection.siteId === APOLLO_11_SITE_ID;
+  const apolloMoments = [
+    { key: 'landing', label: config.apollo11.landing, utc: APOLLO_11_LANDING_UTC },
+    { key: 'flag', label: config.apollo11.flag, utc: APOLLO_11_FLAG_UTC },
+  ] as const;
   const valid = parsedTime.ok && isUsable(query);
   const canUpdate = valid && !loading && !upToDate;
 
@@ -320,8 +335,8 @@ export function ConfigPanel({
         titleAs="h3"
         titleId={siteTitleId}
         help={config.siteInfo}
-        tag={custom ? `[${config.customTag}]` : undefined}
-        tagTone="warning"
+        tag={custom ? `[${config.customTag}]` : apollo ? `[${config.apollo11.tag}]` : undefined}
+        tagTone={custom ? 'warning' : 'accent'}
       >
         <WheelSelect
           label={config.siteList.label}
@@ -366,6 +381,38 @@ export function ConfigPanel({
           <p id={searchHintId} className={`hint${searchHint.error ? ' hint--error' : ''}`}>
             {searchHint.text}
           </p>
+        )}
+
+        {apollo && (
+          <div className="apollo-moments" role="group" aria-labelledby={apolloTitleId}>
+            <span className="search-field__label apollo-moments__title" id={apolloTitleId}>
+              <span aria-hidden="true">★ </span>
+              {config.apollo11.title}
+            </span>
+            <div className="apollo-moments__list">
+              {apolloMoments.map(({ key, label, utc }) => {
+                const selected = selection.utc === utc;
+                // Re-querying a case already shown live is blocked like the update button (D-020).
+                const disabled = loading || (selected && upToDate);
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    className={`apollo-moment${selected ? ' apollo-moment--selected' : ''}`}
+                    aria-pressed={selected}
+                    disabled={disabled}
+                    onClick={() => onShowUtc(utc)}
+                  >
+                    <span className="apollo-moment__label">
+                      {label}
+                      {selected && <span className="visually-hidden"> ({config.apollo11.selected})</span>}
+                    </span>
+                    <span className="apollo-moment__time">{formatUtc(utc)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         )}
 
       </Box>

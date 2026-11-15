@@ -47,8 +47,24 @@ relative sizes or ephemeris illumination.
 - The models contain no time-dependent rotation, libration, phase, position,
   angular size or physical relative scale. The application must set them.
 
-This task creates assets only; the existing scene components do not yet load
-them. No UI, ephemeris method or first-person terrain asset was changed.
+### App integration (`feat/celestial-models-apollo-flag`)
+
+`src/features/scene/CelestialModel.tsx` loads the three GLBs in the
+third-person views; the plain spheres remain as the loading fallback.
+
+- Real scale: the Moon is scaled to 1737.4 km and oriented by
+  `celestialOrientation.ts` so the selected site lies under the observer, with
+  the model north pole along the drawn spin axis (no libration). Its coarse
+  relief is shown as-is; the observer and horizon plane stay on the reference
+  sphere, so the globe surface can sit a few kilometres above or below them.
+- Sun and Earth (both scales): scaled to the radius each view already drew,
+  with their model north pole along the lunar spin axis. This orientation is
+  illustrative; Earth and Sun rotation are not computed. The Sun material is
+  drawn outside tone mapping; the Earth keeps the former sphere's faint blue
+  self-glow so a mostly ocean or night-side disc stays findable.
+- Visual scale does not draw the Moon (the green disc is the local horizon).
+- Checked in the browser on Apollo 11: the three models load and render; no
+  device frame-rate measurement was made.
 
 ## Sources, attribution and method
 

@@ -27,6 +27,24 @@ NASA/NSSDCA's catalogue convention; NASA histories can differ by seconds.
 
 The flag uses a horizontal support rod and a 3-by-5-foot field, as described
 in [NASA's history of the flag assembly](https://www.nasa.gov/history/flag-day-flying-high-the-stars-and-stripes-in-space/).
+
+In the app the props follow the result's instant (`src/features/scene/apolloTimeline.ts`):
+nothing before the touchdown (1969-07-20 20:17:40 UTC); Eagle and the three
+figures, without the flag and with the planting figure standing still, until
+the flag is up at **1969-07-21 03:41:43 UTC** (110:09:43 GET, when Mission
+Control reports it in the
+[Apollo Lunar Surface Journal](https://apollojournals.org/alsj/a11/a11.step.html),
+converted with the journal's first contact, 109:24:15 GET = 02:56:15 UTC);
+the full tableau until the liftoff at **1969-07-21 17:54:00 UTC**
+([124:22:00 GET](https://apollojournals.org/alsj/a11/a11.launch.html)); and
+only the flag afterwards. Historically the descent stage also stayed on the
+surface; leaving it out is a product choice of this illustration.
+The exported canton is defective: it has only top and bottom vertex rows, so
+between them it sits in front of the curved star polygons and buries most
+stars. `src/features/scene/apolloFlag.ts` hides those stars and replaces the
+canton at load time with a tessellated cloth surface textured with 50 stars
+(Executive Order 10834 layout). The builder script and GLB are unchanged;
+fix the canton there too before the next Blender export.
 The two-way hop uses an illustrative launch velocity of 1.02 m/s horizontal
 and 1.14 m/s vertical with [NASA's lunar surface gravity of 1.62 m/s²](https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/moon/).
 Each leg of the hop travels about 1.44 m in 1.41 s and reaches 0.40 m above

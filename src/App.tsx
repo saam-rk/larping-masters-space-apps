@@ -96,7 +96,7 @@ export function App() {
     ephemeris.update();
   }
 
-  /** An inverse search match: select its instant and show it on the horizon view. */
+  /** An inverse search match or an Apollo 11 moment: select its instant and show it on the horizon view. */
   function handleShowMatch(utc: string) {
     viewSwitch.resetWarp();
     transition.start();
@@ -153,6 +153,7 @@ export function App() {
               onCoordinatesChange={ephemeris.setCoordinates}
               onUtcChange={ephemeris.setUtc}
               onUpdate={handleUpdate}
+              onShowUtc={handleShowMatch}
               updateTarget={updateSlot}
             />
             <SkySearchPanel selection={ephemeris.selection} onShow={handleShowMatch} />
