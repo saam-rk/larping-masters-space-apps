@@ -1,12 +1,9 @@
 /**
- * Header controls beside the update button: the astronaut mark (left) and the
- * round options button (right) that reopens the landing window with the
- * preferences.
+ * The options button beside the update button reopens the preferences window.
  */
 
 import { useI18n } from '../../i18n/context';
 import { usePreferences } from '../../preferences/context';
-import { AstronautMark } from './LandingLogo';
 
 /**
  * Settings cog for a 24×24 box: square teeth around a ring with a hole
@@ -27,14 +24,6 @@ function cogPath(teeth: number, outer: number, inner: number, hole: number): str
 }
 
 const COG_PATH = cogPath(8, 11, 8, 3.4);
-
-export function HeaderLogo() {
-  return (
-    <div className="header-logo" aria-hidden="true">
-      <AstronautMark />
-    </div>
-  );
-}
 
 export function OptionsButton() {
   const { messages } = useI18n();

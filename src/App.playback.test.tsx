@@ -14,7 +14,7 @@ vi.mock('./i18n/context', () => ({ useI18n: () => ({ locale: 'en', messages: MES
 vi.mock('./preferences/context', () => ({ usePreferences: () => ({ configured: true, preferences: { effects: 'off' } }) }));
 vi.mock('./features/backdrop/Backdrop', () => ({ Backdrop: () => null }));
 vi.mock('./features/backdrop/CrtCurvature', () => ({ CrtCurvature: () => null }));
-vi.mock('./features/shell/HeaderControls', () => ({ HeaderLogo: () => null, OptionsButton: () => null }));
+vi.mock('./features/shell/HeaderControls', () => ({ OptionsButton: () => null }));
 vi.mock('./features/sky-search/SkySearchPanel', () => ({ SkySearchPanel: () => null }));
 vi.mock('./features/scene/SkyScene', () => ({
   default: ({ data, playback }: { data: EphemerisResponse; playback: boolean }) =>

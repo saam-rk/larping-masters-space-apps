@@ -66,7 +66,7 @@ const ORBIT_TRANSFORM = `rotate(${ORBIT_TILT_DEG} ${CX} ${CY})`;
 
 type AstronautPosition = Pick<ComponentProps<'svg'>, 'x' | 'y' | 'width' | 'height'>;
 
-export function AstronautMark(position: AstronautPosition) {
+function AstronautMark(position: AstronautPosition) {
   const tintId = useId();
 
   return (
