@@ -1,0 +1,836 @@
+{
+  "schemaVersion": 1,
+  "id": "amundsen-rim",
+  "generatedUtc": "2026-11-14T23:56:06.910765+00:00",
+  "source": {
+    "provider": "NASA GSFC / LRO LOLA / PGDA product 78",
+    "product": "DM1_final_adj_5mpp_surf.tif",
+    "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/DM1/DM1_final_adj_5mpp_surf.tif",
+    "catalogUrl": "https://pgda.gsfc.nasa.gov/products/78",
+    "readmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+    "citation": "Barker et al. (2021), Planetary and Space Science 203, 105119",
+    "doi": "https://doi.org/10.1016/j.pss.2020.105119",
+    "version": "No explicit product version in TIFF; identified by filename and SHA-256",
+    "sha256": "ceb7e786d05ef6a604c80b78be885e641ad7bd2b5c3aac944201a4f2008d8ca4",
+    "bytes": 64033681,
+    "dimensions": [
+      4000,
+      4000
+    ],
+    "affine": [
+      5.0,
+      0.0,
+      154000.0,
+      0.0,
+      -5.0,
+      71500.0
+    ],
+    "wkt": "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+    "rasterResolutionM": [
+      5.0,
+      5.0
+    ],
+    "nodata": "NaN",
+    "dtype": "float32",
+    "scale": 1.0,
+    "offset": 0.0,
+    "registration": "pixel centers; affine maps pixel corners",
+    "tags": {
+      "NC_GLOBAL#Conventions": "COARDS, CF-1.5",
+      "NC_GLOBAL#GMT_version": "5.4.2 (r18461) [64-bit]",
+      "NC_GLOBAL#history": "xyz2grd -bi3 -I0005.00000 -R1.54000000000e+05/1.74000000000e+05/5.15000000000e+04/7.15000000000e+04 -G/att/nobackup/mkbarker/GCD/DM1/DM1_final_adj_5mpp_surf_test.grd -r",
+      "NC_GLOBAL#node_offset": "1",
+      "x#actual_range": "{154000,174000}",
+      "x#long_name": "x",
+      "y#actual_range": "{51500,71500}",
+      "y#long_name": "y",
+      "z#actual_range": "{-1839.153564453125,1019.579772949219}",
+      "z#long_name": "z",
+      "z#_FillValue": "nan",
+      "AREA_OR_POINT": "Area"
+    }
+  },
+  "historicalWindowCheck": null,
+  "frame": {
+    "name": "MOON_ME / DE421",
+    "evidence": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+    "note": "Frame realization comes from NASA README, not the generic TIFF datum name. No frame transformation performed.",
+    "latitude": "planetocentric degrees, north positive",
+    "longitude": "degrees, east positive"
+  },
+  "crs": {
+    "proj": "+proj=stere +lat_0=-90 +lon_0=0 +k=1 +x_0=0 +y_0=0 +R=1737400 +units=m +no_defs",
+    "referenceRadiusM": 1737400,
+    "projection": "south polar stereographic",
+    "latitudeOriginDeg": -90,
+    "centralMeridianDeg": 0,
+    "scaleAtPole": 1,
+    "falseEastingM": 0,
+    "falseNorthingM": 0
+  },
+  "units": "meters",
+  "vertical": {
+    "scale": 1,
+    "reference": "radial elevation above 1737400 m lunar sphere",
+    "evidence": "docs/LUNAR_SOUTH_POLE_RESEARCH.md and its LOLA elevation-definition references",
+    "model": "Projected height field, not body-fixed Cartesian or true local ENU. Lunar curvature is not embedded."
+  },
+  "origin": {
+    "projectedXM": 164000,
+    "projectedYM": 61500,
+    "radialElevationM": 399
+  },
+  "axes": {
+    "blender": [
+      "X = projected X - origin X",
+      "Y = projected Y - origin Y",
+      "Z = height - origin height"
+    ],
+    "glb": [
+      "X = projected X - origin X",
+      "Y = height - origin height",
+      "Z = -(projected Y - origin Y)"
+    ],
+    "note": "Projection grid directions are NOT geographic east/north at this longitude. Do not align ephemeris azimuths directly."
+  },
+  "markerTransform": {
+    "projection": "rho = 2*R*tan(pi/4 + latitudeRadians/2); X = rho*sin(longitudeRadians); Y = rho*cos(longitudeRadians)",
+    "position": "[X-originX, meshHeight-originHeight+heightAboveMeshM, -(Y-originY)]",
+    "heightMethod": "Downward ray intersection with exported GLB triangles; barycentric height, not nearest vertex",
+    "validity": "Reject outside mesh center bounds or without a triangle hit. No extrapolation, no site-ID restriction.",
+    "implementation": "tools/lunar-terrain/marker.mjs"
+  },
+  "coverage": {
+    "cropPixelOuterBoundsM": [
+      156500.0,
+      56500.0,
+      166500.0,
+      66500.0
+    ],
+    "meshPixelCenterBoundsM": [
+      156502.5,
+      56502.5,
+      166497.5,
+      66497.5
+    ],
+    "boundsOrder": "minX,minY,maxX,maxY",
+    "sourceWindow": [
+      500,
+      1000,
+      2000,
+      2000
+    ],
+    "cropAffine": [
+      5.0,
+      0.0,
+      156500.0,
+      0.0,
+      -5.0,
+      66500.0
+    ],
+    "validPixels": 4000000,
+    "totalPixels": 4000000,
+    "validPixelFraction": 1.0,
+    "sourceNodataPixels": 0,
+    "meshProjectedAreaM2": 99900025.0,
+    "meshCenterRectangleFraction": 1.0,
+    "removedUnsupportedTriangles": 0,
+    "validityRepresentation": "Union of exported triangles is authoritative; crop rectangle alone is not a validity test.",
+    "nodataPolicy": "Reject triangle if its source-pixel bounding box contains any missing value; conservative holes, never zero-fill.",
+    "outerEdgePolicy": "Surface stops at outer pixel centers, 2.5 m inside raster crop edges. Half-pixel border is unsupported."
+  },
+  "generation": {
+    "config": {
+      "id": "amundsen-rim",
+      "displayName": "Amundsen Rim",
+      "sourceUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/DM1/DM1_final_adj_5mpp_surf.tif",
+      "sourceCatalogUrl": "https://pgda.gsfc.nasa.gov/products/78",
+      "sourceReadmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+      "siteSource": "docs/LUNAR_ADDITIONAL_SITES_RESEARCH.md catalog row 1 (DM1), NASA Lunar Surface Data Book M2M-30044 Table A2.1-1. Center of an original candidate-region polygon; not an approved landing site.",
+      "frame": "MOON_ME / DE421",
+      "referenceRadiusM": 1737400,
+      "site": {
+        "latitudeDeg": -84.2287,
+        "longitudeEastDeg": 69.44396
+      },
+      "ridge": {
+        "latitudeDeg": -84.29451437802126,
+        "longitudeEastDeg": 68.91307426200034
+      },
+      "third": {
+        "latitudeDeg": -84.28417647426343,
+        "longitudeEastDeg": 70.20557640746419
+      },
+      "cropCenterProjectedM": [
+        161500,
+        61500
+      ],
+      "cropSizeM": [
+        10000,
+        10000
+      ],
+      "originProjectedM": [
+        164000,
+        61500,
+        399
+      ],
+      "targetVertices": 40500,
+      "baseStridePixels": 20,
+      "candidateStridePixels": 4,
+      "refinementBatchSize": 2500,
+      "ridgePriorityMultiplier": 2.5,
+      "ridgePriorityRadiusM": 1800,
+      "maxGlbBytes": 2097152,
+      "nearDetail": {
+        "centerProjectedM": [
+          163991.5,
+          61481.5
+        ],
+        "seedBandsRadiusMStridePixels": [
+          [
+            35,
+            1
+          ],
+          [
+            150,
+            2
+          ],
+          [
+            500,
+            4
+          ]
+        ],
+        "residualPriorityBoost": 10,
+        "residualPriorityRadiusM": 550,
+        "textureSquareSizeM": 50,
+        "textureFullDetailRadiusM": 15,
+        "textureFadeEndRadiusM": 24,
+        "cameraHorizontalDirection": [
+          -0.9612616959383189,
+          0.27563735581699916
+        ],
+        "cameraHeightAboveMeshM": 1.65,
+        "astronautDistanceAheadM": 5,
+        "astronautSideOffsetM": 0.65,
+        "initialMovementRadiusM": 2
+      },
+      "featureNotes": {
+        "ridge": "Highest source pixel within 250 m of the sampled skyline at grid bearing 284 degrees from the site: the eastern rim of a roughly 1 km crater, about 2.57 km from the site and 270 m above it. Descriptive label from numeric DM1 elevation and illustrative hillshade; not an IAU feature name.",
+        "third": "Off-grid holdout on the slope that descends toward the Amundsen crater interior (grid south); no mission significance.",
+        "nearDetail": "Gentlest 25 m window (about 1 degree plane-fit slope) within 45 m of the saved point, about 21 m from it. Selected for scale-figure footing, not landing suitability.",
+        "crop": "Shifted 2.5 km grid-west of the saved point so that the higher west-southwest terrain crest seen from the viewpoint lies inside the crop instead of at its boundary."
+      },
+      "siteLimitations": [
+        "The saved point lies on a broad, gently undulating crest; the 10 km crop does not include the complete Amundsen crater or its floor.",
+        "The astronaut stands on a gently sloping triangle selected for footing; no claim of walkability, safe footing or landing suitability."
+      ]
+    },
+    "algorithm": "Deterministic Delaunay adaptive residual refinement at source pixel centers; ridge-weighted error; protected site/ridge support samples; camera-led full 5 m support and nested seed bands with Gaussian near-field residual priority",
+    "refinementHistory": [
+      {
+        "verticesBefore": 12738,
+        "added": 2500,
+        "candidateMaxErrorM": 39.96624884354435
+      },
+      {
+        "verticesBefore": 15238,
+        "added": 2500,
+        "candidateMaxErrorM": 22.40312703450519
+      },
+      {
+        "verticesBefore": 17738,
+        "added": 2500,
+        "candidateMaxErrorM": 13.287532552083348
+      },
+      {
+        "verticesBefore": 20238,
+        "added": 2500,
+        "candidateMaxErrorM": 13.479359944661496
+      },
+      {
+        "verticesBefore": 22738,
+        "added": 2500,
+        "candidateMaxErrorM": 6.5790283203125455
+      },
+      {
+        "verticesBefore": 25238,
+        "added": 2500,
+        "candidateMaxErrorM": 5.84173583984375
+      },
+      {
+        "verticesBefore": 27738,
+        "added": 2500,
+        "candidateMaxErrorM": 4.694244384765625
+      },
+      {
+        "verticesBefore": 30238,
+        "added": 2500,
+        "candidateMaxErrorM": 5.1866027832031705
+      },
+      {
+        "verticesBefore": 32738,
+        "added": 2500,
+        "candidateMaxErrorM": 4.435632324218659
+      },
+      {
+        "verticesBefore": 35238,
+        "added": 2500,
+        "candidateMaxErrorM": 3.834552001953057
+      },
+      {
+        "verticesBefore": 37738,
+        "added": 2500,
+        "candidateMaxErrorM": 4.039953613281227
+      },
+      {
+        "verticesBefore": 40238,
+        "added": 262,
+        "candidateMaxErrorM": 4.048679351806641
+      }
+    ],
+    "vertices": 40500,
+    "triangles": 80572,
+    "compression": "none",
+    "exportAttributes": [
+      "POSITION",
+      "NORMAL",
+      "TEXCOORD_0"
+    ],
+    "versions": {
+      "python": "3.11.9",
+      "numpy": "2.4.6",
+      "rasterio": "1.4.4",
+      "gdal": "3.10.3",
+      "pyproj": "3.7.2",
+      "proj": "9.5.1",
+      "scipy": "1.17.1",
+      "blender": "5.2.2 LTS"
+    },
+    "builder": "tools/lunar-terrain/build_camera_led.py"
+  },
+  "controlPoints": [
+    {
+      "name": "site",
+      "latitudeDeg": -84.2287,
+      "longitudeEastDeg": 69.44396,
+      "projectedM": [
+        164001.12462085998,
+        61500.40469151505
+      ],
+      "rasterBilinearM": 399.4590802990453,
+      "meshHeightM": 399.45302602648735,
+      "meshMinusBilinearM": -0.0060542725579466605
+    },
+    {
+      "name": "ridge",
+      "latitudeDeg": -84.29451437802126,
+      "longitudeEastDeg": 68.91307426200034,
+      "projectedM": [
+        161557.50000000047,
+        62297.50000000017
+      ],
+      "rasterBilinearM": 669.5440673827526,
+      "meshHeightM": 669.5440673828125,
+      "meshMinusBilinearM": 5.991296347929165e-11
+    },
+    {
+      "name": "third",
+      "latitudeDeg": -84.28417647426343,
+      "longitudeEastDeg": 70.20557640746419,
+      "projectedM": [
+        163217.29999999923,
+        58743.899999999725
+      ],
+      "rasterBilinearM": 106.1841528684958,
+      "meshHeightM": 106.28976440429688,
+      "meshMinusBilinearM": 0.1056115358010743
+    }
+  ],
+  "limitations": [
+    "Visualization asset, not a landing, power, radio-link or terrain-horizon certification.",
+    "5 m sample spacing is not effective resolution; NASA reports extensive interpolation (~90%).",
+    "No count/error layers used for this mesh; valid elevation does not mean direct LOLA observation.",
+    "Planar map view omits lunar curvature; use body-fixed geometry for physical sight-line calculations.",
+    "Manual coordinates must share the documented frame. No ME/PA or IAU_MOON conversion is supplied.",
+    "Illustrative Blender light is not an ephemeris-derived Sun position.",
+    "Fine grain is illustrative normal/color detail, not LOLA spatial information.",
+    "The saved point lies on a broad, gently undulating crest; the 10 km crop does not include the complete Amundsen crater or its floor.",
+    "The astronaut stands on a gently sloping triangle selected for footing; no claim of walkability, safe footing or landing suitability.",
+    "No live viewer integration or mobile FPS/network benchmark is included."
+  ],
+  "performance": {
+    "coldLoadTargetSeconds": 2,
+    "orbitTargetFps": 60,
+    "orbitMinimumFps": 50,
+    "status": "pending",
+    "device": null,
+    "browser": null,
+    "network": null,
+    "reason": "No mobile device/network performance test performed; asset size is not latency/FPS evidence.",
+    "initialModelBytes": 2161120,
+    "initialDownloadScope": "Terrain with all embedded maps plus separate astronaut; metadata accounted separately, app JS/CSS excluded."
+  },
+  "nearDetail": {
+    "centerProjectedM": [
+      163991.5,
+      61481.5
+    ],
+    "seedBandsRadiusMStridePixels": [
+      [
+        35,
+        1
+      ],
+      [
+        150,
+        2
+      ],
+      [
+        500,
+        4
+      ]
+    ],
+    "residualPriorityBoost": 10,
+    "residualPriorityRadiusM": 550,
+    "textureSquareSizeM": 50,
+    "textureFullDetailRadiusM": 15,
+    "textureFadeEndRadiusM": 24,
+    "cameraHorizontalDirection": [
+      -0.9612616959383189,
+      0.27563735581699916
+    ],
+    "cameraHeightAboveMeshM": 1.65,
+    "astronautDistanceAheadM": 5,
+    "astronautSideOffsetM": 0.65,
+    "initialMovementRadiusM": 2,
+    "geometryFullDensityRadiusM": 35,
+    "texture": {
+      "type": "Illustrative deterministic baked regolith; NOT geographic lunar imagery",
+      "generator": "tools/lunar-terrain/shackleton_textures.py",
+      "seed": 2404,
+      "normalSize": [
+        2048,
+        2048
+      ],
+      "colorSize": [
+        512,
+        512
+      ],
+      "roughnessSize": [
+        256,
+        256
+      ],
+      "normalTexelFootprintM": 0.0244140625,
+      "fade": "Cubic smoothstep: full to 15 m radius, neutral at 24 m; clamp-to-edge",
+      "displacement": "none",
+      "externalTextureBytes": 0,
+      "materialCount": 1,
+      "normalConvention": "glTF tangent space +Y",
+      "uv": "U=(localX-centerX)/50+0.5; V=(localProjectedY-centerY)/50+0.5"
+    }
+  },
+  "astronaut": {
+    "url": "/terrain/astronaut.glb",
+    "sourcePath": "docs/research/site-terrain/nobile-rim-2/astronaut.glb",
+    "filename": "astronaut.glb",
+    "bytes": 73896,
+    "sha256": "ce2bfc709f9ff07ee259264a2e9fbaaa8739f8e1cb657ec4be0705433c48160b",
+    "rootName": "Astronaut_1p70m.007",
+    "uniformScale": 0.9989839397699692,
+    "translationGlbM": [
+      -9.166666984558105,
+      -0.577850341796875,
+      19.166667938232422
+    ],
+    "quaternionGlbXYZW": [
+      -0.002390084555372596,
+      0.6018110513687134,
+      -0.002958863042294979,
+      0.7986294627189636
+    ],
+    "matrixGlbColumnMajor": [
+      0.27534937858581543,
+      -0.007595104165375233,
+      -0.9602572321891785,
+      0.0,
+      0.0018474330427125096,
+      0.9989550113677979,
+      -0.007371439132839441,
+      0.0,
+      0.9602854251861572,
+      0.0002559702261351049,
+      0.27535542845726013,
+      0.0,
+      -9.166666984558105,
+      -0.577850341796875,
+      19.166667938232422,
+      1.0
+    ],
+    "heightWorldVerticalM": 1.6999999284744263,
+    "heightAlongBodyAxisM": 1.6982726976089477,
+    "heightDefinition": "Uniformly scaled AFTER rigid slope alignment: world vertical sole-to-helmet bounds = 1.70 m. Pose and materials unchanged.",
+    "tiltDeg": 0.4356619086619708,
+    "supportProjectedM": [
+      163990.83333301544,
+      61480.83333206177,
+      398.4221496582031
+    ],
+    "supportGlbM": [
+      -9.166666984558105,
+      -0.577850341796875,
+      19.166667938232422
+    ],
+    "supportTriangle": 80269,
+    "bootSoleCorners": [
+      {
+        "boot": "Astronaut_boot_R.007",
+        "blenderM": [
+          -8.94784927368164,
+          -19.21902084350586,
+          -0.5778687000274658
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_R.007",
+        "blenderM": [
+          -8.94784927368164,
+          -19.21902084350586,
+          -0.5778687000274658
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_R.007",
+        "blenderM": [
+          -8.94784927368164,
+          -19.21902084350586,
+          -0.5778687000274658
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_R.007",
+        "blenderM": [
+          -9.274346351623535,
+          -19.12540054321289,
+          -0.5779557228088379
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_R.007",
+        "blenderM": [
+          -9.274346351623535,
+          -19.12540054321289,
+          -0.5779557228088379
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_R.007",
+        "blenderM": [
+          -9.274346351623535,
+          -19.12540054321289,
+          -0.5779557228088379
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_R.007",
+        "blenderM": [
+          -8.887272834777832,
+          -19.00776481628418,
+          -0.5795395970344543
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_R.007",
+        "blenderM": [
+          -8.887272834777832,
+          -19.00776481628418,
+          -0.5795395970344543
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_R.007",
+        "blenderM": [
+          -8.887272834777832,
+          -19.00776481628418,
+          -0.5795395970344543
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_R.007",
+        "blenderM": [
+          -9.213769912719727,
+          -18.914142608642578,
+          -0.5796266794204712
+        ],
+        "gapM": -5.960464477539063e-08
+      },
+      {
+        "boot": "Astronaut_boot_R.007",
+        "blenderM": [
+          -9.213769912719727,
+          -18.914142608642578,
+          -0.5796266794204712
+        ],
+        "gapM": -5.960464477539063e-08
+      },
+      {
+        "boot": "Astronaut_boot_R.007",
+        "blenderM": [
+          -9.213769912719727,
+          -18.914142608642578,
+          -0.5796266794204712
+        ],
+        "gapM": -5.960464477539063e-08
+      },
+      {
+        "boot": "Astronaut_boot_L.007",
+        "blenderM": [
+          -9.013933181762695,
+          -19.449481964111328,
+          -0.5760458707809448
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_L.007",
+        "blenderM": [
+          -9.013933181762695,
+          -19.449481964111328,
+          -0.5760458707809448
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_L.007",
+        "blenderM": [
+          -9.013933181762695,
+          -19.449481964111328,
+          -0.5760458707809448
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_L.007",
+        "blenderM": [
+          -9.34043025970459,
+          -19.35586166381836,
+          -0.5761328935623169
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_L.007",
+        "blenderM": [
+          -9.34043025970459,
+          -19.35586166381836,
+          -0.5761328935623169
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_L.007",
+        "blenderM": [
+          -9.34043025970459,
+          -19.35586166381836,
+          -0.5761328935623169
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_L.007",
+        "blenderM": [
+          -8.953356742858887,
+          -19.23822593688965,
+          -0.5777167677879333
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_L.007",
+        "blenderM": [
+          -8.953356742858887,
+          -19.23822593688965,
+          -0.5777167677879333
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_L.007",
+        "blenderM": [
+          -8.953356742858887,
+          -19.23822593688965,
+          -0.5777167677879333
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_L.007",
+        "blenderM": [
+          -9.279853820800781,
+          -19.144603729248047,
+          -0.5778038501739502
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_L.007",
+        "blenderM": [
+          -9.279853820800781,
+          -19.144603729248047,
+          -0.5778038501739502
+        ],
+        "gapM": 0.0
+      },
+      {
+        "boot": "Astronaut_boot_L.007",
+        "blenderM": [
+          -9.279853820800781,
+          -19.144603729248047,
+          -0.5778038501739502
+        ],
+        "gapM": 0.0
+      }
+    ],
+    "maxAbsoluteSoleGapM": 5.960464477539063e-08
+  },
+  "initialCamera": {
+    "positionGlbM": [
+      -4.539523124694824,
+      1.0209431648254395,
+      21.169675827026367
+    ],
+    "targetGlbM": [
+      -9.256401062011719,
+      0.27037328481674194,
+      19.33566665649414
+    ],
+    "upGlb": [
+      0,
+      1,
+      0
+    ],
+    "verticalFovDeg": 48,
+    "nearM": 0.05,
+    "farM": 30000,
+    "heightAboveFinalMeshM": 1.65,
+    "movementRadiusM": 2,
+    "portraitMovingMinimumFovDeg": 64,
+    "movementRule": "Translate within 2 m in projected XY; re-raycast final terrain and keep 1.65 m vertical clearance. Initial vertical FOV 48 degrees. At portrait aspect < 0.6 and displacement > 1 m, widen vertical FOV to at least 64 degrees to keep the full body framed.",
+    "astronautHorizontalDistanceM": 5.042072999621723,
+    "shiftedPositionGlbM": [
+      -3.783255100250244,
+      0.9886142611503601,
+      20.346233367919922
+    ],
+    "framingChecks": [
+      {
+        "camera": "Initial | 1.65 m above final mesh.004",
+        "resolution": [
+          1280,
+          900
+        ],
+        "normalizedBoundsXY": [
+          [
+            0.45532840490341187,
+            0.604943037033081
+          ],
+          [
+            0.30219578742980957,
+            0.6892609596252441
+          ]
+        ],
+        "fullBodyInsideFrame": true
+      },
+      {
+        "camera": "Initial | 1.65 m above final mesh.004",
+        "resolution": [
+          390,
+          844
+        ],
+        "normalizedBoundsXY": [
+          [
+            0.36250820755958557,
+            0.8229973912239075
+          ],
+          [
+            0.30219578742980957,
+            0.6892609596252441
+          ]
+        ],
+        "fullBodyInsideFrame": true
+      },
+      {
+        "camera": "Shifted | movement and transition check.004",
+        "resolution": [
+          1280,
+          900
+        ],
+        "normalizedBoundsXY": [
+          [
+            0.45844322443008423,
+            0.5964795351028442
+          ],
+          [
+            0.31728750467300415,
+            0.6723237037658691
+          ]
+        ],
+        "fullBodyInsideFrame": true
+      },
+      {
+        "camera": "Shifted | movement and transition check.004",
+        "resolution": [
+          390,
+          844
+        ],
+        "normalizedBoundsXY": [
+          [
+            0.37209510803222656,
+            0.7969481348991394
+          ],
+          [
+            0.31728750467300415,
+            0.6723237037658691
+          ]
+        ],
+        "fullBodyInsideFrame": true
+      }
+    ]
+  },
+  "blenderRoundTrip": {
+    "status": "passed",
+    "vertices": 40500,
+    "triangles": 80572,
+    "bijectiveVertexMatch": true,
+    "maxNearestVertexResidualM": 0.0,
+    "textureImages": 3,
+    "normalMapImported": true,
+    "uvLayers": 1,
+    "note": "Final scene uses reimported GLB, not the source mesh; screenshots therefore exercise exported materials."
+  },
+  "artifacts": {
+    "glb": {
+      "filename": "amundsen-rim.glb",
+      "bytes": 2087224,
+      "sha256": "ac2a4ea2b9ed1ea88999ddd28c5c41364e092c82fd63a374935357ba0ea7f0de"
+    },
+    "astronaut": {
+      "filename": "astronaut.glb",
+      "bytes": 73896,
+      "sha256": "ce2bfc709f9ff07ee259264a2e9fbaaa8739f8e1cb657ec4be0705433c48160b"
+    },
+    "blend": {
+      "filename": "amundsen-rim.blend",
+      "bytes": 2971203,
+      "sha256": "6a7f431a2955e7606d0108fae074212ae810e8694bec9a8c6dfd1f804fda766f",
+      "normalizedStartupFile": true
+    }
+  }
+}

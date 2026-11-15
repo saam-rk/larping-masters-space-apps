@@ -1,0 +1,216 @@
+{
+  "status": "passed",
+  "glb": {
+    "bytes": 2087224,
+    "mib": 1.9905319213867188,
+    "budgetBytes": 2097152,
+    "remainingBytes": 9928,
+    "vertices": 40500,
+    "triangles": 80572,
+    "attributes": [
+      "POSITION",
+      "NORMAL",
+      "TEXCOORD_0"
+    ],
+    "indexComponentType": 5123,
+    "extensionsRequired": [],
+    "sha256": "ac2a4ea2b9ed1ea88999ddd28c5c41364e092c82fd63a374935357ba0ea7f0de",
+    "boundsM": [
+      [
+        -7497.5,
+        -1222.63427734375,
+        -4997.5
+      ],
+      [
+        2497.5,
+        442.9344482421875,
+        4997.5
+      ]
+    ]
+  },
+  "topology": {
+    "boundaryEdges": 426,
+    "nonManifoldEdges": 0,
+    "eulerCharacteristic": 1,
+    "allFaceNormalsUp": true,
+    "projectedAreaM2": 99900025.0
+  },
+  "sourceChecks": {
+    "sha256": "ceb7e786d05ef6a604c80b78be885e641ad7bd2b5c3aac944201a4f2008d8ca4",
+    "allVerticesAtSourcePixelCenters": true,
+    "maxVertexHeightResidualM": 6.103515625e-05,
+    "allTrianglesNodataSafe": true,
+    "outsidePointRejected": true
+  },
+  "comparisonMethods": {
+    "raster": "float64 bilinear interpolation of four surrounding 5 m pixel centers",
+    "glb": "float64 barycentric vertical intersection with actual exported triangle/index buffers; restore origin height",
+    "delta": "GLB minus raster, meters; mesh approximation difference, NOT scientific accuracy"
+  },
+  "controls": [
+    {
+      "name": "site",
+      "latitudeDeg": -84.2287,
+      "longitudeEastDeg": 69.44396,
+      "projectedM": [
+        164001.12462085998,
+        61500.40469151505
+      ],
+      "rasterBilinearM": 399.4590802990453,
+      "meshHeightM": 399.45302602648735,
+      "meshMinusBilinearM": -0.0060542725579466605,
+      "glbBarycentricM": 399.45302603536675,
+      "glbMinusRasterM": -0.006054263678549887
+    },
+    {
+      "name": "ridge",
+      "latitudeDeg": -84.29451437802126,
+      "longitudeEastDeg": 68.91307426200034,
+      "projectedM": [
+        161557.50000000047,
+        62297.50000000017
+      ],
+      "rasterBilinearM": 669.5440673827526,
+      "meshHeightM": 669.5440673828125,
+      "meshMinusBilinearM": 5.991296347929165e-11,
+      "glbBarycentricM": 669.5440673829413,
+      "glbMinusRasterM": 1.887201506178826e-10
+    },
+    {
+      "name": "third",
+      "latitudeDeg": -84.28417647426343,
+      "longitudeEastDeg": 70.20557640746419,
+      "projectedM": [
+        163217.29999999923,
+        58743.899999999725
+      ],
+      "rasterBilinearM": 106.1841528684958,
+      "meshHeightM": 106.28976440429688,
+      "meshMinusBilinearM": 0.1056115358010743,
+      "glbBarycentricM": 106.28977697736889,
+      "glbMinusRasterM": 0.10562410887308715
+    }
+  ],
+  "holdoutGrid": {
+    "count": 625,
+    "missing": 0,
+    "maxAbsDifferenceM": 7.428490963710146,
+    "rmsDifferenceM": 0.5632063974831101,
+    "p95AbsDifferenceM": 0.9708536525871239,
+    "note": "625 interior points, not exhaustive. Site/ridge supports are protected; third control is not."
+  },
+  "mobilePerformance": {
+    "coldLoadTargetSeconds": 2,
+    "orbitTargetFps": 60,
+    "orbitMinimumFps": 50,
+    "status": "pending",
+    "device": null,
+    "browser": null,
+    "network": null,
+    "reason": "No mobile device/network performance test performed; asset size is not latency/FPS evidence.",
+    "initialModelBytes": 2161120,
+    "initialDownloadScope": "Terrain with all embedded maps plus separate astronaut; metadata accounted separately, app JS/CSS excluded."
+  },
+  "referencePixel": {
+    "row": 1999,
+    "column": 2000,
+    "heightM": 399.65985107421875,
+    "note": "Containing pixel, NOT bilinear height at the exact saved coordinate"
+  },
+  "astronautSupport": {
+    "projectedXYM": [
+      163990.83333301544,
+      61480.83333206177
+    ],
+    "rasterBilinearM": 398.415974938978,
+    "glbBarycentricM": 398.4221496681741,
+    "glbMinusRasterM": 0.006174729196061435
+  },
+  "materialChecks": {
+    "embeddedImages": [
+      {
+        "name": "regolith-normal",
+        "size": [
+          2048,
+          2048
+        ],
+        "bytes": 259744,
+        "mime": "image/jpeg"
+      },
+      {
+        "name": "regolith-color",
+        "size": [
+          512,
+          512
+        ],
+        "bytes": 17074,
+        "mime": "image/jpeg"
+      },
+      {
+        "name": "regolith-orm",
+        "size": [
+          256,
+          256
+        ],
+        "bytes": 29142,
+        "mime": "image/png"
+      }
+    ],
+    "externalTextureBytes": 0,
+    "allSamplersClampToEdge": true,
+    "neutralNormalBorder": true,
+    "centerNormalVariation": true,
+    "singleContinuousMaterial": true,
+    "nearFieldFullDensitySamples": 154
+  },
+  "vertexDensityByDistanceFromNearDetailCenter": [
+    {
+      "ringM": [
+        0,
+        35
+      ],
+      "vertices": 154,
+      "verticesPerKm2": 40016.099977390826
+    },
+    {
+      "ringM": [
+        35,
+        150
+      ],
+      "vertices": 669,
+      "verticesPerKm2": 10009.368453910974
+    },
+    {
+      "ringM": [
+        150,
+        500
+      ],
+      "vertices": 1788,
+      "verticesPerKm2": 2501.705830754364
+    },
+    {
+      "ringM": [
+        500,
+        1500
+      ],
+      "vertices": 6725,
+      "verticesPerKm2": null
+    },
+    {
+      "ringM": [
+        1500,
+        15000
+      ],
+      "vertices": 31164,
+      "verticesPerKm2": null
+    }
+  ],
+  "initialDownload": {
+    "terrainBytes": 2087224,
+    "astronautBytes": 73896,
+    "metadataBytes": 25609,
+    "totalModelBytes": 2161120,
+    "totalIncludingMetadataBytes": 2186729,
+    "scope": "Raw static response bodies, all embedded maps included. Excludes HTTP headers, application JS/CSS and optional QA images."
+  }
+}
