@@ -63,6 +63,7 @@ export default function SkyScene({
   showHorizon,
   animateReenactment = false,
   busy = false,
+  playback = false,
 }: {
   data: EphemerisResponse;
   mode: ViewMode;
@@ -71,6 +72,7 @@ export default function SkyScene({
   animateReenactment?: boolean;
   /** A new result is being queried: the set/rise countdown waits (see `HorizonCountdown`). */
   busy?: boolean;
+  playback?: boolean;
 }) {
   const { messages, locale } = useI18n();
   const bodies = useMemo(() => placeBodies(data), [data]);
@@ -134,7 +136,7 @@ export default function SkyScene({
         ))}
       </div>
 
-      <HorizonCountdown data={data} bodies={bodies} paused={busy} />
+      {!playback && <HorizonCountdown data={data} bodies={bodies} paused={busy} />}
 
       {mode === 'third-person' && (
         <div className="scene__overlay">

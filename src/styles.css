@@ -1250,6 +1250,69 @@ input[aria-invalid='true'] {
   min-height: 0;
 }
 
+/* The player sits on the lower rule, leaving camera controls inside the sky. */
+.horizon-playback {
+  align-self: center;
+  width: min(100%, 38rem);
+  margin-bottom: -0.65rem;
+  padding: 0.15rem 0.5rem;
+  position: relative;
+  background: var(--panel-solid);
+  border: 1px solid var(--line-dim);
+  z-index: 2;
+}
+
+.horizon-playback__bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.horizon-playback[data-ready='false'] { width: auto; }
+
+.horizon-playback button,
+.horizon-playback select {
+  min-height: 2rem;
+  color: var(--accent);
+  background: var(--panel-solid);
+  border: 1px solid var(--line-dim);
+  padding: 0.15rem 0.45rem;
+  cursor: pointer;
+}
+
+.horizon-playback input[type='range'] {
+  flex: 1;
+  min-width: 2rem;
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.horizon-playback__time {
+  display: block;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+}
+
+.playback-form,
+.playback-form fieldset,
+.playback-form label {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.playback-form fieldset { border: 0; padding: 0; min-width: 0; }
+.playback-form input { min-width: 0; width: 100%; }
+.playback-form progress { width: 100%; accent-color: var(--accent); }
+
+@media (max-width: 480px) {
+  .horizon-playback { padding-inline: 0.2rem; }
+  .horizon-playback__bar { gap: 0.15rem; }
+  .horizon-playback button, .horizon-playback select { padding-inline: 0.25rem; }
+}
+
 .scene {
   position: relative;
   flex: 1;

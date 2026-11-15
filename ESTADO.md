@@ -1,5 +1,14 @@
 # Estado del proyecto
 
+## Implementation update — 2026-11-15
+
+- Branch `feat/horizon-playback`: local horizon player with a user-defined UTC
+  interval, cached sample playback, seeking, speed, loading progress and cancellation.
+  Sun and Earth from the Moon were explicitly confirmed by the user.
+- Implementation and review steps: `docs/HORIZON_PLAYBACK.md`.
+- Pending: integrator review, commit and publication. The historical preparation
+  snapshot below predates the implemented application.
+
 **Actualizado:** 2026-11-11 · **Reto oficial:** Lunar Landing Site Navigator · **Producto:** CLPS Lunar Mission Browser · **Implementación:** aún no iniciada.
 
 ## Acordado

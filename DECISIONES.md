@@ -26,6 +26,18 @@ Registrar acuerdos con fecha, responsable y evidencia. Propuestas y preguntas no
 | D-019 | 2026-11-14 | Extend the configuration scope to accept custom coordinates and browser-local date/time entry alongside the predefined sites and UTC. Supersedes the corresponding restrictions in D-015 and the original demo guide. With valid inputs and no request in progress, allow querying or retrying the same case, including the saved sample and partial results. **The permission to repeat an already completed live case is superseded by D-020; the custom-coordinate and local-time scope remains unchanged.** | Explicitly confirmed by the integrator during the PR #8 review. Requests still use UTC; custom points have no published coordinate source. The geometric method and terrain limitations remain unchanged. |
 | D-020 | 2026-11-14 | Disable **Update** when a complete successful live result already matches the selected lunar coordinates and UTC instant. Show **Updated** and do not submit that same case again. Changing the point or date/time re-enables updating; returning to the case currently displayed disables it again. Saved samples, failed requests and partial results do not count as a complete live update and remain queryable/retryable. This duplicate-update block is intentional product behavior, not a defect: future reviews must preserve it and must not restore unconditional refresh without a new explicit integrator decision. | Explicitly confirmed by the integrator in the PR #19 follow-up, including the clarification that changing the point **or date/time** unlocks the button. Supersedes only D-019's permission to repeat an already completed live case. Scientific methods, sources and terrain limitations are unchanged. |
 
+### D-021 — User-defined horizon playback
+
+- **Date:** 2026-11-15.
+- **Status:** confirmed by the user in the implementation request.
+- **Decision:** add a time-interval player centered on the lower edge of the local
+  horizon box. The user sets the interval; the interface supports playback-like
+  exploration of the changing positions.
+- **Bodies:** Sun and Earth observed from the Moon, explicitly clarified by the
+  user in the follow-up answer.
+- **Limits:** no change to the scientific method or terrain-visibility claims.
+  Implementation details and review steps are in `docs/HORIZON_PLAYBACK.md`.
+
 ## Pendientes
 - [x] Inscripción y acceso de los tres integrantes al repositorio, confirmados por el usuario.
 - [x] Stack base, responsable de backend, idioma predeterminado e inglés seleccionable, alojamiento previsto y tope de DeepSeek acordados.
