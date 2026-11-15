@@ -16,8 +16,7 @@ interface InitialState {
 function readInitialState(): InitialState {
   const stored = readPreferencesCookie();
   if (stored) return { preferences: stored, configured: true };
-  // Open directly on the landing scene; the settings rail still opens preferences.
-  return { preferences: recommendPreferences(readDeviceHints()), configured: true };
+  return { preferences: recommendPreferences(readDeviceHints()), configured: false };
 }
 
 export function PreferencesProvider({ children }: { children: ReactNode }) {

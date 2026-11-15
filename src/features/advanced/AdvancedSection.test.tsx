@@ -5,6 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MESSAGES } from '../../i18n/messages';
 import { PreferencesProvider } from '../../preferences/PreferencesProvider';
+import { PreferencesContext } from '../../preferences/context';
 import { COOKIE_NAME, parsePreferencesCookie } from '../../preferences/preferences';
 import { AdvancedSection } from './AdvancedSection';
 
@@ -24,12 +25,18 @@ function render() {
   act(() =>
     root.render(
       <PreferencesProvider>
+        <PreferencesContext.Consumer>
+          {({ confirm, preferences }) => (
+            <button type="button" data-testid="confirm-preferences" onClick={() => confirm(preferences)} />
+          )}
+        </PreferencesContext.Consumer>
         <AdvancedSection>
           <input aria-label="tool field" defaultValue="" />
         </AdvancedSection>
       </PreferencesProvider>,
     ),
   );
+  act(() => container.querySelector<HTMLButtonElement>('[data-testid="confirm-preferences"]')?.click());
 }
 
 function toggle(): HTMLButtonElement {
@@ -90,7 +97,7 @@ describe('AdvancedSection', () => {
   });
 
   it('opens from a saved preference', () => {
-    act(() => root.render(<PreferencesProvider><AdvancedSection><span /></AdvancedSection></PreferencesProvider>));
+    render();
     act(() => toggle().click());
     act(() => root.unmount());
     root = createRoot(container);
