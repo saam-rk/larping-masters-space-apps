@@ -3,8 +3,8 @@
  * (`placeBodies`, from the azimuth/elevation shown in the results panel):
  *
  * - `first-person`: eye level next to a 1.70 m astronaut on the LOLA terrain
- *   of Nobile Rim 1, Nobile Rim 2 or Shackleton Rim (only where a terrain
- *   model exists, see
+ *   of Nobile Rim 1, Nobile Rim 2, Shackleton Rim or Amundsen Rim (only where
+ *   a terrain model exists, see
  *   `terrain/models.ts`).
  * - `third-person`: at visual scale (default), a schematic sky dome with the
  *   true directions and labeled azimuth/elevation guides; at real scale,

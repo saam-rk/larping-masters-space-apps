@@ -6,9 +6,9 @@
  * 5 m/pixel adjusted surface), south polar stereographic projection on a
  * 1,737,400 m sphere, MOON_ME/DE421 frame, meters, vertical exaggeration 1:1.
  * Per-site values come from each model's README and metadata (see
- * `nobileRim1.ts`, `nobileRim2.ts` and `shackletonRim.ts`). Mesh density
- * differs by model: Shackleton Rim is densest around the viewer and coarser
- * toward the crop edges.
+ * `nobileRim1.ts`, `nobileRim2.ts`, `shackletonRim.ts` and `amundsenRim.ts`).
+ * Mesh density differs by model: Shackleton Rim and Amundsen Rim are densest
+ * around the viewer and coarser toward the crop edges.
  *
  * GLB axes: x = X - X0 (grid east), y = h - h0 (radial height), z = -(Y - Y0).
  * Projected +Y is grid north, not geographic north: at a site of east

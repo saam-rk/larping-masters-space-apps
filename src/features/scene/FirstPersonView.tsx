@@ -1,6 +1,6 @@
 /**
  * First-person local horizon at a site with a terrain model (Nobile Rim 1,
- * Nobile Rim 2 and Shackleton Rim, see `terrain/models.ts`): LOLA terrain, the 1.70 m astronaut scale
+ * Nobile Rim 2, Shackleton Rim and Amundsen Rim, see `terrain/models.ts`): LOLA terrain, the 1.70 m astronaut scale
  * figure, and the Sun and Earth placed from the same azimuth/elevation as the
  * results panel.
  *
@@ -142,7 +142,8 @@ function astronautInFront(source: Object3D): Object3D {
 /**
  * Small copy of the terrain triangles around `center` (GLB frame), used for
  * cheap downward ray casts instead of testing every triangle of the crop
- * (tens of thousands; Shackleton Rim packs most of them near the viewer).
+ * (tens of thousands; Shackleton Rim and Amundsen Rim pack most of them near
+ * the viewer).
  */
 function buildProbe(terrain: Mesh, center: Vector3Tuple): Mesh {
   const source = terrain.geometry;
