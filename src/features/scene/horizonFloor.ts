@@ -2,8 +2,8 @@
  * Elevation of the assumed horizon beyond the edge of a terrain crop, per
  * azimuth, for the first-person view.
  *
- * The terrain model is a 10 x 10 km crop (12 x 14 km at Haworth); there is
- * no relief data beyond it.
+ * The terrain model is a 10 x 10 km crop (12 x 14 km at Haworth, 12 x 12 km
+ * at Shoemaker Rim A); there is no relief data beyond it.
  * The view used to hide everything below the eye's horizontal plane
  * (elevation 0) with a dark "floor". Where the terrain falls away from the
  * viewer (a rim), that hid the parts of the Sun or the Earth that sit between

@@ -10,7 +10,7 @@ function normalize([x, y, z]: readonly number[]): number[] {
 
 describe('terrain models', () => {
   it('has first-person terrain for every reference site and none for custom points', () => {
-    expect(SITE_TERRAINS.map((model) => model.siteId).sort()).toEqual(['amundsen-rim', 'apollo-11', 'haworth', 'nobile-rim-1', 'nobile-rim-2', 'shackleton-rim']);
+    expect(SITE_TERRAINS.map((model) => model.siteId).sort()).toEqual(['amundsen-rim', 'apollo-11', 'haworth', 'nobile-rim-1', 'nobile-rim-2', 'shackleton-rim', 'shoemaker-rim-a']);
     expect(terrainForSite('custom')).toBeNull();
   });
 
@@ -44,14 +44,25 @@ describe('terrain models', () => {
     expect(y).toBeCloseTo(90501.19, 2);
   });
 
-  it('records the larger Haworth crop (metadata bounds -45500..-33500 x 88500..102500 m)', () => {
+  it('projects shoemaker-rim-a as in its terrain README (published to the millimeter)', () => {
+    // assets/terrain/shoemaker-rim-a/README.md: X 12000.225 m, Y 57001.060 m.
+    const site = findSite('shoemaker-rim-a');
+    const { x, y } = projectSouthPolar(site.latitudeDeg, site.longitudeEastDeg);
+    expect(x).toBeCloseTo(12000.225, 2);
+    expect(y).toBeCloseTo(57001.06, 2);
+  });
+
+  it('records the larger Haworth and Shoemaker Rim A crops', () => {
+    // Metadata bounds: Haworth -45500..-33500 x 88500..102500 m; Shoemaker Rim A 4000..16000 x 49000..61000 m.
     expect(terrainForSite('haworth')!.cropSizeKm).toEqual([12, 14]);
-    for (const model of SITE_TERRAINS.filter((terrain) => terrain.siteId !== 'haworth' && terrain.siteId !== 'apollo-11')) {
+    expect(terrainForSite('shoemaker-rim-a')!.cropSizeKm).toEqual([12, 12]);
+    const notTenByTen = new Set<SiteId>(['haworth', 'shoemaker-rim-a', 'apollo-11']);
+    for (const model of SITE_TERRAINS.filter((terrain) => !notTenByTen.has(terrain.siteId))) {
       expect(model.cropSizeKm).toEqual([10, 10]);
     }
   });
 
-  it.each<SiteId>(['nobile-rim-1', 'nobile-rim-2', 'shackleton-rim', 'amundsen-rim', 'haworth'])('places the %s site near the GLB origin', (siteId) => {
+  it.each<SiteId>(['nobile-rim-1', 'nobile-rim-2', 'shackleton-rim', 'amundsen-rim', 'haworth', 'shoemaker-rim-a'])('places the %s site near the GLB origin', (siteId) => {
     const site = findSite(siteId);
     const terrain = terrainForSite(siteId)!;
     const { x, y } = projectSouthPolar(site.latitudeDeg, site.longitudeEastDeg);
@@ -73,6 +84,8 @@ describe('terrain models', () => {
     ['amundsen-rim', 'east', 0, 0.05, [1, 0, 0]],
     ['haworth', 'north', 0.01, 0, [0, 0, -1]],
     ['haworth', 'east', 0, 0.05, [1, 0, 0]],
+    ['shoemaker-rim-a', 'north', 0.01, 0, [0, 0, -1]],
+    ['shoemaker-rim-a', 'east', 0, 0.05, [1, 0, 0]],
   ] as const)('turns geographic %s %s into the scene axis', (siteId, _label, dLat, dLon, expected) => {
     const site = findSite(siteId);
     const terrain = terrainForSite(siteId)!;

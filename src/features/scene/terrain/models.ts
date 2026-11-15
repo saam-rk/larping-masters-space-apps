@@ -10,6 +10,7 @@ import { HAWORTH_TERRAIN } from './haworth';
 import { NOBILE_RIM_1_TERRAIN } from './nobileRim1';
 import { NOBILE_RIM_2_TERRAIN } from './nobileRim2';
 import { SHACKLETON_RIM_TERRAIN } from './shackletonRim';
+import { SHOEMAKER_RIM_A_TERRAIN } from './shoemakerRimA';
 import type { PolarTerrain, SiteTerrain } from './siteTerrain';
 
 export const POLAR_TERRAINS: readonly PolarTerrain[] = [
@@ -18,6 +19,7 @@ export const POLAR_TERRAINS: readonly PolarTerrain[] = [
   SHACKLETON_RIM_TERRAIN,
   AMUNDSEN_RIM_TERRAIN,
   HAWORTH_TERRAIN,
+  SHOEMAKER_RIM_A_TERRAIN,
 ];
 
 export const SITE_TERRAINS: readonly SiteTerrain[] = [APOLLO_11_TERRAIN, ...POLAR_TERRAINS];
