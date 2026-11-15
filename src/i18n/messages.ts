@@ -120,6 +120,8 @@ export interface Messages {
     readonly tagline: string;
     /** Short introduction of the purpose and limits of the app. */
     readonly intro: Paragraphs;
+    readonly repository: string;
+    readonly repositoryNewTab: string;
     readonly options: string;
     readonly language: string;
     readonly effects: string;
@@ -630,6 +632,8 @@ const es: Messages = {
       'Explora el cielo desde puntos de referencia del polo sur lunar. Elige un lugar y una fecha y hora UTC, y verás dónde están el Sol y la Tierra respecto al horizonte local, en una vista 3D y en un resumen con unidades y fuentes.',
       'Las posiciones proceden de JPL Horizons. El relieve no está modelado: es geometría, no una garantía de luz, comunicaciones ni idoneidad de aterrizaje.',
     ],
+    repository: 'Repositorio en GitHub',
+    repositoryNewTab: 'se abre en una pestaña nueva',
     options: 'Preferencias',
     language: 'Idioma',
     effects: 'Efectos visuales',
@@ -1397,6 +1401,8 @@ const en: Messages = {
       'Explore the sky from reference points at the lunar south pole. Pick a site and a UTC date and time to see where the Sun and the Earth are relative to the local horizon, in a 3D view and in a summary with units and sources.',
       'Positions come from JPL Horizons. Terrain is not modeled: this is geometry, not a guarantee of light, communications or landing suitability.',
     ],
+    repository: 'Repository on GitHub',
+    repositoryNewTab: 'opens in a new tab',
     options: 'Preferences',
     language: 'Language',
     effects: 'Visual effects',

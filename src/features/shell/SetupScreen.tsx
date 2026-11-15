@@ -52,6 +52,16 @@ export function SetupScreen() {
                   <p key={paragraph}>{paragraph}</p>
                 ))}
               </div>
+              <a
+                className="setup__repository"
+                href="https://github.com/saam-rk/larping-masters-space-apps"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span className="setup__github-mark" aria-hidden="true" />
+                <span>{setup.repository}</span>
+                <span className="visually-hidden"> ({setup.repositoryNewTab})</span>
+              </a>
             </div>
           </section>
 
