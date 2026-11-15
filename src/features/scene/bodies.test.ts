@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import type { EphemerisResponse } from '../../../shared/ephemeris';
-import { SAVED_SAMPLE } from '../../data/savedSample';
+import nobileSample from '../../../shared/samples/nobile-rim-1_2026-11-14T12-00-00Z.json';
 import { AU_KM, placeBodies, radiusForAngularDiameter, upperLimbAboveHorizon } from './bodies';
 import { createStars } from './stars';
 import { hasFirstPersonView } from './viewMode';
 
+const NOBILE_SAMPLE = nobileSample as EphemerisResponse;
+
 describe('placeBodies', () => {
   it('uses the Horizons diameter and range of the saved sample', () => {
-    const { placed, missing } = placeBodies(SAVED_SAMPLE);
+    const { placed, missing } = placeBodies(NOBILE_SAMPLE);
     expect(missing).toEqual([]);
     const sun = placed.find((body) => body.body === 'sun');
     const earth = placed.find((body) => body.body === 'earth');
@@ -22,16 +24,16 @@ describe('placeBodies', () => {
   });
 
   it('flags the Earth upper limb above the plane while its center is below', () => {
-    const earth = placeBodies(SAVED_SAMPLE).placed.find((body) => body.body === 'earth')!;
+    const earth = placeBodies(NOBILE_SAMPLE).placed.find((body) => body.body === 'earth')!;
     expect(earth.elevationDeg).toBeLessThan(0);
     expect(upperLimbAboveHorizon(earth)).toBe(true);
   });
 
   it('marks nominal values and skips bodies without az/el instead of using zero', () => {
-    const sunResult = SAVED_SAMPLE.bodies.sun;
+    const sunResult = NOBILE_SAMPLE.bodies.sun;
     if (sunResult.status !== 'ok') throw new Error('sample changed');
     const data: EphemerisResponse = {
-      ...SAVED_SAMPLE,
+      ...NOBILE_SAMPLE,
       bodies: {
         sun: { status: 'ok', observation: { ...sunResult.observation, angularDiameterArcsec: null, rangeAu: null } },
         earth: { status: 'error', body: 'earth', error: { code: 'UPSTREAM_FORMAT', detail: 'test' } },

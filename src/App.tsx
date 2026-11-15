@@ -9,6 +9,7 @@
  */
 
 import { lazy, Suspense, useRef, useState } from 'react';
+import { APOLLO_11_SITE_ID } from '../shared/sites';
 import { Backdrop } from './features/backdrop/Backdrop';
 import { CrtCurvature } from './features/backdrop/CrtCurvature';
 import { ConfigPanel } from './features/mission-config/ConfigPanel';
@@ -75,10 +76,11 @@ export function App() {
     ephemeris.data.provenance === 'live' &&
     !ephemeris.data.warnings.includes('PARTIAL_RESULT');
   const view = useViewMode(ephemeris.data.site.id);
+  const apollo = view.mode === 'first-person' && ephemeris.data.site.id === APOLLO_11_SITE_ID;
   const viewSwitch = useViewTransition({ mode: view.mode, setMode: view.setMode, streaks, busy });
   const warp = viewSwitch.warp;
   // "Compass" switch: horizon line (first person) and grid (third person), one for both views.
-  const [showCompass, setShowCompass] = useState(true);
+  const [showCompass, setShowCompass] = useState(false);
   // Full screen for the local horizon box, in both views.
   const sceneBoxRef = useRef<HTMLElement>(null);
   const fullscreen = useFullscreen(sceneBoxRef);
@@ -107,26 +109,12 @@ export function App() {
         <main className="workspace">
           <h1 className="visually-hidden">{messages.app.title}</h1>
 
-          <div className="column column--control">
-            <AsciiHeading text={messages.banner.config} />
-            <ConfigPanel
-              selection={ephemeris.selection}
-              loading={busy}
-              upToDate={upToDate}
-              onSiteChange={ephemeris.setSiteId}
-              onCoordinatesChange={ephemeris.setCoordinates}
-              onUtcChange={ephemeris.setUtc}
-              onUpdate={handleUpdate}
-            />
-            <SkySearchPanel selection={ephemeris.selection} onShow={handleShowMatch} />
-          </div>
-
           <div className="column column--view">
             <AsciiHeading text={messages.banner.horizon} />
             <Box
               title={messages.scene.heading}
               titleAs="h3"
-              className="scene-box"
+              className={apollo ? 'scene-box scene-box--apollo' : 'scene-box'}
               ref={sceneBoxRef}
               help={messages.scene.info[view.mode]}
               actions={
@@ -139,7 +127,7 @@ export function App() {
             >
               <div className="scene-stage" data-jumping={busy || viewSwitch.active} data-warp={warp.kind}>
                 <Suspense fallback={<p className="scene__note">{messages.scene.loading}</p>}>
-                  <SkyScene data={ephemeris.data} mode={view.mode} showHorizon={showCompass} />
+                  <SkyScene data={ephemeris.data} mode={view.mode} showHorizon={showCompass} animateReenactment={streaks} />
                 </Suspense>
                 {streaks && <Hyperspace active={busy || viewSwitch.active} reverse={warp.reverse} tempo={warp.tempo} />}
               </div>
@@ -150,6 +138,19 @@ export function App() {
               busy={busy}
               status={<DataStatus ephemeris={ephemeris} />}
             />
+          </div>
+          <div className="column column--control">
+            <AsciiHeading text={messages.banner.config} />
+            <ConfigPanel
+              selection={ephemeris.selection}
+              loading={busy}
+              upToDate={upToDate}
+              onSiteChange={ephemeris.setSiteId}
+              onCoordinatesChange={ephemeris.setCoordinates}
+              onUtcChange={ephemeris.setUtc}
+              onUpdate={handleUpdate}
+            />
+            <SkySearchPanel selection={ephemeris.selection} onShow={handleShowMatch} />
           </div>
         </main>
       </div>

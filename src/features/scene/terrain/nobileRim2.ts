@@ -7,9 +7,9 @@
  * in `siteTerrain.ts`.
  */
 
-import type { SiteTerrain } from './siteTerrain';
+import type { PolarTerrain } from './siteTerrain';
 
-export const NOBILE_RIM_2_TERRAIN: SiteTerrain = {
+export const NOBILE_RIM_2_TERRAIN: PolarTerrain = {
   siteId: 'nobile-rim-2',
   terrainUrl: '/models/nobile-rim-2/nobile-rim-2.glb',
   astronautUrl: '/models/nobile-rim-2/astronaut.glb',

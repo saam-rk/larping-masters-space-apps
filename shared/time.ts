@@ -4,15 +4,16 @@
  * Accepted input: `YYYY-MM-DDTHH:mm` or `YYYY-MM-DDTHH:mm:ss`, ending in `Z`.
  */
 
-export const DEFAULT_UTC = '2026-11-14T12:00:00Z';
+/** NASA/NSSDCA Apollo 11 mission catalogue touchdown time, in UTC. */
+export const APOLLO_11_LANDING_UTC = '1969-07-20T20:17:40Z';
+export const DEFAULT_UTC = APOLLO_11_LANDING_UTC;
 
 /**
- * Product guard on selectable instants: [2000-01-01, 2100-01-01) UTC.
- * This is an application choice, not a Horizons limit. On 2026-11-14 both ends
- * returned the high-precision lunar frame (MEAN_ME) for Nobile Rim 1.
+ * Product guard on selectable instants: [1969-01-01, 2100-01-01) UTC.
+ * This includes the Apollo 11 landing year and is not a Horizons limit.
  */
 export const SUPPORTED_UTC_RANGE = {
-  startInclusive: '2000-01-01T00:00:00Z',
+  startInclusive: '1969-01-01T00:00:00Z',
   endExclusive: '2100-01-01T00:00:00Z',
 } as const;
 

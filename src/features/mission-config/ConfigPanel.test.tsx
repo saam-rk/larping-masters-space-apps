@@ -79,13 +79,13 @@ describe('ConfigPanel reference points', () => {
     expect(html).not.toContain('type="radio"');
     const options = [...html.matchAll(/role="option"[^>]*>([^<]+)</g)].map((match) => match[1]!.replace(/&#x27;/g, "'"));
     expect(options).toHaveLength(REFERENCE_SITES.length);
-    expect(options.slice(0, 3)).toEqual(['Nobile Rim 1 · R06', 'Nobile Rim 2 · DM2', 'Shackleton Rim · R04']);
-    expect(options[3]).toBe('Amundsen 1 · NPB');
+    expect(options.slice(0, 4)).toEqual(['Apollo 11', 'Nobile Rim 1 · R06', 'Nobile Rim 2 · DM2', 'Shackleton Rim · R04']);
+    expect(options[4]).toBe('Amundsen 1 · NPB');
     expect(options).toContain('Haworth');
     expect(options).toContain('Leibnitz Beta Plateau, extended boundaries · Site20v2');
     const names = options.slice(FEATURED_SITES.length).map((option) => option.split(' · ')[0]!);
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' })));
-    expect(html).toMatch(/class="wheel-select__value">Nobile Rim 1 · R06</);
+    expect(html).toMatch(/class="wheel-select__value">Apollo 11</);
   });
 
   it('shows the selected point as the chosen option', () => {

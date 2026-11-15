@@ -92,13 +92,13 @@ describe('D-020 duplicate-update policy', () => {
     await act(async () => button.click());
     chooseSite('nobile-rim-2');
     expect(button.disabled).toBe(false);
-    chooseSite('nobile-rim-1');
+    chooseSite('apollo-11');
     expect(button.disabled).toBe(true);
     chooseSite('nobile-rim-2');
     await act(async () => button.click());
     expect(fetchEphemeris).toHaveBeenCalledTimes(2);
     expect(button.disabled).toBe(true);
-    chooseSite('nobile-rim-1');
+    chooseSite('apollo-11');
     expect(button.disabled).toBe(false);
   });
 

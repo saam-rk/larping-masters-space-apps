@@ -26,6 +26,18 @@ export interface SourceEntry {
 export const SOURCE_CATALOG = [
   // Used directly by the application.
   {
+    id: 'apolloLanding',
+    group: 'app',
+    title: 'NASA/NSSDCA Apollo 11 mission catalogue',
+    url: 'https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo11info.html',
+  },
+  {
+    id: 'apolloTerrain',
+    group: 'app',
+    title: 'LRO/LROC NAC_DTM_APOLLO11',
+    url: 'https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_DTM_APOLLO11',
+  },
+  {
     id: 'lunarSurfaceDataBook',
     group: 'app',
     title: 'NASA Moon to Mars Lunar Surface Data Book (M2M-30044), table A2.1-1',

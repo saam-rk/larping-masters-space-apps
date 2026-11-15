@@ -5,6 +5,10 @@ build/
 .vite/
 .vercel/
 
+# Blender automatic backups for the delivered Apollo 11 scene
+/public/terrain/apollo-11.blend[0-9]*
+/assets/terrain/apollo-11/apollo-11.blend[0-9]*
+
 # Local environment and credentials
 .env
 .env.*

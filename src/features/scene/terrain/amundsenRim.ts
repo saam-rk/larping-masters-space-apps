@@ -25,9 +25,9 @@
  * upright, facing the viewer, as at the other sites.
  */
 
-import type { SiteTerrain } from './siteTerrain';
+import type { PolarTerrain } from './siteTerrain';
 
-export const AMUNDSEN_RIM_TERRAIN: SiteTerrain = {
+export const AMUNDSEN_RIM_TERRAIN: PolarTerrain = {
   siteId: 'amundsen-rim',
   terrainUrl: '/terrain/amundsen-rim.glb',
   astronautUrl: '/terrain/astronaut.glb',

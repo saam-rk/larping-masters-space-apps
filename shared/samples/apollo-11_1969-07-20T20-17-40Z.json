@@ -1,0 +1,73 @@
+{
+  "provenance": "saved-sample",
+  "site": {
+    "id": "apollo-11",
+    "name": "Apollo 11",
+    "latitudeDeg": 0.67416,
+    "longitudeEastDeg": 23.47314,
+    "altitudeKm": 0,
+    "source": {
+      "name": "NASA/NSSDCA Apollo Landing Site Coordinates",
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html",
+      "locator": "Apollo 11 · Lunar Module"
+    }
+  },
+  "requestedUtc": "1969-07-20T20:17:40Z",
+  "ephemerisUtc": "1969-07-20T20:17:40Z",
+  "bodies": {
+    "sun": {
+      "status": "ok",
+      "observation": {
+        "body": "sun",
+        "targetName": "Sun (10)",
+        "azimuthDeg": 88.805495,
+        "elevationDeg": 10.703313,
+        "angularDiameterArcsec": 1889.744,
+        "rangeAu": 1.01519685455107,
+        "rangeRateKmPerS": 0.7411974,
+        "markers": {
+          "solarPresence": "*",
+          "interferingBodyPresence": "i"
+        },
+        "interferingBody": "EARTH"
+      }
+    },
+    "earth": {
+      "status": "ok",
+      "observation": {
+        "body": "earth",
+        "targetName": "Earth (399)",
+        "azimuthDeg": 272.195241,
+        "elevationDeg": 59.224237,
+        "angularDiameterArcsec": 6782.737,
+        "rangeAu": 0.00259321245793,
+        "rangeRateKmPerS": -0.0555986,
+        "markers": {
+          "solarPresence": "*",
+          "interferingBodyPresence": "i"
+        },
+        "interferingBody": "EARTH"
+      }
+    }
+  },
+  "source": {
+    "name": "NASA/JPL Horizons API",
+    "url": "https://ssd.jpl.nasa.gov/api/horizons.api",
+    "apiVersion": "1.2",
+    "planetaryEphemeris": "DE441",
+    "observerFrame": "MEAN_ME (high precision)",
+    "retrievedAt": "2026-11-15T01:06:09.000Z"
+  },
+  "method": {
+    "ephemerisType": "OBSERVER",
+    "quantities": [
+      4,
+      13,
+      20
+    ],
+    "refraction": "AIRLESS",
+    "timeScale": "UT",
+    "terrainModeled": false
+  },
+  "warnings": []
+}

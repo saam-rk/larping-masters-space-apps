@@ -62,10 +62,10 @@ describe('reference sites', () => {
     expect(checkCoordinates(latitudeDeg, longitudeEastDeg)).toEqual({ ok: true, latitudeDeg, longitudeEastDeg });
   });
 
-  it('features the three original points and offers the 24 others', () => {
-    expect(FEATURED_SITES.map((site) => site.id)).toEqual(['nobile-rim-1', 'nobile-rim-2', 'shackleton-rim']);
+  it('features Apollo 11 and the three original points, with 24 others', () => {
+    expect(FEATURED_SITES.map((site) => site.id)).toEqual(['apollo-11', 'nobile-rim-1', 'nobile-rim-2', 'shackleton-rim']);
     expect(MORE_SITES).toHaveLength(24);
-    expect(REFERENCE_SITES).toHaveLength(27);
+    expect(REFERENCE_SITES).toHaveLength(28);
     expect(new Set(SITE_IDS).size).toBe(SITE_IDS.length);
     expect(MORE_SITES.some((site) => FEATURED_SITES.includes(site))).toBe(false);
   });
@@ -82,8 +82,9 @@ describe('reference sites', () => {
     expect(REFERENCE_SITES.filter((site) => site.variantOf)).toHaveLength(1);
   });
 
-  it('places every reference point at the lunar south pole within the regional DEM range (83-90° S)', () => {
+  it('places the polar reference points at the lunar south pole within the regional DEM range (83-90° S)', () => {
     for (const site of REFERENCE_SITES) {
+      if (site.id === 'apollo-11') continue;
       expect(site.latitudeDeg).toBeLessThan(-83);
       expect(site.latitudeDeg).toBeGreaterThanOrEqual(-90);
       expect(site.longitudeEastDeg).toBeGreaterThan(-180);
@@ -153,7 +154,7 @@ describe('parseUtcInstant', () => {
     ['2026-11-14T12:00+01:00', 'format'],
     ['2026-02-29T12:00Z', 'invalid-date'],
     ['2026-11-14T24:00Z', 'invalid-date'],
-    ['1999-12-31T23:59:59Z', 'out-of-range'],
+    ['1968-12-31T23:59:59Z', 'out-of-range'],
     ['2100-01-01T00:00Z', 'out-of-range'],
   ])('rejects %s (%s)', (input, reason) => {
     expect(parseUtcInstant(input)).toEqual({ ok: false, reason });

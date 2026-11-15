@@ -10,7 +10,7 @@ function normalize([x, y, z]: readonly number[]): number[] {
 
 describe('terrain models', () => {
   it('has first-person terrain for every reference site and none for custom points', () => {
-    expect(SITE_TERRAINS.map((model) => model.siteId).sort()).toEqual(['amundsen-rim', 'haworth', 'nobile-rim-1', 'nobile-rim-2', 'shackleton-rim']);
+    expect(SITE_TERRAINS.map((model) => model.siteId).sort()).toEqual(['amundsen-rim', 'apollo-11', 'haworth', 'nobile-rim-1', 'nobile-rim-2', 'shackleton-rim']);
     expect(terrainForSite('custom')).toBeNull();
   });
 
@@ -46,7 +46,7 @@ describe('terrain models', () => {
 
   it('records the larger Haworth crop (metadata bounds -45500..-33500 x 88500..102500 m)', () => {
     expect(terrainForSite('haworth')!.cropSizeKm).toEqual([12, 14]);
-    for (const model of SITE_TERRAINS.filter((terrain) => terrain.siteId !== 'haworth')) {
+    for (const model of SITE_TERRAINS.filter((terrain) => terrain.siteId !== 'haworth' && terrain.siteId !== 'apollo-11')) {
       expect(model.cropSizeKm).toEqual([10, 10]);
     }
   });

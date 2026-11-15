@@ -1,6 +1,6 @@
 /**
- * Display preferences chosen on the first visit (or later from the sidebar),
- * persisted in a first-party cookie so the setup screen is not shown again.
+ * Display preferences suggested on the first visit and adjustable in the
+ * sidebar. User changes are persisted in a first-party cookie.
  *
  * A single switch controls the effects: `on` shows the animated CRT (parallax,
  * noise, flicker, screen curvature, hyperspace jump); `off` is the low
@@ -88,7 +88,7 @@ export function writePreferencesCookie(preferences: Preferences): void {
   try {
     document.cookie = `${COOKIE_NAME}=${serializePreferences(preferences)}; Max-Age=${COOKIE_MAX_AGE_SECONDS}; Path=/; SameSite=Lax${secure}`;
   } catch {
-    // Not persisting is acceptable; the choice still applies to this visit.
+    // The choice still applies to this visit.
   }
 }
 

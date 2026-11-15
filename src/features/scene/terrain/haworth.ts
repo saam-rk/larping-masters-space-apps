@@ -28,9 +28,9 @@
  * facing the viewer, as at the other sites.
  */
 
-import type { SiteTerrain } from './siteTerrain';
+import type { PolarTerrain } from './siteTerrain';
 
-export const HAWORTH_TERRAIN: SiteTerrain = {
+export const HAWORTH_TERRAIN: PolarTerrain = {
   siteId: 'haworth',
   terrainUrl: '/terrain/haworth.glb',
   astronautUrl: '/terrain/astronaut.glb',

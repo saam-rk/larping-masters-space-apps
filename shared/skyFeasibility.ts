@@ -22,6 +22,9 @@
  *   - max |SunSub-LAT|                       = 1.591900°
  *   - max angle of ObsSub (sub-Earth point) from 0° N 0° E = 10.461192°
  *   - min Earth–Moon distance (delta)        = 356,437.0 km
+ * The same query for 1969-01-01 through 2000-01-01 (22,645 rows), checked
+ * on 2026-11-15, gave 1.586397°, 10.436261°, and 356,522.33383 km, all
+ * within the bounds above.
  */
 
 import type { BodyId } from './ephemeris.js';
