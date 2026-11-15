@@ -48,7 +48,7 @@ function expectMode(firstPerson: boolean) {
 }
 
 describe('view selection and terrain availability', () => {
-  it.each<ObserverSiteId>(['apollo-11', 'nobile-rim-1', 'nobile-rim-2', 'shackleton-rim', 'amundsen-rim', 'haworth', 'shoemaker-rim-a', 'faustini-rim-a', 'cabeus-exterior-wall-1'])('starts in first person at %s', (siteId) => {
+  it.each<ObserverSiteId>(['apollo-11', 'nobile-rim-1', 'nobile-rim-2', 'shackleton-rim', 'amundsen-rim', 'haworth', 'shoemaker-rim-a', 'faustini-rim-a', 'cabeus-exterior-wall-1', 'malapert-crater-1'])('starts in first person at %s', (siteId) => {
     render(siteId);
     expectMode(true);
     expect(option(0).getAttribute('aria-disabled')).toBe('false');
@@ -66,7 +66,7 @@ describe('view selection and terrain availability', () => {
     expectMode(true);
   });
 
-  it.each<ObserverSiteId>(['faustini-rim-a', 'cabeus-exterior-wall-1'])('resets to first person at %s and preserves a manual view choice until the site changes', (siteId) => {
+  it.each<ObserverSiteId>(['faustini-rim-a', 'cabeus-exterior-wall-1', 'malapert-crater-1'])('resets to first person at %s and preserves a manual view choice until the site changes', (siteId) => {
     render('custom');
     expectMode(false);
     render(siteId);
@@ -102,7 +102,7 @@ describe('view selection and terrain availability', () => {
     expectMode(true);
   });
 
-  it.each<ObserverSiteId>(['amundsen-rim', 'haworth', 'shoemaker-rim-a', 'faustini-rim-a', 'cabeus-exterior-wall-1'])('offers first person at drop-down site %s, which has a terrain model', (siteId) => {
+  it.each<ObserverSiteId>(['amundsen-rim', 'haworth', 'shoemaker-rim-a', 'faustini-rim-a', 'cabeus-exterior-wall-1', 'malapert-crater-1'])('offers first person at drop-down site %s, which has a terrain model', (siteId) => {
     render(siteId);
     expectMode(true);
     expect(option(0).getAttribute('aria-disabled')).toBe('false');

@@ -62,7 +62,7 @@ afterEach(() => {
 });
 
 describe('first-person loading portal', () => {
-  it.each(['faustini-rim-a', 'cabeus-exterior-wall-1'] as const)('requests the %s terrain asset through the shared polar view', (siteId) => {
+  it.each(['faustini-rim-a', 'cabeus-exterior-wall-1', 'malapert-crater-1'] as const)('requests the %s terrain asset through the shared polar view', (siteId) => {
     // Synthetic selection for routing only; these are not observations for the selected site.
     const data = { ...SAVED_SAMPLE, site: { ...findSite(siteId), altitudeKm: 0 as const } };
     act(() => root.render(

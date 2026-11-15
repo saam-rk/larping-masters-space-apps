@@ -9,6 +9,7 @@ import { AMUNDSEN_RIM_TERRAIN } from './amundsenRim';
 import { CABEUS_EXTERIOR_WALL_1_TERRAIN } from './cabeusExteriorWall1';
 import { FAUSTINI_RIM_A_TERRAIN } from './faustiniRimA';
 import { HAWORTH_TERRAIN } from './haworth';
+import { MALAPERT_CRATER_1_TERRAIN } from './malapertCrater1';
 import { NOBILE_RIM_1_TERRAIN } from './nobileRim1';
 import { NOBILE_RIM_2_TERRAIN } from './nobileRim2';
 import { SHACKLETON_RIM_TERRAIN } from './shackletonRim';
@@ -24,6 +25,7 @@ export const POLAR_TERRAINS: readonly PolarTerrain[] = [
   SHOEMAKER_RIM_A_TERRAIN,
   FAUSTINI_RIM_A_TERRAIN,
   CABEUS_EXTERIOR_WALL_1_TERRAIN,
+  MALAPERT_CRATER_1_TERRAIN,
 ];
 
 export const SITE_TERRAINS: readonly SiteTerrain[] = [APOLLO_11_TERRAIN, ...POLAR_TERRAINS];
