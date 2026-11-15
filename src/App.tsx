@@ -82,8 +82,8 @@ export function App() {
   const apollo = view.mode === 'first-person' && ephemeris.data.site.id === APOLLO_11_SITE_ID;
   const viewSwitch = useViewTransition({ mode: view.mode, setMode: view.setMode, streaks, busy });
   const warp = viewSwitch.warp;
-  // "Compass" switch: horizon line (first person) and grid (third person), one for both views.
-  const [showCompass, setShowCompass] = useState(false);
+  // "Compass" switch: horizon line (first person) and grid (third person), one for both views. On by default.
+  const [showCompass, setShowCompass] = useState(true);
   // Full screen for the local horizon box, in both views.
   const sceneBoxRef = useRef<HTMLElement>(null);
   const fullscreen = useFullscreen(sceneBoxRef);
@@ -131,7 +131,7 @@ export function App() {
             >
               <div className="scene-stage" data-jumping={busy || viewSwitch.active} data-warp={warp.kind}>
                 <Suspense fallback={<p className="scene__note">{messages.scene.loading}</p>}>
-                  <SkyScene data={ephemeris.data} mode={view.mode} showHorizon={showCompass} animateReenactment={streaks} />
+                  <SkyScene data={ephemeris.data} mode={view.mode} showHorizon={showCompass} animateReenactment={streaks} busy={busy} />
                 </Suspense>
                 {streaks && <Hyperspace active={busy || viewSwitch.active} reverse={warp.reverse} tempo={warp.tempo} />}
               </div>

@@ -8,11 +8,13 @@
  * Site names and source titles are proper nouns and are not translated.
  */
 
-import type { ApiErrorCode } from '../../shared/ephemeris.js';
+import type { ApiErrorCode, BodyId } from '../../shared/ephemeris.js';
+import { SOLAR_ECLIPSE_MAX_SEPARATION_DEG, TERRESTRIAL_ECLIPSE_MIN_SEPARATION_DEG } from '../../shared/eclipses.js';
 import type { PresenceState } from '../../shared/presence.js';
-import type { SkySearchDirection } from '../../shared/skySearch.js';
+import type { SkyAngle, SkySearchDirection } from '../../shared/skySearch.js';
 import type { SkySearchExample } from '../features/sky-search/examples';
 import type { SourceId } from '../features/results/sourceCatalog';
+import type { HorizonEvent } from '../features/scene/horizonEvents';
 import type { SceneScale } from '../features/scene/sceneScale';
 import type { ViewMode } from '../features/scene/viewMode';
 import type { EffectMode } from '../preferences/preferences';
@@ -167,6 +169,28 @@ export interface Messages {
     };
     /** Full-screen switch in the title rule (accessible name and tooltip). */
     readonly fullscreen: { readonly enter: string; readonly exit: string };
+    /** Time left until the Sun or the Earth sets (or rises), in a corner of the view (see `horizonEvents.ts`). */
+    readonly countdown: {
+      /** Accessible name of the overlay. */
+      readonly label: string;
+      /** Event name per body, e.g. "Sunset". */
+      readonly events: Readonly<Record<BodyId, Readonly<Record<HorizonEvent, string>>>>;
+      /** Time left, already formatted (e.g. "1 d 14 h 19 min"). */
+      readonly in: (duration: string) => string;
+      /** The search budget ran out: the event may come earlier than this. */
+      readonly atMost: (duration: string) => string;
+      readonly now: string;
+      readonly never: Readonly<Record<HorizonEvent, string>>;
+      /** Not within the searched span after the shown instant. */
+      readonly beyond: (days: string) => string;
+      readonly budget: string;
+      readonly loading: string;
+      readonly error: string;
+      /** Tooltip of a found event: its instant. */
+      readonly at: (utc: string) => string;
+      /** Tooltip of the overlay: definition, method and limits. */
+      readonly detail: string;
+    };
     /** Zoom slider and buttons over the view. */
     readonly zoom: {
       readonly label: string;
@@ -271,9 +295,11 @@ export interface Messages {
     readonly conditionsHint: string;
     readonly min: string;
     readonly max: string;
-    readonly angles: { readonly azimuth: string; readonly elevation: string };
-    /** Unit and convention under each angle name. */
-    readonly angleHints: { readonly azimuth: string; readonly elevation: string };
+    readonly angles: Readonly<Record<SkyAngle, string>>;
+    /** Unit and convention of each angle (in the conditions' "i" window). */
+    readonly angleHints: Readonly<Record<SkyAngle, string>>;
+    /** Name of the Sun–Earth pair, in the label of the separation row. */
+    readonly pair: string;
     /** Accessible name of one field, e.g. "Sun, azimuth, minimum". */
     readonly fieldLabel: (body: string, angle: string, bound: string) => string;
     readonly minimum: string;
@@ -300,6 +326,7 @@ export interface Messages {
       readonly format: string;
       readonly azimuthBounds: string;
       readonly elevationBounds: string;
+      readonly separationBounds: string;
       readonly order: string;
     };
     /** Azimuth row whose min is above its max. */
@@ -342,6 +369,10 @@ export interface Messages {
   };
   readonly errors: Readonly<Record<ClientErrorKey, string>>;
 }
+
+/** Eclipse thresholds of the examples with a decimal comma (Spanish). */
+const ES_SOLAR_ECLIPSE = String(SOLAR_ECLIPSE_MAX_SEPARATION_DEG).replace('.', ',');
+const ES_TERRESTRIAL_ECLIPSE = String(TERRESTRIAL_ECLIPSE_MIN_SEPARATION_DEG).replace('.', ',');
 
 const es: Messages = {
   app: { title: 'CLPS Lunar Mission Browser' },
@@ -476,6 +507,24 @@ const es: Messages = {
       hide: 'Ocultar la brújula: línea y cuadrícula del horizonte',
     },
     fullscreen: { enter: 'Ver el horizonte local a pantalla completa', exit: 'Salir de pantalla completa' },
+    countdown: {
+      label: 'Tiempo hasta la puesta o la salida',
+      events: {
+        sun: { set: 'Puesta del Sol', rise: 'Salida del Sol' },
+        earth: { set: 'Puesta de la Tierra', rise: 'Salida de la Tierra' },
+      },
+      in: (duration) => `en ${duration}`,
+      atMost: (duration) => `en ≤ ${duration}`,
+      now: 'ahora',
+      never: { set: 'nunca desde aquí', rise: 'nunca desde aquí' },
+      beyond: (days) => `en más de ${days} d`,
+      budget: 'sin resultado (límite de consultas)',
+      loading: 'calculando…',
+      error: 'no disponible',
+      at: (utc) => `Momento: ${utc}`,
+      detail:
+        'Tiempo desde la fecha y hora mostradas hasta que el borde superior cruza el horizonte de referencia (puesta si ahora está sobre él, salida si está debajo). Búsqueda inversa con JPL Horizons, resolución 1 s. El relieve no está modelado.',
+    },
     zoom: {
       label: 'Zoom',
       slider: 'Nivel de zoom',
@@ -611,11 +660,16 @@ const es: Messages = {
     close: 'Cerrar',
     steps: { conditions: '1 · Condiciones', direction: '2 · Fecha buscada', result: '3 · Resultado' },
     conditionsHint:
-      'Rellena de una a cuatro filas. Mínimo y máximo forman un rango; si rellenas solo uno, se busca ese valor exacto. Las filas vacías no imponen condición.',
+      'Rellena de una a cinco filas. Mínimo y máximo forman un rango; si rellenas solo uno, se busca ese valor exacto. Las filas vacías no imponen condición.',
     min: 'Mín',
     max: 'Máx',
-    angles: { azimuth: 'Azimut', elevation: 'Elevación' },
-    angleHints: { azimuth: '0° a 360°, desde el norte, horario', elevation: '-90° a 90°, sobre el plano de referencia' },
+    angles: { azimuth: 'Azimut', elevation: 'Elevación', separation: 'Separación' },
+    angleHints: {
+      azimuth: '0° a 360°, desde el norte, horario',
+      elevation: '-90° a 90°, sobre el plano de referencia',
+      separation: '0° a 180°, ángulo entre el Sol y la Tierra vistos desde aquí',
+    },
+    pair: 'Sol–Tierra',
     fieldLabel: (body, angle, bound) => `${body}, ${angle}, ${bound}`,
     minimum: 'mínimo',
     maximum: 'máximo',
@@ -640,7 +694,8 @@ const es: Messages = {
       format: 'Escribe grados con hasta 4 decimales.',
       azimuthBounds: 'El azimut va de 0° a 360°.',
       elevationBounds: 'La elevación va de -90° a 90°.',
-      order: 'En la elevación, el mínimo no puede superar al máximo.',
+      separationBounds: 'La separación va de 0° a 180°.',
+      order: 'En la elevación y la separación, el mínimo no puede superar al máximo.',
     },
     wrapsNorth: (body) => `${body}: el rango de azimut cruza el norte.`,
     impossible: (body) => `${body}: desde este punto nunca alcanza esos valores.`,
@@ -652,6 +707,14 @@ const es: Messages = {
       earthUp: { title: 'Tierra sobre el plano', detail: 'Elevación de la Tierra de 0° a 90°: «al menos 0°» se escribe con 90° como máximo.' },
       sunNorth: { title: 'Sol hacia el norte', detail: 'Azimut del Sol de 350° a 10°: el mínimo es mayor que el máximo, así que el rango cruza el norte.' },
       both: { title: 'Sol y Tierra a la vez', detail: 'Ambas elevaciones de 0° a 90°: todas las filas rellenas deben cumplirse en el mismo instante.' },
+      solarEclipse: {
+        title: 'Próximo eclipse solar',
+        detail: `La Tierra tapa al menos parte del Sol, visto desde aquí con el Sol sobre el horizonte (en la Tierra, un eclipse lunar). Separación Sol–Tierra de 0° a ${ES_SOLAR_ECLIPSE}° y elevación del Sol de 0° a 90°; busca la fecha siguiente.`,
+      },
+      terrestrialEclipse: {
+        title: 'Próximo eclipse terrestre',
+        detail: `La sombra de la Luna cae sobre la Tierra, vista desde aquí con la Tierra sobre el horizonte (en la Tierra, un eclipse solar). Separación Sol–Tierra de ${ES_TERRESTRIAL_ECLIPSE}° a 180° y elevación de la Tierra de 0° a 90°; busca la fecha siguiente.`,
+      },
     },
     tryExample: 'Probar',
     tryExampleLabel: (example) => `Probar el ejemplo: ${example}`,
@@ -661,7 +724,7 @@ const es: Messages = {
         heading: 'Qué hace',
         paragraphs: [
           '«Actualizar vista» responde a «en esta fecha, ¿dónde están el Sol y la Tierra?». La búsqueda inversa responde a la pregunta contraria: indicas dónde quieres verlos y obtienes la fecha y hora UTC en que ocurre, vista desde el punto elegido en «Punto de referencia».',
-          'Rellena entre uno y cuatro campos: azimut y elevación del Sol y de la Tierra. Todas las filas rellenas deben cumplirse a la vez; las vacías no imponen nada.',
+          'Rellena entre una y cinco filas: azimut y elevación del Sol y de la Tierra, y la separación entre ambos. Todas las filas rellenas deben cumplirse a la vez; las vacías no imponen nada.',
         ],
       },
       {
@@ -686,6 +749,15 @@ const es: Messages = {
           'Visto desde la Luna, el Sol nunca se aparta más de 1,6° del ecuador lunar y la Tierra nunca más de unos 10,7° de su posición media. Por eso, desde un punto cercano al polo, cada objeto solo recorre una franja estrecha del cielo.',
           'La columna «Posible aquí» indica qué elevación y azimut puede tener cada objeto en el punto elegido. Los límites salen de JPL Horizons (DE441, 1969–2100) con 0,25° de margen. Si una fila pide valores fuera de esa franja, el formulario la marca y no deja buscar.',
           'Una condición aceptada puede, aun así, no cumplirse dentro de la ventana buscada, sobre todo si combinas varias filas que deben coincidir en el mismo instante.',
+        ],
+      },
+      {
+        heading: 'Separación Sol–Tierra y eclipses',
+        paragraphs: [
+          'La separación es el ángulo entre el Sol y la Tierra vistos desde el punto elegido, de 0° a 180°. Se calcula con el azimut y la elevación que da JPL Horizons para cada instante, así que necesita consultar los dos objetos.',
+          'Visto desde la Luna hay dos clases de eclipse. Eclipse solar: la Tierra tapa al menos parte del Sol; en la Tierra se ve como un eclipse lunar. Eclipse terrestre: la sombra de la Luna cae sobre la Tierra, que está casi opuesta al Sol; en la Tierra se ve como un eclipse solar.',
+          `Los umbrales de los ejemplos (hasta ${ES_SOLAR_ECLIPSE}° y desde ${ES_TERRESTRIAL_ECLIPSE}°) usan los tamaños aparentes más pequeños y las distancias más grandes de 1969 a 2100, medidas con JPL Horizons: todo instante que los cumple es un eclipse, pero los primeros y últimos minutos de un eclipse rasante pueden quedar fuera. El ejemplo exige además que el objeto que se mira esté sobre el horizonte de referencia.`,
+          'No se modelan el relieve ni la atmósfera terrestre, que desvía la luz y agranda la sombra de la Tierra.',
         ],
       },
       {
@@ -886,6 +958,24 @@ const en: Messages = {
       hide: 'Hide the compass: horizon line and grid',
     },
     fullscreen: { enter: 'Show the local horizon full screen', exit: 'Exit full screen' },
+    countdown: {
+      label: 'Time until set or rise',
+      events: {
+        sun: { set: 'Sunset', rise: 'Sunrise' },
+        earth: { set: 'Earthset', rise: 'Earthrise' },
+      },
+      in: (duration) => `in ${duration}`,
+      atMost: (duration) => `in ≤ ${duration}`,
+      now: 'now',
+      never: { set: 'never from here', rise: 'never from here' },
+      beyond: (days) => `in over ${days} d`,
+      budget: 'no result (query limit)',
+      loading: 'computing…',
+      error: 'unavailable',
+      at: (utc) => `At: ${utc}`,
+      detail:
+        'Time from the shown date and time until the upper limb crosses the reference horizon (set if it is above it now, rise if below). Inverse search with JPL Horizons, 1 s resolution. Terrain is not modeled.',
+    },
     zoom: {
       label: 'Zoom',
       slider: 'Zoom level',
@@ -1021,11 +1111,16 @@ const en: Messages = {
     close: 'Close',
     steps: { conditions: '1 · Conditions', direction: '2 · Date to find', result: '3 · Result' },
     conditionsHint:
-      'Fill in one to four rows. Minimum and maximum make a range; fill in only one and that exact value is searched. Empty rows set no condition.',
+      'Fill in one to five rows. Minimum and maximum make a range; fill in only one and that exact value is searched. Empty rows set no condition.',
     min: 'Min',
     max: 'Max',
-    angles: { azimuth: 'Azimuth', elevation: 'Elevation' },
-    angleHints: { azimuth: '0° to 360°, clockwise from north', elevation: '-90° to 90°, above the reference plane' },
+    angles: { azimuth: 'Azimuth', elevation: 'Elevation', separation: 'Separation' },
+    angleHints: {
+      azimuth: '0° to 360°, clockwise from north',
+      elevation: '-90° to 90°, above the reference plane',
+      separation: '0° to 180°, angle between the Sun and the Earth seen from here',
+    },
+    pair: 'Sun–Earth',
     fieldLabel: (body, angle, bound) => `${body}, ${angle}, ${bound}`,
     minimum: 'minimum',
     maximum: 'maximum',
@@ -1050,7 +1145,8 @@ const en: Messages = {
       format: 'Enter degrees with up to 4 decimals.',
       azimuthBounds: 'Azimuth goes from 0° to 360°.',
       elevationBounds: 'Elevation goes from -90° to 90°.',
-      order: 'For elevation, the minimum cannot exceed the maximum.',
+      separationBounds: 'Separation goes from 0° to 180°.',
+      order: 'For elevation and separation, the minimum cannot exceed the maximum.',
     },
     wrapsNorth: (body) => `${body}: the azimuth range wraps through north.`,
     impossible: (body) => `${body}: never reaches these values from this point.`,
@@ -1062,6 +1158,14 @@ const en: Messages = {
       earthUp: { title: 'Earth above the plane', detail: 'Earth elevation from 0° to 90°: "at least 0°" is typed with 90° as the maximum.' },
       sunNorth: { title: 'Sun towards north', detail: 'Sun azimuth from 350° to 10°: the minimum is above the maximum, so the range wraps through north.' },
       both: { title: 'Sun and Earth together', detail: 'Both elevations from 0° to 90°: every filled row must hold at the same instant.' },
+      solarEclipse: {
+        title: 'Next solar eclipse',
+        detail: `The Earth covers at least part of the Sun, seen from here with the Sun above the horizon (on Earth, a lunar eclipse). Sun–Earth separation from 0° to ${SOLAR_ECLIPSE_MAX_SEPARATION_DEG}° and Sun elevation from 0° to 90°; finds the next date.`,
+      },
+      terrestrialEclipse: {
+        title: 'Next Earth eclipse',
+        detail: `The Moon's shadow falls on the Earth, seen from here with the Earth above the horizon (on Earth, a solar eclipse). Sun–Earth separation from ${TERRESTRIAL_ECLIPSE_MIN_SEPARATION_DEG}° to 180° and Earth elevation from 0° to 90°; finds the next date.`,
+      },
     },
     tryExample: 'Try',
     tryExampleLabel: (example) => `Try the example: ${example}`,
@@ -1071,7 +1175,7 @@ const en: Messages = {
         heading: 'What it does',
         paragraphs: [
           '"Update view" answers "on this date, where are the Sun and the Earth?". The inverse search answers the opposite question: you say where you want to see them and get the UTC date and time at which that happens, seen from the point chosen under "Reference point".',
-          'Fill in one to four fields: azimuth and elevation of the Sun and of the Earth. Every filled row must hold at once; empty rows set nothing.',
+          'Fill in one to five rows: azimuth and elevation of the Sun and of the Earth, and the separation between them. Every filled row must hold at once; empty rows set nothing.',
         ],
       },
       {
@@ -1096,6 +1200,15 @@ const en: Messages = {
           'Seen from the Moon, the Sun never strays more than 1.6° from the lunar equator and the Earth never more than about 10.7° from its mean position. So, from a point near the pole, each body only covers a narrow band of the sky.',
           'The "Possible here" column shows which elevation and azimuth each body can have at the chosen point. The bounds come from JPL Horizons (DE441, 1969–2100) with a 0.25° margin. If a row asks for values outside that band, the form flags it and does not allow the search.',
           'An accepted condition may still not be met within the searched window, especially when you combine several rows that must hold at the same instant.',
+        ],
+      },
+      {
+        heading: 'Sun–Earth separation and eclipses',
+        paragraphs: [
+          'The separation is the angle between the Sun and the Earth seen from the chosen point, from 0° to 180°. It is computed from the azimuth and elevation JPL Horizons gives for each instant, so it needs both bodies to be queried.',
+          "Seen from the Moon there are two kinds of eclipse. Solar eclipse: the Earth covers at least part of the Sun; on Earth it is seen as a lunar eclipse. Earth eclipse: the Moon's shadow falls on the Earth, which is nearly opposite the Sun; on Earth it is seen as a solar eclipse.",
+          `The example thresholds (up to ${SOLAR_ECLIPSE_MAX_SEPARATION_DEG}° and from ${TERRESTRIAL_ECLIPSE_MIN_SEPARATION_DEG}°) use the smallest apparent sizes and the largest distances from 1969 to 2100, measured with JPL Horizons: every instant that meets them is an eclipse, but the first and last minutes of a grazing eclipse can fall outside. The example also requires the body you look at to be above the reference horizon.`,
+          "Terrain and the Earth's atmosphere, which bends light and enlarges the Earth's shadow, are not modeled.",
         ],
       },
       {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkRange, formatRangeParam, matchesConditions, matchesRange, parseAngleText, parseRangeParam } from './skySearch.js';
+import { angularSeparationDeg, checkRange, formatRangeParam, matchesConditions, matchesRange, parseAngleText, parseRangeParam } from './skySearch.js';
 
 describe('parseAngleText', () => {
   it('accepts plain degrees with up to 4 decimals', () => {
@@ -28,6 +28,27 @@ describe('checkRange / parseRangeParam', () => {
     expect(parseRangeParam('azimuth', '350,10')).toEqual({ ok: true, range: { min: 350, max: 10 } });
     expect(parseRangeParam('elevation', '1.5')).toEqual({ ok: true, range: { min: 1.5, max: 1.5 } });
     expect(parseRangeParam('elevation', '1,2,3').ok).toBe(false);
+  });
+});
+
+describe('angularSeparationDeg', () => {
+  it('measures the angle between two azimuth/elevation directions', () => {
+    expect(angularSeparationDeg(10, 0, 10, 0)).toBe(0);
+    expect(angularSeparationDeg(0, 0, 90, 0)).toBeCloseTo(90, 12);
+    expect(angularSeparationDeg(0, 0, 0, 90)).toBeCloseTo(90, 12);
+    expect(angularSeparationDeg(30, 10, 210, -10)).toBeCloseTo(180, 12);
+    // Across north and close to 0°/180°, where the cosine formula loses digits.
+    expect(angularSeparationDeg(359.5, 0, 0.5, 0)).toBeCloseTo(1, 10);
+    expect(angularSeparationDeg(0, 0.0005, 180, 0.0005)).toBeCloseTo(179.999, 9);
+  });
+
+  it('is checked like an elevation range on 0° to 180°', () => {
+    expect(checkRange('separation', 0, 1.15).ok).toBe(true);
+    expect(checkRange('separation', 2, 1)).toEqual({ ok: false, reason: 'order' });
+    expect(checkRange('separation', 170, 180.5)).toEqual({ ok: false, reason: 'bounds' });
+    expect(matchesRange('separation', { min: 178.89, max: 180 }, 179.5)).toBe(true);
+    expect(matchesRange('separation', { min: 0, max: 1.15 }, 1.15004)).toBe(true);
+    expect(matchesRange('separation', { min: 0, max: 1.15 }, 1.15006)).toBe(false);
   });
 });
 

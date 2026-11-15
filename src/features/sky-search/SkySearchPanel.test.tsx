@@ -112,6 +112,47 @@ describe('SkySearchPanel', () => {
     expect(field('Sun, Elevation, minimum').value).toBe('2');
   });
 
+  it('keeps each condition on one line and moves the long explanations to "i" windows', () => {
+    mount();
+    const text = MESSAGES.en.skySearch;
+    const labels = [...container.querySelectorAll('.sky-search__label')].map((label) =>
+      [...label.querySelectorAll('.sky-search__body, .sky-search__angle')].map((part) => part.textContent).join(' '),
+    );
+    expect(labels).toEqual(['Sun Azimuth', 'Sun Elevation', 'Earth Azimuth', 'Earth Elevation', 'Sun–Earth Separation']);
+    const help = (section: string) => container.querySelector<HTMLButtonElement>(`button[aria-label="${MESSAGES.en.common.help(section)}"]`);
+    for (const section of [text.guideHeading, text.steps.conditions, text.steps.direction, text.examplesHeading]) {
+      expect(help(section)).not.toBeNull();
+    }
+    // The long texts live only inside those windows, which start closed.
+    const conditionsWindow = help(text.steps.conditions)!.nextElementSibling as HTMLDialogElement;
+    expect(conditionsWindow.textContent).toContain(text.conditionsHint);
+    expect(conditionsWindow.open).toBe(false);
+    act(() => help(text.steps.conditions)!.click());
+    expect(conditionsWindow.open).toBe(true);
+    const guideWindow = help(text.guideHeading)!.nextElementSibling as HTMLDialogElement;
+    expect(guideWindow.textContent).toContain(text.guide[0]!.paragraphs[0]);
+  });
+
+  it('closing an "i" window keeps the search window open', () => {
+    const { dialog, button } = mount();
+    act(() => button('Open').click());
+    const help = container.querySelector<HTMLButtonElement>(`button[aria-label="${MESSAGES.en.common.help(MESSAGES.en.skySearch.guideHeading)}"]`)!;
+    act(() => help.click());
+    const guide = help.nextElementSibling as HTMLDialogElement;
+    expect(guide.open).toBe(true);
+    act(() => guide.close());
+    expect(guide.open).toBe(false);
+    expect(dialog().open).toBe(true);
+  });
+
+  it('fills an eclipse example and looks for the next date', () => {
+    const { field, button } = mount();
+    act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Try the example: Next solar eclipse"]')!.click());
+    expect(field('Sun–Earth, Separation, maximum').value).toBe('1.15');
+    expect(field('Sun, Elevation, minimum').value).toBe('0');
+    expect(button('Next').getAttribute('aria-pressed')).toBe('true');
+  });
+
   it('fills the form with an example', () => {
     const { field } = mount();
     act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Try the example: Sun towards north"]')!.click());

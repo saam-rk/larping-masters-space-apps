@@ -15,7 +15,7 @@ import {
   SITE_IDS,
   type SiteId,
 } from './sites.js';
-import { parseUtcInstant, toUtcIsoSeconds } from './time.js';
+import { APOLLO_11_LANDING_UTC, currentUtc, parseUtcInstant, toUtcIsoSeconds } from './time.js';
 
 describe('reference sites', () => {
   it('lists every site id exactly once', () => {
@@ -162,6 +162,16 @@ describe('parseUtcInstant', () => {
 
   it('formats with seconds and no milliseconds', () => {
     expect(toUtcIsoSeconds(new Date('2026-11-14T12:00:00.789Z'))).toBe('2026-11-14T12:00:00Z');
+  });
+});
+
+describe('currentUtc', () => {
+  it('starts at the given clock time, whole seconds', () => {
+    expect(currentUtc(new Date('2026-11-15T09:30:12.456Z'))).toBe('2026-11-15T09:30:12Z');
+  });
+
+  it('falls back to the Apollo 11 touchdown outside the supported range', () => {
+    expect(currentUtc(new Date('2100-01-01T00:00:00Z'))).toBe(APOLLO_11_LANDING_UTC);
   });
 });
 

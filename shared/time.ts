@@ -6,7 +6,6 @@
 
 /** NASA/NSSDCA Apollo 11 mission catalogue touchdown time, in UTC. */
 export const APOLLO_11_LANDING_UTC = '1969-07-20T20:17:40Z';
-export const DEFAULT_UTC = APOLLO_11_LANDING_UTC;
 
 /**
  * Apollo 11 US flag erected, in UTC: 110:09:43 ground elapsed time, when
@@ -81,6 +80,15 @@ export function parseUtcInstant(input: string): UtcParseResult {
   }
 
   return { ok: true, instant, iso: toUtcIsoSeconds(instant) };
+}
+
+/**
+ * Starting instant of the page: the current time, whole seconds. Falls back to
+ * the Apollo 11 touchdown when the clock is outside `SUPPORTED_UTC_RANGE`.
+ */
+export function currentUtc(now: Date = new Date()): string {
+  const iso = toUtcIsoSeconds(now);
+  return parseUtcInstant(iso).ok ? iso : APOLLO_11_LANDING_UTC;
 }
 
 /** `2026-11-14T12:00:00Z` (seconds precision, no milliseconds). */

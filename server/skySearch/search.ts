@@ -11,6 +11,11 @@
  *      azimuth/elevation can be strongly nonlinear near a zenith or nadir.
  *   3. Resample each candidate hour every minute and repeat with a smaller
  *      margin, then resample each candidate minute every second.
+ *      The Sun–Earth separation is not interpolated: an interval is ruled out
+ *      only when the separation's largest possible rate
+ *      (`SEPARATION_MAX_RATE_DEG_PER_HOUR`) keeps it outside the range for the
+ *      whole interval. That rejection is rigorous, so those intervals need no
+ *      second-by-second verification (step 5).
  *   4. A second matches only if the Horizons values printed for that second,
  *      rounded to 4 decimals, satisfy every range. Interpolation is only a
  *      discovery heuristic: near a zenith/nadir it can miss an interior peak.
@@ -31,6 +36,7 @@ import {
   activeTargets,
   matchesConditions,
   SKY_SEARCH_DECIMALS,
+  SEPARATION_MAX_RATE_DEG_PER_HOUR,
   SKY_SEARCH_WINDOW_DAYS,
   SKY_TARGET_INFO,
   type AngleRange,
@@ -161,6 +167,8 @@ export async function searchSky(input: SearchInput, sampler: Sampler, limits: Se
         for (let i = 0; i + 1 < series.times.length; i += 1) {
           const from = series.times[i] as number;
           const to = series.times[i + 1] as number;
+          // A rigorous rejection (separation rate bound) needs no verification.
+          if (ruledOut(series, i, conditions)) continue;
           unverified.push({ startMs: from, stopMs: to, distanceMs: distanceTo(referenceMs, from, to) });
         }
         coarse.push(...findCandidates(series, conditions, COARSE_MARGIN_DEG, referenceMs));
@@ -284,9 +292,14 @@ export function findCandidates(series: SkySeries, conditions: SkyConditions, mar
     for (const target of targets) {
       const column = series.values[target];
       const range = conditions[target] as AngleRange;
-      const allowed = column
-        ? segmentFeasibility(SKY_TARGET_INFO[target].angle, range, column[index] ?? null, column[index + 1] ?? null, marginDeg)
-        : [];
+      const v0 = column?.[index] ?? null;
+      const v1 = column?.[index + 1] ?? null;
+      const angle = SKY_TARGET_INFO[target].angle;
+      const allowed = !column
+        ? []
+        : angle === 'separation'
+          ? separationFeasibility(range, v0, v1, stopMs - startMs, marginDeg)
+          : segmentFeasibility(angle, range, v0, v1, marginDeg);
       feasible = intersect(feasible, allowed);
       if (feasible.length === 0) break;
     }
@@ -297,6 +310,35 @@ export function findCandidates(series: SkySeries, conditions: SkyConditions, mar
     candidates.push({ startMs, stopMs, distanceMs });
   }
   return candidates;
+}
+
+/**
+ * Sun–Earth separation over an interval of `durationMs` between samples `v0`
+ * and `v1`: with a rate of at most `SEPARATION_MAX_RATE_DEG_PER_HOUR`, every
+ * value inside lies within [(v0 + v1 − rΔ) / 2, (v0 + v1 + rΔ) / 2]. The whole
+ * interval is kept when that span meets the range (widened by `marginDeg` and
+ * the rounding tolerance), and none of it otherwise.
+ */
+export function separationFeasibility(range: AngleRange, v0: number | null, v1: number | null, durationMs: number, marginDeg: number): Interval[] {
+  if (v0 === null || v1 === null) return [];
+  const swing = (SEPARATION_MAX_RATE_DEG_PER_HOUR * durationMs) / HOUR_MS;
+  const tolerance = HALF_UNIT_DEG + marginDeg;
+  // The endpoints are included in case the samples ever change faster than the bound.
+  const lowest = Math.min(v0, v1, (v0 + v1 - swing) / 2);
+  const highest = Math.max(v0, v1, (v0 + v1 + swing) / 2);
+  return highest >= range.min - tolerance && lowest <= range.max + tolerance ? [[0, 1]] : [];
+}
+
+/** True when a separation condition excludes every instant of interval `index` (no margin: a proof, not a heuristic). */
+function ruledOut(series: SkySeries, index: number, conditions: SkyConditions): boolean {
+  const range = conditions.sunEarthSeparation;
+  const column = series.values.sunEarthSeparation;
+  if (!range || !column) return false;
+  const v0 = column[index] ?? null;
+  const v1 = column[index + 1] ?? null;
+  if (v0 === null || v1 === null) return false;
+  const durationMs = (series.times[index + 1] as number) - (series.times[index] as number);
+  return separationFeasibility(range, v0, v1, durationMs, 0).length === 0;
 }
 
 function distanceTo(referenceMs: number, fromMs: number, toMs: number): number {

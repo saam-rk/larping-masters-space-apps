@@ -7,10 +7,12 @@
  *
  * The box stays in the control column as a short summary (conditions set,
  * last result) with a button that opens the search window. The window holds
- * the form in three numbered steps, ready-made examples and the extended
- * guide, since this is the hardest feature of the page to read at a glance.
- * Values the Sun or the Earth can never take at the site are flagged, and
- * the possible ones are listed beside each row.
+ * the form in three numbered steps and ready-made examples. Each condition
+ * (e.g. the Sun's elevation) takes one line; the longer explanations (units
+ * and conventions, the search directions, what each example shows and the
+ * extended guide) open in their own window from an "i" button, so the form
+ * reads at a glance. Values the Sun or the Earth can never take at the site
+ * are flagged, and the possible ones are listed beside each row.
  *
  * The window's content stays mounted while closed: fields and the last
  * result survive, and a running search keeps going (it can be cancelled). A
@@ -19,7 +21,17 @@
  */
 
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
-import { SKY_SEARCH_DIRECTIONS, SKY_TARGET_INFO, SKY_TARGETS, wrapsNorth, type AngleRange, type SkySearchDirection, type SkySearchResponse, type SkyTarget } from '../../../shared/skySearch';
+import {
+  ANGLE_BOUNDS,
+  SKY_SEARCH_DIRECTIONS,
+  SKY_TARGET_INFO,
+  SKY_TARGETS,
+  wrapsNorth,
+  type AngleRange,
+  type SkySearchDirection,
+  type SkySearchResponse,
+  type SkyTarget,
+} from '../../../shared/skySearch';
 import { possibleSky } from '../../../shared/skyFeasibility';
 import { CUSTOM_SITE_ID, findSite } from '../../../shared/sites';
 import type { ClientError, EphemerisSelection } from '../../api/ephemerisClient';
@@ -27,9 +39,23 @@ import { fetchSkySearch } from '../../api/skySearchClient';
 import { formatDegrees, formatOffset, formatUtc } from '../../format';
 import { useI18n } from '../../i18n/context';
 import { Box } from '../../ui/Box';
+import { DialogButton, HelpButton } from '../../ui/DialogButton';
 import { Modal } from '../../ui/Modal';
 import { EMPTY_INPUTS, readForm, type ConditionInputs, type RowState } from './conditionForm';
-import { EXAMPLE_INPUTS, SKY_SEARCH_EXAMPLES } from './examples';
+import { EXAMPLE_DIRECTIONS, EXAMPLE_INPUTS, SKY_SEARCH_EXAMPLES, type SkySearchExample } from './examples';
+import type { Messages } from '../../i18n/messages';
+
+/** "Sun", "Earth" or, for the separation, "Sun–Earth". */
+function targetBodyName(target: SkyTarget, messages: Messages): string {
+  const { bodies } = SKY_TARGET_INFO[target];
+  return bodies.length === 1 ? messages.bodies[bodies[0]!] : messages.skySearch.pair;
+}
+
+/** Row colour: the body's own, or `pair` for the separation. */
+function targetTone(target: SkyTarget): string {
+  const { bodies } = SKY_TARGET_INFO[target];
+  return bodies.length === 1 ? bodies[0]! : 'pair';
+}
 
 interface SkySearchPanelProps {
   readonly selection: EphemerisSelection;
@@ -104,20 +130,28 @@ export function SkySearchPanel({ selection, onShow }: SkySearchPanelProps) {
     setState({ status: 'idle' });
   }
 
+  /** Fills the form with an example, and sets its search direction when it has one (the eclipses look for the next date). */
+  function applyExample(example: SkySearchExample) {
+    setInputs(EXAMPLE_INPUTS[example]);
+    const exampleDirection = EXAMPLE_DIRECTIONS[example];
+    if (exampleDirection) setDirection(exampleDirection);
+  }
+
   /** Closes the window so the match on the horizon view is visible. */
   function handleShow(utc: string) {
     if (selection.utc !== utc) onShow(utc);
     setOpen(false);
   }
 
-  const bodyName = (target: SkyTarget) => messages.bodies[SKY_TARGET_INFO[target].body];
+  const bodyName = (target: SkyTarget) => targetBodyName(target, messages);
   const angleName = (target: SkyTarget) => text.angles[SKY_TARGET_INFO[target].angle];
   const rowError = (target: SkyTarget, row: RowState): string | null => {
     if (row.kind !== 'invalid') return null;
     const prefix = `${bodyName(target)} · ${angleName(target).toLowerCase()}: `;
     if (row.reason === 'format') return prefix + text.rowErrors.format;
     if (row.reason === 'order') return prefix + text.rowErrors.order;
-    return prefix + (SKY_TARGET_INFO[target].angle === 'azimuth' ? text.rowErrors.azimuthBounds : text.rowErrors.elevationBounds);
+    const angle = SKY_TARGET_INFO[target].angle;
+    return prefix + (angle === 'azimuth' ? text.rowErrors.azimuthBounds : angle === 'elevation' ? text.rowErrors.elevationBounds : text.rowErrors.separationBounds);
   };
   const errors = [
     ...SKY_TARGETS.map((target) => rowError(target, reading.rows[target])).filter((error): error is string => error !== null),
@@ -128,8 +162,10 @@ export function SkySearchPanel({ selection, onShow }: SkySearchPanelProps) {
   const down = (value: number) => formatDegrees(Math.floor(value * 10) / 10, locale, 1) as string;
   const up = (value: number) => formatDegrees(Math.ceil(value * 10) / 10, locale, 1) as string;
   const possibleText = (target: SkyTarget) => {
-    const { body, angle } = SKY_TARGET_INFO[target];
-    const range = possible[body][angle];
+    const { bodies, angle } = SKY_TARGET_INFO[target];
+    // The separation is not bounded per site (see `skyFeasibility.ts`): its full span.
+    if (angle === 'separation') return text.span(down(ANGLE_BOUNDS.separation[0]), up(ANGLE_BOUNDS.separation[1]));
+    const range = possible[bodies[0]!][angle];
     return range === null ? text.anyAzimuth : text.span(down(range.min), up(range.max));
   };
   const wrapNotes = SKY_TARGETS.flatMap((target) => {
@@ -144,6 +180,15 @@ export function SkySearchPanel({ selection, onShow }: SkySearchPanelProps) {
   };
 
   const searchingTag = searching ? <span className="blink">●</span> : undefined;
+  const conditionsHelp = [
+    text.conditionsHint,
+    ...(['azimuth', 'elevation', 'separation'] as const).map((angle) => `${text.angles[angle]}: ${text.angleHints[angle]}.`),
+  ];
+  const directionHelp = SKY_SEARCH_DIRECTIONS.map((option) => `${text.directions[option]}: ${text.directionHints[option]}`);
+  const examplesHelp = [
+    text.examplesIntro,
+    ...SKY_SEARCH_EXAMPLES.map((example) => `${text.examples[example].title}: ${text.examples[example].detail}`),
+  ];
 
   return (
     <Box
@@ -161,15 +206,19 @@ export function SkySearchPanel({ selection, onShow }: SkySearchPanelProps) {
       <p className="sky-search__intro">{text.intro}</p>
       <BoxSummary state={state} count={reading.active} />
 
-      <Modal open={open} onClose={() => setOpen(false)} title={text.dialogTitle} tag={searchingTag} className="dialog--wide sky-search-dialog">
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title={text.dialogTitle}
+        tag={searchingTag}
+        className="dialog--wide sky-search-dialog"
+        actions={<GuideButton />}
+      >
         <div className="sky-search__layout">
           <div className="sky-search__main">
             <form className="sky-search__form" onSubmit={handleSubmit} noValidate>
               <section className="sky-search__step" aria-labelledby={conditionsId}>
-                <h3 className="sky-search__step-title" id={conditionsId}>
-                  {text.steps.conditions}
-                </h3>
-                <p className="hint">{text.conditionsHint}</p>
+                <StepHead id={conditionsId} title={text.steps.conditions} help={conditionsHelp} />
                 <div className="sky-search__grid" role="group" aria-labelledby={conditionsId} aria-describedby={errors.length > 0 ? errorId : undefined}>
                   <span aria-hidden="true" />
                   <span className="sky-search__head" aria-hidden="true">
@@ -183,8 +232,10 @@ export function SkySearchPanel({ selection, onShow }: SkySearchPanelProps) {
                   </span>
                   {SKY_TARGETS.map((target) => {
                     const row = reading.rows[target];
-                    const { body, angle } = SKY_TARGET_INFO[target];
-                    const impossible = row.kind === 'ok' && reading.impossible.includes(body);
+                    const { bodies, angle } = SKY_TARGET_INFO[target];
+                    const body = targetTone(target);
+                    // Only single-body rows can be impossible at a site (see `skyFeasibility.ts`).
+                    const impossible = row.kind === 'ok' && angle !== 'separation' && reading.impossible.includes(bodies[0]!);
                     const invalid = (bound: 'min' | 'max') =>
                       impossible || (row.kind === 'invalid' && (row.field === bound || row.field === 'both'));
                     const hintId = `${idBase}-${target}-hint`;
@@ -193,7 +244,8 @@ export function SkySearchPanel({ selection, onShow }: SkySearchPanelProps) {
                         <span className="sky-search__label">
                           <span className={`sky-search__body sky-search__body--${body}`}>{bodyName(target)}</span>
                           <span className="sky-search__angle">{angleName(target)}</span>
-                          <span className="sky-search__angle-hint" id={hintId}>
+                          {/* Shown in the step's "i" window; kept here for screen readers. */}
+                          <span className="visually-hidden" id={hintId}>
                             {text.angleHints[angle]}
                           </span>
                         </span>
@@ -237,9 +289,7 @@ export function SkySearchPanel({ selection, onShow }: SkySearchPanelProps) {
               </section>
 
               <section className="sky-search__step" aria-labelledby={directionId}>
-                <h3 className="sky-search__step-title" id={directionId}>
-                  {text.steps.direction}
-                </h3>
+                <StepHead id={directionId} title={text.steps.direction} help={directionHelp} />
                 <div className="segmented sky-search__directions" role="group" aria-labelledby={directionId}>
                   {SKY_SEARCH_DIRECTIONS.map((option) => (
                     <button
@@ -254,7 +304,6 @@ export function SkySearchPanel({ selection, onShow }: SkySearchPanelProps) {
                     </button>
                   ))}
                 </div>
-                <p className="hint">{text.directionHints[direction]}</p>
                 <p className="hint sky-search__reference">{text.reference(currentSiteName, formatUtc(selection.utc))}</p>
               </section>
 
@@ -281,9 +330,7 @@ export function SkySearchPanel({ selection, onShow }: SkySearchPanelProps) {
             </form>
 
             <section className="sky-search__step" aria-labelledby={`${idBase}-result`}>
-              <h3 className="sky-search__step-title" id={`${idBase}-result`}>
-                {text.steps.result}
-              </h3>
+              <StepHead id={`${idBase}-result`} title={text.steps.result} />
               <div aria-live="polite" className="sky-search__result">
                 {state.status === 'idle' && <p className="hint">{text.noResult}</p>}
                 {state.status === 'searching' && (
@@ -309,22 +356,20 @@ export function SkySearchPanel({ selection, onShow }: SkySearchPanelProps) {
             </section>
           </div>
 
-          <aside className="sky-search__guide" aria-label={text.guideHeading}>
+          <aside className="sky-search__guide" aria-labelledby={`${idBase}-examples`}>
             <section className="sky-search__guide-section">
-              <h3 className="sky-search__step-title">{text.examplesHeading}</h3>
-              <p>{text.examplesIntro}</p>
+              <StepHead id={`${idBase}-examples`} title={text.examplesHeading} help={examplesHelp} />
               <ul className="sky-search__examples">
                 {SKY_SEARCH_EXAMPLES.map((example) => (
                   <li key={example} className="sky-search__example">
-                    <span className="sky-search__example-text">
-                      <span className="sky-search__example-title">{text.examples[example].title}</span>
-                      <span className="sky-search__example-detail">{text.examples[example].detail}</span>
+                    <span className="sky-search__example-title" title={text.examples[example].detail}>
+                      {text.examples[example].title}
                     </span>
                     <button
                       type="button"
                       className="text-button"
                       aria-label={text.tryExampleLabel(text.examples[example].title)}
-                      onClick={() => setInputs(EXAMPLE_INPUTS[example])}
+                      onClick={() => applyExample(example)}
                     >
                       {text.tryExample}
                     </button>
@@ -332,14 +377,6 @@ export function SkySearchPanel({ selection, onShow }: SkySearchPanelProps) {
                 ))}
               </ul>
             </section>
-            {text.guide.map((section) => (
-              <section key={section.heading} className="sky-search__guide-section">
-                <h3 className="sky-search__step-title">{section.heading}</h3>
-                {section.paragraphs.map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))}
-              </section>
-            ))}
           </aside>
         </div>
 
@@ -350,6 +387,42 @@ export function SkySearchPanel({ selection, onShow }: SkySearchPanelProps) {
         </div>
       </Modal>
     </Box>
+  );
+}
+
+/** Title of a step of the window, with an "i" button for its longer explanation when there is one. */
+function StepHead({ id, title, help }: { id: string; title: string; help?: readonly string[] }) {
+  return (
+    <div className="sky-search__step-head">
+      <h3 className="sky-search__step-title" id={id}>
+        {title}
+      </h3>
+      {help && <HelpButton section={title} paragraphs={help} />}
+    </div>
+  );
+}
+
+/** "i" button in the window's title rule: the extended guide, in its own window. */
+function GuideButton() {
+  const { messages } = useI18n();
+  const text = messages.skySearch;
+  return (
+    <DialogButton
+      label="i"
+      ariaLabel={messages.common.help(text.guideHeading)}
+      buttonClassName="icon-button icon-button--info"
+      title={text.guideHeading}
+      dialogClassName="dialog--guide"
+    >
+      {text.guide.map((section) => (
+        <section key={section.heading} className="sky-search__guide-section">
+          <h3 className="sky-search__step-title">{section.heading}</h3>
+          {section.paragraphs.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
+        </section>
+      ))}
+    </DialogButton>
   );
 }
 
@@ -424,7 +497,7 @@ function SearchResult({ data, current, siteName, formatRange, onShow, shownUtc }
           {targets.map((target) => (
             <tr key={target}>
               <th scope="row">
-                {messages.bodies[SKY_TARGET_INFO[target].body]} · {text.angles[SKY_TARGET_INFO[target].angle].toLowerCase()}
+                {targetBodyName(target, messages)} · {text.angles[SKY_TARGET_INFO[target].angle].toLowerCase()}
               </th>
               <td>{formatRange(data.conditions[target] as AngleRange)}</td>
               <td>{formatDegrees(match.values[target] ?? null, locale) ?? messages.results.noValue}</td>

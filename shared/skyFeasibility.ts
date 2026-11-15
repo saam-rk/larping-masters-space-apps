@@ -161,7 +161,10 @@ export function isBodyBoxPossible(body: BodyId, site: SiteCoordinates, azimuth: 
 export function impossibleBodies(site: SiteCoordinates, conditions: SkyConditions): BodyId[] {
   const bodies: BodyId[] = [];
   for (const body of ['sun', 'earth'] as const) {
-    const targets = SKY_TARGETS.filter((target) => SKY_TARGET_INFO[target].body === body && conditions[target] !== undefined);
+    // Single-body quantities only: the Sun–Earth separation is not checked (it sweeps from near 0° to near 180° every synodic month at any site).
+    const targets = SKY_TARGETS.filter(
+      (target) => SKY_TARGET_INFO[target].angle !== 'separation' && SKY_TARGET_INFO[target].bodies[0] === body && conditions[target] !== undefined,
+    );
     if (targets.length === 0) continue;
     const azimuth = targets.find((target) => SKY_TARGET_INFO[target].angle === 'azimuth');
     const elevation = targets.find((target) => SKY_TARGET_INFO[target].angle === 'elevation');

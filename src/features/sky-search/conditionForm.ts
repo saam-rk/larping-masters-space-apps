@@ -11,6 +11,7 @@ import type { BodyId } from '../../../shared/ephemeris';
 import { impossibleBodies, type SiteCoordinates } from '../../../shared/skyFeasibility';
 
 import {
+  ANGLE_BOUNDS,
   checkRange,
   parseAngleText,
   SKY_TARGET_INFO,
@@ -32,6 +33,7 @@ export const EMPTY_INPUTS: ConditionInputs = {
   sunElevation: { min: '', max: '' },
   earthAzimuth: { min: '', max: '' },
   earthElevation: { min: '', max: '' },
+  sunEarthSeparation: { min: '', max: '' },
 };
 
 export type RowError = 'format' | 'bounds' | 'order';
@@ -59,7 +61,7 @@ export function readRow(target: SkyTarget, input: ConditionInput): RowState {
   const checked = checkRange(angle, low, high);
   if (checked.ok) return { kind: 'ok', range: checked.range };
   if (checked.reason === 'order') return { kind: 'invalid', reason: 'order', field: 'both' };
-  const [lowBound, highBound] = angle === 'azimuth' ? [0, 360] : [-90, 90];
+  const [lowBound, highBound] = ANGLE_BOUNDS[angle];
   const outside = (value: number | 'empty') => value !== 'empty' && (value < lowBound || value > highBound);
   const field = outside(min) && !outside(max) ? 'min' : outside(max) && !outside(min) ? 'max' : 'both';
   return { kind: 'invalid', reason: 'bounds', field };

@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { DEFAULT_SITE_ID, FEATURED_SITES, findSite, REFERENCE_SITES, type SiteId } from '../../../shared/sites';
-import { DEFAULT_UTC } from '../../../shared/time';
+import { APOLLO_11_LANDING_UTC as DEFAULT_UTC } from '../../../shared/time';
 import { MESSAGES } from '../../i18n/messages';
 import { ConfigPanel } from './ConfigPanel';
 

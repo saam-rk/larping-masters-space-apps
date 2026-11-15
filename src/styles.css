@@ -1618,6 +1618,56 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   color: var(--amber);
 }
 
+/* Time left until the Sun and the Earth set or rise: top right over the view. */
+.scene__countdown {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  max-width: calc(100% - 1rem);
+  padding: 0.3rem 0.5rem;
+  font-size: 0.8em;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--line-dim);
+  cursor: help;
+}
+
+.scene__countdown-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.scene__countdown-event {
+  color: var(--muted);
+}
+
+.scene__countdown-row[data-body='sun'] .scene__countdown-event::before,
+.scene__countdown-row[data-body='earth'] .scene__countdown-event::before {
+  content: '● ';
+}
+
+.scene__countdown-row[data-body='sun'] .scene__countdown-event::before {
+  color: var(--amber);
+}
+
+.scene__countdown-row[data-body='earth'] .scene__countdown-event::before {
+  color: var(--cyan);
+}
+
+.scene__countdown-value {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.scene__countdown-row[data-pending='true'] .scene__countdown-value {
+  color: var(--muted);
+}
+
 /* Map-style controls over the view, bottom right: the zoom. */
 .scene__controls {
   position: absolute;
@@ -1902,7 +1952,7 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   width: min(66rem, calc(100vw - 2rem));
 }
 
-.sky-search-dialog .dialog__body {
+.sky-search-dialog > .dialog__window > .dialog__body {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -1910,17 +1960,17 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   overflow: hidden;
 }
 
-.sky-search-dialog .dialog__body .hint {
+.sky-search-dialog > .dialog__window > .dialog__body .hint {
   margin: 0.4rem 0 0;
 }
 
-.sky-search-dialog .dialog__body .callout {
+.sky-search-dialog > .dialog__window > .dialog__body .callout {
   margin: 0.5rem 0 0;
 }
 
 .sky-search__layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: 0 1.5rem;
   min-height: 0;
   flex: 1;
@@ -1946,6 +1996,22 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
 .sky-search__form + .sky-search__step,
 .sky-search__actions {
   margin-top: 1.1rem;
+}
+
+/* Step title and its "i" button (longer explanation in its own window). */
+.sky-search__step-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.35rem;
+}
+
+.sky-search__step-head .sky-search__step-title {
+  margin: 0;
+}
+
+.sky-search__step-head .icon-button {
+  font-size: 0.85em;
 }
 
 .sky-search__step-title {
@@ -1982,13 +2048,16 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   text-transform: var(--title-case);
 }
 
+/* One line per condition: body and angle side by side, never wrapped. */
 .sky-search__label {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: baseline;
   gap: 0 0.5em;
   min-width: 0;
+  overflow: hidden;
   color: var(--muted);
+  white-space: nowrap;
 }
 
 .sky-search__row[data-active='true'] .sky-search__label {
@@ -2013,10 +2082,16 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   color: var(--cyan);
 }
 
-.sky-search__angle-hint {
-  flex-basis: 100%;
-  color: var(--muted);
-  font-size: 0.8em;
+/* Sun–Earth separation row: both bodies' colours. */
+.sky-search__body--pair {
+  background: linear-gradient(90deg, var(--amber), var(--cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.sky-search__body--pair::before {
+  color: var(--amber);
 }
 
 .sky-search__input {
@@ -2029,6 +2104,7 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   color: var(--muted);
   font-size: 0.85em;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 /* The column head names it on wide screens; the inline label only shows when stacked. */
@@ -2070,8 +2146,8 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   gap: 0.35rem;
 }
 
-.sky-search-dialog .dialog__body .sky-search__match .hint,
-.sky-search-dialog .dialog__body .sky-search__match-head {
+.sky-search-dialog > .dialog__window > .dialog__body .sky-search__match .hint,
+.sky-search-dialog > .dialog__window > .dialog__body .sky-search__match-head {
   margin: 0;
 }
 
@@ -2107,9 +2183,23 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   margin-top: 1.1rem;
 }
 
-.sky-search__guide p {
+.sky-search__guide p,
+.dialog--guide p {
   margin: 0 0 0.55rem;
   line-height: 1.45;
+}
+
+/* Extended guide of the inverse search, opened from the window's "i" button. */
+.dialog--guide {
+  width: min(44rem, calc(100vw - 2rem));
+}
+
+.dialog--guide .dialog__body {
+  max-height: min(80vh, 40rem);
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) rgba(10, 30, 18, 0.9);
+  overscroll-behavior: contain;
+  padding-right: 0.5rem;
 }
 
 .sky-search__examples {
@@ -2129,21 +2219,10 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   border: 1px solid var(--line-dim);
 }
 
-.sky-search__example-text {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 0.15rem;
-  min-width: 0;
-}
-
 .sky-search__example-title {
+  flex: 1;
+  min-width: 0;
   color: var(--text);
-}
-
-.sky-search__example-detail {
-  color: var(--muted);
-  font-size: 0.85em;
 }
 
 .sky-search__footer {
@@ -2154,7 +2233,7 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
 }
 
 @media (max-width: 860px), (max-height: 560px) {
-  .sky-search-dialog .dialog__body {
+  .sky-search-dialog > .dialog__window > .dialog__body {
     overflow: auto;
     overscroll-behavior: contain;
   }
@@ -2717,6 +2796,12 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
 
   .scene-box.scene-box--apollo {
     min-height: clamp(19rem, 48svh, 32rem);
+  }
+
+  /* The zoom moves to the top right here; the countdown sits beside it. */
+  .scene-box--apollo .scene__countdown {
+    right: 2.6rem;
+    max-width: calc(100% - 3.1rem);
   }
 
   .scene-box--apollo .scene__controls {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { formatOffset } from '../../format';
 import { EMPTY_INPUTS, readForm, readRow } from './conditionForm';
+import { EXAMPLE_INPUTS } from './examples';
 
 const NOBILE_RIM_1 = { latitudeDeg: -85.4381, longitudeEastDeg: 37.36667 };
 
@@ -33,6 +34,26 @@ describe('readForm', () => {
     expect(high).toMatchObject({ active: 2, impossible: ['sun'], conditions: null });
     const low = readForm({ ...EMPTY_INPUTS, sunElevation: { min: '0', max: '5' } }, NOBILE_RIM_1);
     expect(low).toMatchObject({ impossible: [], conditions: { sunElevation: { min: 0, max: 5 } } });
+  });
+});
+
+describe('eclipse examples', () => {
+  const APOLLO_11 = { latitudeDeg: 0.67416, longitudeEastDeg: 23.47314 };
+  const FAR_SIDE = { latitudeDeg: 0, longitudeEastDeg: 180 };
+
+  it('fill a separation threshold with the body to look at above the horizon', () => {
+    expect(readForm(EXAMPLE_INPUTS.solarEclipse, APOLLO_11).conditions).toEqual({
+      sunElevation: { min: 0, max: 90 },
+      sunEarthSeparation: { min: 0, max: 1.15 },
+    });
+    expect(readForm(EXAMPLE_INPUTS.terrestrialEclipse, NOBILE_RIM_1).conditions).toEqual({
+      earthElevation: { min: 0, max: 90 },
+      sunEarthSeparation: { min: 178.89, max: 180 },
+    });
+  });
+
+  it('flag the Earth eclipse where the Earth is never up', () => {
+    expect(readForm(EXAMPLE_INPUTS.terrestrialEclipse, FAR_SIDE)).toMatchObject({ impossible: ['earth'], conditions: null });
   });
 });
 

@@ -9,6 +9,8 @@ interface DialogButtonProps {
   readonly buttonClassName?: string;
   /** Dialog title. */
   readonly title: string;
+  /** Extra class on the `<dialog>`, e.g. to widen it. */
+  readonly dialogClassName?: string;
   readonly children: ReactNode;
 }
 
@@ -18,7 +20,7 @@ interface DialogButtonProps {
  * window also closes it. Used for help texts and secondary details such as
  * sources, so they do not take space on the main screen.
  */
-export function DialogButton({ label, ariaLabel, buttonClassName, title, children }: DialogButtonProps) {
+export function DialogButton({ label, ariaLabel, buttonClassName, title, dialogClassName, children }: DialogButtonProps) {
   const { messages } = useI18n();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -39,7 +41,7 @@ export function DialogButton({ label, ariaLabel, buttonClassName, title, childre
       </button>
       <dialog
         ref={dialogRef}
-        className="dialog"
+        className={`dialog${dialogClassName ? ` ${dialogClassName}` : ''}`}
         aria-labelledby={titleId}
         onClick={(event) => {
           // A click on the dialog element itself is a click on its backdrop.

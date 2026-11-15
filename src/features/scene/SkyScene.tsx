@@ -15,7 +15,9 @@
  * its box gets; notes and the zoom control are overlaid so the view keeps its
  * full height. Each view keeps its own zoom level (see `zoom.ts`), shared
  * between the slider and the camera controls (the two third-person scales
- * keep separate levels, since their distances differ). `showHorizon` comes from the
+ * keep separate levels, since their distances differ). The top-right corner
+ * shows the time left until the Sun and the Earth set or rise after the
+ * shown instant (see `HorizonCountdown`). `showHorizon` comes from the
  * "Compass" switch in the box title (see `CompassToggle`) and hides the
  * horizon reference in both views.
  */
@@ -29,6 +31,7 @@ import { AngleLegend } from './AngleLegend';
 import { elevationExaggeration } from './angles';
 import { placeBodies } from './bodies';
 import { FirstPersonView } from './FirstPersonView';
+import { HorizonCountdown } from './HorizonCountdown';
 import { ScaleToggle } from './ScaleToggle';
 import { DEFAULT_SCENE_SCALE, type SceneScale } from './sceneScale';
 import { StarSphere } from './StarSphere';
@@ -59,12 +62,15 @@ export default function SkyScene({
   mode,
   showHorizon,
   animateReenactment = false,
+  busy = false,
 }: {
   data: EphemerisResponse;
   mode: ViewMode;
   /** Horizon line (first person) and grid (third person). */
   showHorizon: boolean;
   animateReenactment?: boolean;
+  /** A new result is being queried: the set/rise countdown waits (see `HorizonCountdown`). */
+  busy?: boolean;
 }) {
   const { messages, locale } = useI18n();
   const bodies = useMemo(() => placeBodies(data), [data]);
@@ -127,6 +133,8 @@ export default function SkyScene({
           </p>
         ))}
       </div>
+
+      <HorizonCountdown data={data} bodies={bodies} paused={busy} />
 
       {mode === 'third-person' && (
         <div className="scene__overlay">

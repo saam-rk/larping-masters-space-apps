@@ -3,8 +3,11 @@
  * sky around the site, not to scale, so the angles read at a glance.
  *
  * The Sun and the Earth sit along the same azimuth as the results panel, on
- * a sky dome of a fixed radius (`VISUAL_DOME_RADIUS`) and as enlarged
- * spheres; distances and sizes carry no meaning here. Elevation is drawn with
+ * a sky dome (`VISUAL_DOME_RADIUS`) and as enlarged spheres; distances and
+ * sizes carry no meaning here. The Sun sits on a slightly larger radius than
+ * the Earth (`BODY_DOME_RADIUS`), so when they line up (a solar eclipse seen
+ * from the Moon) the Earth is drawn in front of the Sun instead of both
+ * spheres merging; their labels then go above and below. Elevation is drawn with
  * a vertical exaggeration (`elevationExaggeration`, ×1 to ×10, shown in the
  * note and the legend) so the few degrees of a polar sky can be read; the
  * labels always give the true values. The Sun and the Earth are the GLB
@@ -44,6 +47,7 @@ import { CelestialModel } from './CelestialModel';
 import { northAlongLunarAxis } from './celestialOrientation';
 import { horizontalToPosition, type Vector3Tuple } from './geometry';
 import { glowTexture } from './glow';
+import { BODY_DOME_RADIUS, BODY_RADIUS, LABELS_APART_DEG } from './visualBodies';
 import { OrbitZoom } from './OrbitZoom';
 import type { ThirdPersonControls } from './ThirdPersonView';
 import {
@@ -55,8 +59,6 @@ import {
   visualDistanceForLevel,
 } from './zoom';
 
-/** Enlarged sphere radii, scene units (not to scale). */
-const BODY_RADIUS: Readonly<Record<BodyId, number>> = { sun: 0.6, earth: 0.45 };
 /** Radius of each body's azimuth arc on the plane, as a fraction of the dome radius (apart so they do not overlap). */
 const AZIMUTH_ARC: Readonly<Record<BodyId, number>> = { sun: 0.42, earth: 0.62 };
 /** Radius of the Sun–Earth azimuth difference arc, fraction of the dome radius. */
@@ -156,13 +158,16 @@ function VisualBody({
   drawnElevation,
   label,
   orientation,
+  labelBelow = false,
 }: {
   body: SceneBody;
   drawnElevation: number;
   label: string;
   orientation: Quaternion;
+  /** Put the name under the sphere (the other body is in the same direction). */
+  labelBelow?: boolean;
 }) {
-  const position = horizontalToPosition(body.azimuthDeg, drawnElevation, R);
+  const position = horizontalToPosition(body.azimuthDeg, drawnElevation, BODY_DOME_RADIUS[body.body]);
   const radius = BODY_RADIUS[body.body];
   const color = BODY_COLOR[body.body];
   return (
@@ -187,7 +192,7 @@ function VisualBody({
         <sprite scale={[radius * 4, radius * 4, 1]}>
           <spriteMaterial map={glowTexture()} color={color} transparent depthWrite={false} toneMapped={false} />
         </sprite>
-        <Html center className="scene__label" style={{ transform: 'translateY(-1.8rem)', color }}>
+        <Html center className="scene__label" style={{ transform: `translateY(${labelBelow ? '1.8rem' : '-1.8rem'})`, color }}>
           {label}
         </Html>
       </group>
@@ -203,8 +208,9 @@ function BodyGuides({ body, drawnElevation }: { body: SceneBody; drawnElevation:
   const azimuth = normalizeAzimuth(body.azimuthDeg);
   const arcRadius = AZIMUTH_ARC[body.body] * R;
   const azArc = useMemo(() => azimuthArc(0, azimuth, arcRadius), [azimuth, arcRadius]);
-  const elArc = useMemo(() => elevationArc(azimuth, drawnElevation, R), [azimuth, drawnElevation]);
-  const foot = horizontalToPosition(azimuth, 0, R);
+  const domeRadius = BODY_DOME_RADIUS[body.body];
+  const elArc = useMemo(() => elevationArc(azimuth, drawnElevation, domeRadius), [azimuth, drawnElevation, domeRadius]);
+  const foot = horizontalToPosition(azimuth, 0, domeRadius);
   const azLabel = horizontalToPosition(azimuth / 2, 0, arcRadius + 0.08 * R);
   // Right of the middle of the arc, so it does not sit on the body or its name.
   const elLabel = midpoint(elArc);
@@ -234,15 +240,19 @@ function DifferenceGuides({ from, to, exaggeration }: { from: SceneBody; to: Sce
   const separation = angularSeparationDeg(from, to);
   const deltaAz = azimuthDifferenceDeg(from.azimuthDeg, to.azimuthDeg);
   // Drawn between the exaggerated directions; the label gives the true separation.
-  const dome = useMemo(
-    () =>
-      separationArc(
-        { azimuthDeg: from.azimuthDeg, elevationDeg: exaggerateElevation(from.elevationDeg, exaggeration) },
-        { azimuthDeg: to.azimuthDeg, elevationDeg: exaggerateElevation(to.elevationDeg, exaggeration) },
-        R,
-      ),
-    [from, to, exaggeration],
-  );
+  // Its radius goes from one body's dome radius to the other's, so it ends on both.
+  const dome = useMemo(() => {
+    const arc = separationArc(
+      { azimuthDeg: from.azimuthDeg, elevationDeg: exaggerateElevation(from.elevationDeg, exaggeration) },
+      { azimuthDeg: to.azimuthDeg, elevationDeg: exaggerateElevation(to.elevationDeg, exaggeration) },
+      R,
+    );
+    const [start, end] = [BODY_DOME_RADIUS[from.body], BODY_DOME_RADIUS[to.body]];
+    return arc.map(([x, y, z], i): Vector3Tuple => {
+      const k = (start + ((end - start) * i) / Math.max(1, arc.length - 1)) / R;
+      return [x * k, y * k, z * k];
+    });
+  }, [from, to, exaggeration]);
   const plane = useMemo(() => azimuthArc(from.azimuthDeg, deltaAz, DIFFERENCE_ARC * R), [from.azimuthDeg, deltaAz]);
   const domeMid = midpoint(dome);
   // Inside the arc, away from the azimuth labels of the bodies outside it.
@@ -278,6 +288,14 @@ export function VisualScaleView({
   const earth = bodies.placed.find((body) => body.body === 'earth');
   const exaggeration = elevationExaggeration(bodies.placed.map((body) => body.elevationDeg));
   const drawn = (body: SceneBody) => exaggerateElevation(body.elevationDeg, exaggeration);
+  // Lined up on screen (e.g. a solar eclipse): the Earth, in front, takes its label below.
+  const aligned =
+    sun !== undefined &&
+    earth !== undefined &&
+    angularSeparationDeg(
+      { azimuthDeg: sun.azimuthDeg, elevationDeg: drawn(sun) },
+      { azimuthDeg: earth.azimuthDeg, elevationDeg: drawn(earth) },
+    ) < LABELS_APART_DEG;
 
   return (
     <>
@@ -293,7 +311,14 @@ export function VisualScaleView({
 
       {controls.showHorizon && <Horizon exaggeration={exaggeration} />}
       {bodies.placed.map((body) => (
-        <VisualBody key={body.body} body={body} drawnElevation={drawn(body)} label={messages.bodies[body.body]} orientation={orientation} />
+        <VisualBody
+          key={body.body}
+          body={body}
+          drawnElevation={drawn(body)}
+          label={messages.bodies[body.body]}
+          orientation={orientation}
+          labelBelow={aligned && body.body === 'earth'}
+        />
       ))}
       {controls.showHorizon && bodies.placed.map((body) => <BodyGuides key={body.body} body={body} drawnElevation={drawn(body)} />)}
       {controls.showHorizon && sun && earth && <DifferenceGuides from={sun} to={earth} exaggeration={exaggeration} />}

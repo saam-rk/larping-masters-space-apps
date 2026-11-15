@@ -1,18 +1,23 @@
 /**
  * Selection state plus the result currently displayed. The scene and the
  * results panel both read `data`, so they always show the same values.
+ *
+ * The page starts at the default site (Apollo 11) and the current time, and
+ * queries that selection once on load. The saved sample (Apollo 11 at
+ * touchdown) stays on screen, labeled as a sample, until the answer arrives
+ * or if the query fails.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { EphemerisResponse } from '../../shared/ephemeris';
 import { DEFAULT_SITE_ID, findSite, siteAt, type SiteId } from '../../shared/sites';
-import { DEFAULT_UTC } from '../../shared/time';
+import { currentUtc } from '../../shared/time';
 import { fetchEphemeris, type ClientError, type EphemerisSelection } from '../api/ephemerisClient';
 import { SAVED_SAMPLE } from '../data/savedSample';
 
 export interface EphemerisState {
   readonly selection: EphemerisSelection;
-  /** Result on screen. Starts as the saved sample. */
+  /** Result on screen. Starts as the saved sample, until the first query answers. */
   readonly data: EphemerisResponse;
   readonly loading: boolean;
   /** Last request error. The previous `data` stays on screen, labeled with its own site and time. */
@@ -31,14 +36,15 @@ export interface EphemerisState {
 const DEFAULT_SITE = findSite(DEFAULT_SITE_ID);
 
 export function useEphemeris(): EphemerisState {
-  const [selection, setSelection] = useState<EphemerisSelection>({
+  const [selection, setSelection] = useState<EphemerisSelection>(() => ({
     siteId: DEFAULT_SITE.id,
     latitudeDeg: DEFAULT_SITE.latitudeDeg,
     longitudeEastDeg: DEFAULT_SITE.longitudeEastDeg,
-    utc: DEFAULT_UTC,
-  });
+    utc: currentUtc(),
+  }));
   const [data, setData] = useState<EphemerisResponse>(SAVED_SAMPLE);
-  const [loading, setLoading] = useState(false);
+  // True from the start: the selection is queried on load.
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClientError | null>(null);
   const inFlight = useRef<AbortController | null>(null);
 
@@ -64,6 +70,12 @@ export function useEphemeris(): EphemerisState {
   }, []);
 
   const update = useCallback(() => run(selection), [run, selection]);
+
+  // First query: the starting selection (current time), once on load.
+  const initial = useRef(selection);
+  useEffect(() => {
+    run(initial.current);
+  }, [run]);
 
   const showUtc = useCallback(
     (utc: string) => {
