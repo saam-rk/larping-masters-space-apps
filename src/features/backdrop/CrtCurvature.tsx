@@ -7,9 +7,10 @@
  * once per viewport size on a small canvas and stretched by the browser; the
  * field is smooth, so bilinear scaling keeps it exact enough. Its resolution
  * is capped (`MAX_MAP_SIDE`), so zooming out (a larger CSS viewport) does not
- * make it more expensive, and it is rebuilt on the frame after a resize: the
+ * make it more expensive, and it is rebuilt once a resize has settled: the
  * filter region follows the viewport, and a stale, smaller region would clip
- * the frame after zooming out.
+ * the frame after zooming out. The filter itself is off while the viewport is
+ * changing (see `resizeActivity.ts`), which keeps fast zooming smooth.
  *
  * Limits:
  * - The filter only moves pixels, and the browser hit-tests the undistorted
@@ -28,6 +29,7 @@
 import { useEffect, useState } from 'react';
 import { barrelShift, encodeShift, evaluateProbe, isCalm, isFirefox, mapChannels, maxShift, PROBE, type MapChannels } from './curvature';
 import { installCurvaturePointer } from './curvaturePointer';
+import { onViewportSettled } from './resizeActivity';
 
 /** Decided once: the browser does not change during a visit. */
 const FILTER_SUPPORTED = typeof navigator === 'undefined' || !isFirefox(navigator.userAgent);
@@ -209,25 +211,18 @@ export function CrtCurvature({ enabled: requested }: { enabled: boolean }) {
 
   useEffect(() => {
     if (!enabled) return;
-    let frame: number | null = null;
     let built = { width: 0, height: 0 };
     const build = () => {
-      frame = null;
       const { width, height } = readViewport();
       if (width === built.width && height === built.height) return;
       built = { width, height };
       setMap(createMap(width, height));
     };
-    // One rebuild per frame, however many resize events arrive in it.
-    const onResize = () => {
-      if (frame === null) frame = requestAnimationFrame(build);
-    };
     build();
-    window.addEventListener('resize', onResize);
-    return () => {
-      window.removeEventListener('resize', onResize);
-      if (frame !== null) cancelAnimationFrame(frame);
-    };
+    // Rebuilt once the viewport is still. While it changes, the CSS switches the
+    // filter off (see `data-resizing` in resizeActivity.ts), so a stale map
+    // never clips the frame and a burst of zoom steps costs one rebuild.
+    return onViewportSettled(build);
   }, [enabled]);
 
   const active = enabled && map !== null && verdict !== 'slow';

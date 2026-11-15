@@ -92,9 +92,19 @@ body,
   height: 100%;
 }
 
-/* Keep rem units tied to the user's font size; shrinking them with the viewport cancels browser zoom. */
+/*
+ * rem units start from the user's font size (the floor: the root never shrinks
+ * with the viewport, which would cancel browser zoom in).
+ *
+ * Zooming out widens the CSS viewport while everything keeps its CSS size, so
+ * the whole interface shrinks on screen. Above the 1920 x 1000 CSS px design
+ * viewport the root grows with the viewport (the smaller of the width and
+ * height ratios, 16px at the design size), which keeps text and controls about
+ * as large on screen as at 100 % zoom and lets the columns use the extra room.
+ * Everything is sized in rem / vw / vh, so the whole layout scales together.
+ */
 html {
-  font-size: 100%;
+  font-size: max(100%, min(0.8333vw, 1.6vh));
   background: var(--bg);
 }
 
@@ -3004,6 +3014,22 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
 
 :root[data-curve='on'] .app__frame {
   filter: url(#crt-curvature);
+}
+
+/*
+ * While the viewport changes (browser zoom steps, dragging the window edge;
+ * see resizeActivity.ts) every step re-lays out and repaints the page. The
+ * full-frame filter and the animated overlay are the costly part of that, so
+ * they step aside until the viewport has been still for a moment.
+ */
+:root[data-resizing='on'][data-curve='on'] .app__frame {
+  filter: none;
+}
+
+:root[data-resizing='on'] .crt *,
+:root[data-resizing='on'] .crt *::before,
+:root[data-resizing='on'] .crt *::after {
+  animation-play-state: paused !important;
 }
 
 /*

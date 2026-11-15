@@ -3,8 +3,8 @@
  * more than far ones). Redraws only when the shared motion loop reports a
  * change; with parallax off (low performance) it is drawn once per resize.
  *
- * Resizes (browser zoom, window size) are applied once per frame and keep the
- * same stars: each star is placed in viewport-relative coordinates once, and
+ * Resizes (browser zoom, window size) are applied once the viewport has settled
+ * (the canvas is stretched by CSS meanwhile) and keep the same stars: each star is placed in viewport-relative coordinates once, and
  * a resize only rescales them and shows more or fewer of them for the new area.
  *
  * A barrel distortion (`STAR_BARREL`) is applied in the projection itself (no extra
@@ -14,6 +14,7 @@
 import { useEffect, useRef } from 'react';
 import { STAR_BARREL } from './curvature';
 import { subscribeMotion, type MotionFrame } from './motion';
+import { onViewportSettled } from './resizeActivity';
 
 interface Star {
   /** Position across the (overscanned) viewport, -1 … 1; fixed for the visit. */
@@ -77,7 +78,6 @@ export function StarField() {
     let focal = 1;
     const allStars = createStars(MAX_STARS);
     let stars: Star[] = [];
-    let resizeFrame: number | null = null;
     let lastFrame: MotionFrame = { pointerX: 0, pointerY: 0 };
 
     function project(x: number, y: number, z: number, shiftX: number, shiftY: number): [number, number] {
@@ -112,7 +112,6 @@ export function StarField() {
     }
 
     function resize() {
-      resizeFrame = null;
       if (!canvas || !context) return;
       // Device pixels, capped: below 1 when zoomed out, so the buffer never exceeds the screen.
       const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
@@ -130,13 +129,9 @@ export function StarField() {
       draw(lastFrame);
     }
 
-    // One resize per frame, however many resize events arrive in it.
-    const onResize = () => {
-      if (resizeFrame === null) resizeFrame = requestAnimationFrame(resize);
-    };
-
+    // The canvas is stretched to the viewport by CSS meanwhile; redraw once it settles.
     resize();
-    window.addEventListener('resize', onResize);
+    const stopWatching = onViewportSettled(resize);
 
     const unsubscribe = subscribeMotion((frame) => {
       lastFrame = frame;
@@ -144,8 +139,7 @@ export function StarField() {
     });
 
     return () => {
-      window.removeEventListener('resize', onResize);
-      if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+      stopWatching();
       unsubscribe();
     };
   }, []);
