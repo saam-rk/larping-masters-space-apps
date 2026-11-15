@@ -1,0 +1,52 @@
+{
+  "id": "malapert-crater-1",
+  "displayName": "Malapert Crater 1",
+  "sourceUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/NPD/NPD_final_adj_5mpp_surf.tif",
+  "sourceCatalogUrl": "https://pgda.gsfc.nasa.gov/products/78",
+  "sourceReadmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+  "siteSource": "docs/LUNAR_ADDITIONAL_SITES_RESEARCH.md catalog row 14 (Malapert Crater 1, NPD; distinct from Malapert Massif R23), NASA Lunar Surface Data Book M2M-30044 Table A2.1-1. PGDA/Data Book reference point; center of an original candidate-region polygon; not an approved landing site.",
+  "frame": "MOON_ME / DE421",
+  "referenceRadiusM": 1737400,
+  "site": {"latitudeDeg": -84.8034, "longitudeEastDeg": 8.387032},
+  "ridge": {"latitudeDeg": -84.7997982880518, "longitudeEastDeg": 8.37658398809779},
+  "third": {"latitudeDeg": -84.85470066878577, "longitudeEastDeg": 7.47133531337011},
+  "cropCenterProjectedM": [23000, 156000],
+  "cropSizeM": [20000, 20000],
+  "originProjectedM": [23000, 156000, -2267],
+  "targetVertices": 40400,
+  "baseStridePixels": 30,
+  "candidateStridePixels": 4,
+  "refinementBatchSize": 2500,
+  "ridgePriorityMultiplier": 2.5,
+  "ridgePriorityRadiusM": 300,
+  "maxGlbBytes": 2097152,
+  "nearDetail": {
+    "centerProjectedM": [22977.5, 155992.5],
+    "seedBandsRadiusMStridePixels": [[35, 1], [150, 2], [500, 4]],
+    "residualPriorityBoost": 10,
+    "residualPriorityRadiusM": 550,
+    "textureSquareSizeM": 50,
+    "textureFullDetailRadiusM": 15,
+    "textureFadeEndRadiusM": 24,
+    "cameraHorizontalDirection": [0, 1],
+    "cameraHeightAboveMeshM": 1.65,
+    "astronautDistanceAheadM": 5,
+    "astronautSideOffsetM": 0.65,
+    "initialMovementRadiusM": 2,
+    "illustrativeLightTravelDirection": [-0.925, 0.163, -0.342]
+  },
+  "featureNotes": {
+    "ridge": "Highest source pixel within 50 m of the sampled skyline at grid bearing 0 degrees from the near-detail center: the crest of a low swell of the crater floor about 120 m grid-north of it and about 6 m above it, forming the skyline of the initial view. Descriptive label from numeric NPD elevation and illustrative hillshade; not an IAU feature name.",
+    "third": "Off-grid holdout on the floor grid-west-southwest of the site, about 2.95 km away; no mission significance.",
+    "nearDetail": "Gentlest 25 m window found within 45 m of the saved point (about 0.15 degree plane-fit slope versus 3.0 degrees at the point), about 24 m grid-west-southwest of it. The surrounding floor slopes under 1 degree within 100 m and 500 m. Selected for scale-figure footing, not landing suitability.",
+    "crop": "20 x 20 km, the complete NPD raster, centered on the saved point (which is the raster center). The saved point lies on a nearly flat, cratered floor; the large relief in this product (rises of roughly 230-920 m above the floor) is at the raster's grid-east, grid-southwest and grid-west-northwest edges, so the crop keeps as much of it as the source contains.",
+    "view": "Initial view faces grid bearing 0 degrees (about 8.4 degrees west of geographic north). A planar raster scan from the near-detail center in 3-degree steps found the skyline to be the floor's low swell 60-250 m away at grid bearings 108-219 and 228-36 degrees, but the raster edge itself at grid bearings 39-105 and 222-225 degrees, where the terrain is still rising when the data stop. Grid bearing 0 keeps both saved views at least 6 degrees away from the raster-edge sectors.",
+    "light": "Illustrative Blender/QA light from grid bearing about 100 degrees at about 20 degrees elevation, so the view (grid bearing 0) is side-lit. Not an ephemeris Sun; the application lights terrain with its own Sun direction."
+  },
+  "siteLimitations": [
+    "The saved point lies on a nearly flat crater floor. From eye height at the viewpoint, the skyline in most directions is a low swell of that floor 60-250 m away, 2-8 m above the eye; it is not a distant mountain skyline.",
+    "Grid-east and grid-northeast (grid bearings about 39-105 degrees from the viewpoint) and grid-southwest (about 222-225 degrees) the terrain rises about 360-920 m toward the NPD raster edges and is still rising where the data stop. Looking in those directions, the modeled skyline is the crop edge, not real terrain; the real skyline is higher. A smaller rise toward the grid-west-northwest edge is also truncated but stays below the near swell as seen from the viewpoint.",
+    "Terrain beyond the NPD raster (more than about 10 km from the site) was not checked; higher features outside it can rise above the modeled skyline in every direction.",
+    "The astronaut stands on a gently sloping triangle selected for footing; no claim of walkability, safe footing or landing suitability."
+  ]
+}
