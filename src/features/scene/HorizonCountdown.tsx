@@ -24,6 +24,7 @@ import type { EphemerisResponse } from '../../../shared/ephemeris';
 import { fetchSkySearch } from '../../api/skySearchClient';
 import { formatDuration, formatUtc } from '../../format';
 import { useI18n } from '../../i18n/context';
+import { HelpButton } from '../../ui/DialogButton';
 import type { PlacedBodies } from './bodies';
 import {
   countdownConditions,
@@ -127,7 +128,12 @@ export function HorizonCountdown({
   };
 
   return (
-    <div className="scene__countdown" role="group" aria-label={text.label} title={text.detail}>
+    <div className="scene__countdown" role="group" aria-label={text.label}>
+      <div className="scene__countdown-head">
+        <span className="scene__countdown-heading" title={text.detail}>{text.heading}</span>
+        <span className="scene__countdown-rule" aria-hidden="true" />
+        <HelpButton section={text.heading} paragraphs={text.info} />
+      </div>
       {plans.map((plan) => {
         const entry = plan.never ? undefined : entryFor(plan);
         const at = entry?.status === 'found' ? text.at(formatUtc(entry.utc)) : undefined;

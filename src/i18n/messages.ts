@@ -237,6 +237,10 @@ export interface Messages {
     readonly countdown: {
       /** Accessible name of the overlay. */
       readonly label: string;
+      /** Short visible heading for the overlay and its help dialog. */
+      readonly heading: string;
+      /** Explanation of the geometric horizon and the missing local relief. */
+      readonly info: Paragraphs;
       /** Event name per body, e.g. "Sunset". */
       readonly events: Readonly<Record<BodyId, Readonly<Record<HorizonEvent, string>>>>;
       /** Time left, already formatted (e.g. "1 d 14 h 19 min"). */
@@ -737,6 +741,11 @@ const es: Messages = {
     fullscreen: { enter: 'Ver el horizonte local a pantalla completa', exit: 'Salir de pantalla completa' },
     countdown: {
       label: 'Tiempo hasta la puesta o la salida',
+      heading: 'Salida y puesta',
+      info: [
+        'La salida y la puesta se calculan cuando el borde superior del Sol o la Tierra cruza el horizonte geométrico de referencia.',
+        'El relieve local no forma parte del cálculo. Si estás dentro de un cráter o tienes una montaña o una cresta delante, el objeto podría seguir oculto aunque aquí aparezca sobre el horizonte.',
+      ],
       events: {
         sun: { set: 'Puesta del Sol', rise: 'Salida del Sol' },
         earth: { set: 'Puesta de la Tierra', rise: 'Salida de la Tierra' },
@@ -1521,6 +1530,11 @@ const en: Messages = {
     fullscreen: { enter: 'Show the local horizon full screen', exit: 'Exit full screen' },
     countdown: {
       label: 'Time until set or rise',
+      heading: 'Rise and set',
+      info: [
+        'Rise and set are calculated when the upper edge of the Sun or the Earth crosses the geometric reference horizon.',
+        'Local terrain is not part of the calculation. If you are inside a crater or a mountain or ridge is in front of you, the object may still be hidden even when it appears above the horizon here.',
+      ],
       events: {
         sun: { set: 'Sunset', rise: 'Sunrise' },
         earth: { set: 'Earthset', rise: 'Earthrise' },
