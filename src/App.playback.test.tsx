@@ -3,6 +3,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EphemerisResponse } from '../shared/ephemeris';
+import { APOLLO_11_FLAG_UTC } from '../shared/time';
 import type { EphemerisSelection } from './api/ephemerisClient';
 import { fetchEphemeris, fetchEphemerisSeries } from './api/ephemerisClient';
 import { App } from './App';
@@ -85,7 +86,7 @@ describe('App playback selection lifecycle', () => {
     const scene = () => container.querySelector('[data-testid="scene"]')!;
     const previewUtc = scene().textContent;
     // Second sample of the default Sun preset: 924 min after the start.
-    expect(previewUtc).toBe('2026-11-16T03:24:00Z');
+    expect(previewUtc).toBe('1969-07-21T19:05:00Z');
     act(() => button('Reselect coordinates').click());
     expect(scene().textContent).toBe(previewUtc);
     expect(scene().getAttribute('data-playback')).toBe('true');
@@ -98,7 +99,7 @@ describe('App playback selection lifecycle', () => {
   it('discards the sequence and restores the ordinary result when coordinates actually change', async () => {
     await prepare();
     act(() => button('Change coordinates').click());
-    expect(container.querySelector('[data-testid="scene"]')!.textContent).toBe('2026-11-15T12:00:00Z');
+    expect(container.querySelector('[data-testid="scene"]')!.textContent).toBe(APOLLO_11_FLAG_UTC);
     expect(container.querySelector('[data-testid="scene"]')!.getAttribute('data-playback')).toBe('false');
     expect(button('Play')).toBeUndefined();
     act(() => button('Restore coordinates').click());
