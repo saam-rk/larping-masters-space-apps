@@ -1,6 +1,6 @@
 # Cabeus Exterior Wall 1: camera-led terrain delivery
 
-A standalone terrain and scene asset for **CLPS Lunar Mission Browser**. It follows the camera-led design of the [Faustini Rim A](../faustini-rim-a/README.md), [Shoemaker Rim A](../shoemaker-rim-a/README.md) and [Haworth](../haworth/README.md) deliveries and reuses their site-agnostic tooling unchanged. The only new input is [`tools/lunar-terrain/cabeus-exterior-wall-1.config.json`](../../../tools/lunar-terrain/cabeus-exterior-wall-1.config.json). The build ran in the live Blender session through the Blender MCP, inside a new scene, and the existing live scenes were preserved. It does not change the application scene, the site catalog or the ephemeris calculations. `cabeus-exterior-wall-1` is already a `SiteId` in `shared/sites.ts`, but the viewer does not load this terrain yet. Wiring it into `src/features/scene/terrain/models.ts` is separate interface work.
+A standalone terrain and scene asset for **CLPS Lunar Mission Browser**. It follows the camera-led design of the [Faustini Rim A](../faustini-rim-a/README.md), [Shoemaker Rim A](../shoemaker-rim-a/README.md) and [Haworth](../haworth/README.md) deliveries and reuses their site-agnostic tooling unchanged. The only new input is [`tools/lunar-terrain/cabeus-exterior-wall-1.config.json`](../../../tools/lunar-terrain/cabeus-exterior-wall-1.config.json). The build ran in the live Blender session through the Blender MCP, inside a new scene, and the existing live scenes were preserved. It does not change the application scene, the site catalog or the ephemeris calculations. `cabeus-exterior-wall-1` is a `SiteId` in `shared/sites.ts`. The viewer now registers this asset in `src/features/scene/terrain/models.ts` through `cabeusExteriorWall1.ts` and opens the shared first-person view when this site is selected.
 
 "Cabeus Exterior Wall 1" here is the PGDA/Data Book reference point NPA (catalog row 11 of [`docs/LUNAR_ADDITIONAL_SITES_RESEARCH.md`](../../../docs/LUNAR_ADDITIONAL_SITES_RESEARCH.md)), not a verified IAU feature or an approved landing site.
 
@@ -52,6 +52,28 @@ Far away, vertices are spent where the surface actually changes. Interpolation r
 - The crop is **14 × 14 km**, shifted 2.5 km grid-east and 2.5 km grid-south of the saved point so that this skyline lies well inside it. It is larger than the 12 × 12 km of earlier sites because the view's skyline is farther away; the vertex budget is unchanged, so the far field is somewhat sparser (see the holdout errors below).
 - **The "wall" is not in the initial view, by design.** Grid-north and grid-northwest of the site the terrain rises ≈760–870 m within ≈10 km, but it is still rising at the north edge of the NPA raster, so its top is not in the source data. A preliminary planar raster scan from the site found that, at grid bearings ≈306°–30°, the skyline would be the raster edge itself, not real terrain. Facing it would show an artificial flat top where the data stops. The crop keeps only the foot of that rise (to ≈4.5 km grid-north), and the initial view faces the interior ridge instead. This was the user's explicit choice among the documented options. Looking grid-north or grid-northwest in this model, the skyline is the crop edge.
 - Movement policy, as for the previous camera-led sites: move within 2 m, keep 1.65 m clearance and widen to ≥64° vertical FOV in portrait while moving. In the browser, all 102 combinations of position, aspect and zoom keep the full body framed.
+
+## Application integration
+
+The application loads `/terrain/cabeus-exterior-wall-1.glb` and the shared
+`/terrain/astronaut.glb` without modifying the delivered geometry or textures.
+The adapter copies the metadata origin, 14 x 14 km crop and astronaut support,
+then rotates the grid by the site's east longitude (-71.5651 degrees) to align
+geographic north with the scene. The figure remains upright and its height is
+re-cast onto the mesh, as at Amundsen Rim and Shackleton Rim.
+
+The shared viewer stands 2.6 m from the astronaut, inside both the full-density
+35 m geometry radius and the full-detail 15 m texture radius at every initial
+bearing. Its gaze follows the displayed celestial bodies and its lighting uses
+the app's Sun direction; it does **not** reproduce the saved Blender camera,
+movement policy or illustrative light. The crop-edge and unchecked distant
+terrain limitations above therefore also apply when looking around in the app.
+Ephemeris calculations are unchanged.
+
+To validate manually, run `npm run dev`, select **Cabeus Exterior Wall 1** from
+the additional sites, and update the result. Check that first person is available,
+the terrain and astronaut load, and switching to third person and back works.
+Physical mobile load/FPS measurements remain pending.
 
 ## Source and georeferencing
 
@@ -113,4 +135,4 @@ The renders came from `render_views`, run on the normalized file in a separate b
 
 The grain and lighting are illustrative. The Blender/QA light comes from grid bearing ≈230° at ≈20° elevation, side-lighting the view; it is not an ephemeris Sun, and at this latitude the real Sun stays much lower. The model is a projected height field with no lunar curvature. The 5 m source spacing is not its effective resolution, because NASA interpolates many pixels. A 14 × 14 km crop omits distant obstacles, including the upper part of the grid-northern rise. Terrain beyond the NPA raster was not checked. Nothing here establishes landing suitability, power, communications or visibility.
 
-**Proposed `ESTADO.md` note** (not edited): "Cabeus Exterior Wall 1 camera-led terrain asset is ready for review; viewer integration and physical mobile load/FPS measurements remain pending."
+**Proposed `ESTADO.md` note** (not edited): "Cabeus Exterior Wall 1 camera-led terrain is connected to the shared first-person viewer; human review and physical mobile load/FPS measurements remain pending."
