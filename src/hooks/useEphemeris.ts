@@ -31,6 +31,8 @@ export interface EphemerisState {
   readonly update: () => void;
   /** Selects another instant for the current site and queries it right away (e.g. an inverse search match). */
   readonly showUtc: (utc: string) => void;
+  /** Selects another point and instant and queries it right away (e.g. a compared scenario). */
+  readonly showSelection: (selection: EphemerisSelection) => void;
 }
 
 const DEFAULT_SITE = findSite(DEFAULT_SITE_ID);
@@ -86,6 +88,14 @@ export function useEphemeris(): EphemerisState {
     [run, selection],
   );
 
+  const showSelection = useCallback(
+    (next: EphemerisSelection) => {
+      setSelection(next);
+      run(next);
+    },
+    [run],
+  );
+
   const setSiteId = useCallback((siteId: SiteId) => {
     const site = findSite(siteId);
     setSelection((current) => ({
@@ -109,5 +119,5 @@ export function useEphemeris(): EphemerisState {
     selection.longitudeEastDeg !== data.site.longitudeEastDeg ||
     selection.utc !== data.requestedUtc;
 
-  return { selection, data, loading, error, stale, setSiteId, setCoordinates, setUtc, update, showUtc };
+  return { selection, data, loading, error, stale, setSiteId, setCoordinates, setUtc, update, showUtc, showSelection };
 }

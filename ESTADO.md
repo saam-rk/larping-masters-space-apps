@@ -1,5 +1,36 @@
 # Estado del proyecto
 
+## Implementation update — 2026-11-15 (branch `feat/scenario-comparison-assessment`)
+
+- **Compare scenarios** box: up to four scenarios (point + UTC) side by side,
+  added from the current selection as is or shifted by +1 d, +7 d or +½ mean
+  synodic month. Rows: Sun/Earth azimuth, elevation and state; mission
+  screening; optional one-synodic-month window. Best value marked (▲) in
+  comparable rows; "Show" puts a scenario on the main view.
+- **Feasibility** box: screening of the instant on screen against editable
+  mission assumptions — solar power (IAU 2015 B3 irradiance, visible disk
+  fraction, panel orientation, area, efficiency) vs. demand, and a
+  direct-to-Earth link budget (ITU-R P.525 free-space loss, C/N0, Eb/N0,
+  margin, Earth elevation mask). Window over ~29.5 d (100 samples): share of
+  time with power/link/both, longest gaps, mean power.
+- Model: `shared/missionAssessment.ts` (tests in `missionAssessment.test.ts`);
+  method and limits in `docs/ARCHITECTURE.md`. Starting assumptions are
+  illustrative, not mission data. Terrain is still not modeled; results are
+  a geometric screening, not a feasibility guarantee.
+- PR #52 review corrections: subtract Earth occultation from the solar disk
+  with joint horizon clipping; keep missing geometry unknown; reject negative
+  link masks and guard the model against old negative-mask callers; deduplicate
+  active and queued window requests across both panels and abort on unmount.
+  Longest gaps remain unknown when missing samples prevent establishing
+  continuity; unknown time is not compressed into an outage.
+  The occultation behavior and correction publication were explicitly approved
+  by the integrator in the review questionnaire.
+- Review validation observed locally: `npm run check` (typecheck, lint,
+  672 tests / 61 files) and `npm run build` passed. The build retains the
+  existing large-chunk warning. Browser behavior was not manually verified.
+- Pending: human diff review; science review of the power and link model by
+  Diego. No physical accuracy certification is claimed.
+
 ## Implementation update — 2026-11-15 (branch `feat/interval-toolbar-guides`)
 
 - Interval button in the horizon toolbar; player laid over the view; interval

@@ -38,6 +38,36 @@ Registrar acuerdos con fecha, responsable y evidencia. Propuestas y preguntas no
 - **Limits:** no change to the scientific method or terrain-visibility claims.
   Implementation details and review steps are in `docs/HORIZON_PLAYBACK.md`.
 
+### D-022 — Scenario comparison and mission feasibility screening
+
+- **Date:** 2026-11-15.
+- **Status:** confirmed by the user in the implementation request (side-by-side
+  comparison of several scenarios; determining whether an option is viable,
+  including available power and communication link).
+- **Decision:** add a side-by-side comparison of up to four point + date
+  scenarios, and a feasibility screening against user-entered mission
+  assumptions (solar array and demand, direct-to-Earth link budget), for one
+  instant and over about one synodic month.
+- **Method and sources:** `shared/missionAssessment.ts` and
+  `docs/ARCHITECTURE.md` (IAU 2015 B3, IAU 2012 B2, SI exact constants,
+  ITU-R P.525). The starting assumptions are illustrative, not from a real
+  mission or station.
+- **Limits:** terrain is not modeled; a "meets" verdict is a geometric
+  screening under the user's assumptions, not a guarantee of power,
+  communications or landing suitability. Implementation choices (four
+  scenarios max., time shifts, window length, example values) are open to
+  review by the integrator and the science owner.
+
+### PR #52 review clarification — Earth occultation
+
+- **Status:** explicitly confirmed by the integrator in the review questionnaire.
+- **Decision:** deduct the solar disk occulted by Earth using both apparent
+  directions and angular diameters. Missing required geometry must not
+  produce a favorable power verdict. The integrator also authorized an
+  isolated checkout, verified correction commit and push, without merge.
+- **Method and limits:** `docs/ARCHITECTURE.md`; a uniform-disk numerical
+  screening approximation, not radiometry or operational certification.
+
 ## Pendientes
 - [x] Inscripción y acceso de los tres integrantes al repositorio, confirmados por el usuario.
 - [x] Stack base, responsable de backend, idioma predeterminado e inglés seleccionable, alojamiento previsto y tope de DeepSeek acordados.

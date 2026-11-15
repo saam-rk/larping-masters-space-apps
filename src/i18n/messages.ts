@@ -18,6 +18,9 @@ import type { HorizonEvent } from '../features/scene/horizonEvents';
 import type { SceneScale } from '../features/scene/sceneScale';
 import type { ViewMode } from '../features/scene/viewMode';
 import type { EffectMode } from '../preferences/preferences';
+import type { CriterionStatus, PanelOrientation } from '../../shared/missionAssessment.js';
+import type { FieldId } from '../features/mission/assumptionsForm';
+import type { ScenarioOffset } from '../features/mission/scenarios';
 
 export const LOCALES = ['es', 'en'] as const;
 export type Locale = (typeof LOCALES)[number];
@@ -426,6 +429,92 @@ export interface Messages {
     readonly otherSite: (site: string) => string;
     readonly precision: string;
   };
+  /** Mission feasibility screening (`shared/missionAssessment.ts`). */
+  readonly mission: {
+    readonly heading: string;
+    readonly info: Paragraphs;
+    readonly open: string;
+    readonly dialogTitle: string;
+    readonly limitsTitle: string;
+    readonly limits: Paragraphs;
+    /** Per criterion and overall: short tag, table tag and full sentence (tooltip). */
+    readonly verdictShort: Readonly<Record<CriterionStatus, string>>;
+    readonly verdict: Readonly<Record<CriterionStatus, string>>;
+    readonly verdictLong: Readonly<Record<CriterionStatus, string>>;
+    readonly power: string;
+    readonly link: string;
+    readonly overall: string;
+    readonly powerVsDemand: (power: string, demand: string) => string;
+    readonly marginValue: (margin: string) => string;
+    readonly earthBelowMask: string;
+    readonly fixAssumptions: string;
+    readonly sampleData: string;
+    readonly assumptionsTitle: string;
+    readonly examplesNote: string;
+    readonly resetExamples: string;
+    readonly powerGroup: string;
+    readonly linkGroup: string;
+    readonly fields: Readonly<Record<FieldId, string>>;
+    readonly fieldHints: Readonly<Record<FieldId, string>>;
+    readonly orientation: string;
+    readonly orientations: Readonly<Record<PanelOrientation, { readonly label: string; readonly hint: string }>>;
+    readonly invalidFields: (fields: string) => string;
+    readonly instantTitle: string;
+    readonly screeningTitle: string;
+    readonly rows: {
+      readonly irradiance: string;
+      readonly diskFraction: string;
+      readonly incidence: string;
+      readonly power: string;
+      readonly earthElevation: string;
+      readonly distance: string;
+      readonly freeSpaceLoss: string;
+      readonly margin: string;
+    };
+    readonly windowTitle: string;
+    readonly windowHint: (samples: number, step: string) => string;
+    readonly windowRun: string;
+    readonly windowRetry: string;
+    readonly windowLoading: string;
+    readonly windowOutOfRange: string;
+    readonly windowOutOfRangeShort: string;
+    readonly windowRows: {
+      readonly powerShare: string;
+      readonly linkShare: string;
+      readonly bothShare: string;
+      readonly powerGap: string;
+      readonly linkGap: string;
+      readonly meanPower: string;
+    };
+    readonly windowUnknown: (samples: number) => string;
+  };
+  /** Side-by-side comparison of scenarios (point + instant). */
+  readonly compare: {
+    readonly heading: string;
+    readonly info: Paragraphs;
+    readonly open: string;
+    readonly dialogTitle: string;
+    readonly addGroup: string;
+    readonly add: Readonly<Record<ScenarioOffset, string>>;
+    readonly addHints: Readonly<Record<ScenarioOffset, string>>;
+    readonly empty: string;
+    readonly emptyShort: string;
+    readonly full: (max: number) => string;
+    readonly duplicate: string;
+    readonly outOfRange: string;
+    readonly scenario: (index: number) => string;
+    readonly criterion: string;
+    readonly show: string;
+    readonly remove: string;
+    readonly removeNamed: (index: number) => string;
+    readonly retry: string;
+    readonly loading: string;
+    readonly best: string;
+    readonly windows: string;
+    readonly windowsHint: string;
+    readonly windowNotRun: string;
+    readonly limits: string;
+  };
   readonly presence: {
     readonly sun: Readonly<Record<PresenceState, string>>;
     readonly earth: Readonly<Record<PresenceState, string>>;
@@ -740,6 +829,10 @@ const es: Messages = {
         title: 'Puntos de referencia',
         summary: 'De dónde salen los nombres y las coordenadas de los lugares que puedes elegir.',
       },
+      mission: {
+        title: 'Viabilidad y comparación',
+        summary: 'Constantes y fórmulas de la potencia solar y del balance del enlace con la Tierra. Los supuestos de la misión los introduces tú.',
+      },
       terrain: {
         title: 'Relieve 3D',
         summary: 'Modelos de elevación y herramientas con los que se construyen los terrenos en primera persona.',
@@ -783,6 +876,10 @@ const es: Messages = {
       },
     },
     sourceReasons: {
+      iau2015B3: 'Irradiancia solar total nominal a 1 ua (1361 W/m²) para estimar la potencia de los paneles.',
+      iau2012B2: 'Valor exacto de la unidad astronómica (149 597 870 700 m) para convertir la distancia a la Tierra en metros.',
+      siBrochure: 'Valores exactos de la velocidad de la luz y la constante de Boltzmann usados en el balance del enlace.',
+      ituP525: 'Fórmula de la pérdida en espacio libre del enlace directo con la Tierra.',
       horizonsApi: 'Calcula azimut, elevación, tamaño angular y distancia del Sol y la Tierra desde el punto lunar elegido.',
       horizonsManual: 'Define las cantidades del observador y los marcadores de presencia que traducimos a los estados del panel.',
       jplApiPolicy: 'Normas de uso y política CORS: por eso la consulta pasa por nuestra ruta de servidor y se guarda en caché.',
@@ -1034,6 +1131,145 @@ const es: Messages = {
       `Se agotó el límite de consultas (revisado de ${start} a ${end}) sin encontrar coincidencia. Prueba con rangos más amplios o con otra fecha de referencia.`,
     otherSite: (site) => `Resultado para ${site}; el punto de referencia ha cambiado. Vuelve a buscar.`,
     precision: 'JPL Horizons · resolución 1 s · 4 decimales · sin relieve',
+  },
+  mission: {
+    heading: 'Viabilidad',
+    info: [
+      'Cribado de la misión en el instante mostrado: compara la potencia solar estimada con el consumo y el margen del enlace directo con la Tierra con el mínimo que pidas.',
+      'Pulsa «Evaluar» para cambiar los supuestos (paneles, consumo, radio), ver cada paso del cálculo y analizar aproximadamente un mes sinódico.',
+      'Es geométrico: el relieve no está modelado. Un «Cumple» no garantiza energía, comunicaciones ni que el lugar sea apto para aterrizar.',
+    ],
+    open: 'Evaluar',
+    dialogTitle: 'Evaluación de viabilidad',
+    limitsTitle: 'Método y límites',
+    limits: [
+      'Potencia = irradiancia × fracción del disco solar sobre el horizonte × factor de incidencia × área × eficiencia. Irradiancia = 1361 W/m² (irradiancia solar total nominal, Resolución B3 de la IAU 2015) dividida por el cuadrado de la distancia al Sol en ua (JPL Horizons). Se descuenta la parte oculta por la Tierra usando las direcciones y diámetros de ambos cuerpos y se recorta conjuntamente con el horizonte (discos planos de ángulo pequeño, integración numérica). El disco es uniforme, sin oscurecimiento hacia el borde ni atmósfera terrestre; si falta geometría, la potencia es desconocida, salvo que todo el Sol esté bajo el horizonte.',
+      'Factor de incidencia: panel vertical orientado al azimut del Sol = cos(elevación); panel horizontal = sen(elevación); seguimiento en dos ejes = 1.',
+      'Enlace: pérdida en espacio libre 20·log10(4π·d·f/c) (UIT-R P.525) con la distancia a la Tierra de JPL Horizons (1 ua = 149 597 870 700 m, Resolución B2 de la IAU 2012). C/N0 = PIRE − pérdida − otras pérdidas + G/T − 10·log10(k); Eb/N0 = C/N0 − 10·log10(velocidad); margen = Eb/N0 − Eb/N0 requerida. c y k son valores exactos del SI.',
+      'El enlace solo cuenta si el centro de la Tierra está a la elevación de la máscara o por encima (máscara de 0° a 90°; no elimina la ocultación por la Luna). No se modela si una estación terrestre tiene la Luna a la vista (rotación de la Tierra y red de estaciones), ni el apuntamiento, la polarización o la atmósfera terrestre: inclúyelos en «otras pérdidas».',
+      'La potencia no tiene en cuenta temperatura, polvo, degradación, sombras del propio módulo, baterías ni pérdidas de conversión.',
+      'El relieve no está modelado: una cresta o la pared de un cráter puede tapar el Sol o la Tierra aunque la geometría los sitúe sobre el horizonte. Los resultados son cotas superiores bajo tus supuestos, no una evaluación de misión.',
+      'Ventana: 100 muestras desde el instante mostrado durante unos 29,5 días (mes sinódico medio, NASA GSFC). Los porcentajes cuentan muestras y los huecos se resuelven con la separación entre muestras.',
+    ],
+    verdictShort: { met: 'CUMPLE', 'not-met': 'NO CUMPLE', unknown: 'SIN DATOS' },
+    verdict: { met: 'Cumple', 'not-met': 'No cumple', unknown: 'Sin datos' },
+    verdictLong: {
+      met: 'Cumple tus requisitos en este instante según la geometría, sin relieve. No garantiza viabilidad.',
+      'not-met': 'No cumple al menos uno de tus requisitos en este instante según la geometría, sin relieve.',
+      unknown: 'Faltan datos de JPL Horizons para decidir; no se sustituyen por cero.',
+    },
+    power: 'Potencia',
+    link: 'Enlace con la Tierra',
+    overall: 'Global',
+    powerVsDemand: (power, demand) => `${power} de ${demand}`,
+    marginValue: (margin) => `margen ${margin}`,
+    earthBelowMask: 'Tierra bajo la máscara',
+    fixAssumptions: 'Revisa los supuestos de la misión: hay valores no válidos.',
+    sampleData: 'muestra guardada',
+    assumptionsTitle: 'Supuestos de la misión',
+    examplesNote: 'Los valores iniciales son ejemplos ilustrativos, no de una misión, módulo ni estación reales. Sustitúyelos por los tuyos; se recuerdan en este navegador.',
+    resetExamples: 'Restablecer ejemplos',
+    powerGroup: 'Paneles solares y consumo',
+    linkGroup: 'Enlace directo con la Tierra',
+    fields: {
+      panelArea: 'Área de paneles',
+      efficiency: 'Eficiencia',
+      demand: 'Consumo necesario',
+      transmitPower: 'Potencia del transmisor',
+      transmitGain: 'Ganancia de la antena',
+      frequency: 'Frecuencia',
+      gOverT: 'G/T de la estación',
+      dataRate: 'Velocidad de datos',
+      requiredEbN0: 'Eb/N0 requerida',
+      otherLosses: 'Otras pérdidas',
+      requiredMargin: 'Margen mínimo',
+      earthMask: 'Máscara de elevación',
+    },
+    fieldHints: {
+      panelArea: 'Superficie activa de los paneles, en metros cuadrados.',
+      efficiency: 'Fracción de la luz incidente convertida en electricidad, en %.',
+      demand: 'Potencia eléctrica que la misión necesita en el instante evaluado.',
+      transmitPower: 'Potencia de radiofrecuencia a la salida del transmisor del módulo.',
+      transmitGain: 'Ganancia de la antena del módulo hacia la Tierra, en dBi.',
+      frequency: 'Frecuencia de la portadora, en GHz.',
+      gOverT: 'Figura de mérito de la estación receptora en la Tierra, en dB/K.',
+      dataRate: 'Velocidad de transmisión, en kbit/s.',
+      requiredEbN0: 'Eb/N0 que exigen la modulación y la codificación, en dB.',
+      otherLosses: 'Pérdidas no modeladas: apuntamiento, polarización, atmósfera terrestre, implementación…',
+      requiredMargin: 'Margen por encima de la Eb/N0 requerida para dar el enlace por bueno.',
+      earthMask: 'Elevación mínima del centro de la Tierra sobre el horizonte de referencia, de 0° a 90°.',
+    },
+    orientation: 'Orientación',
+    orientations: {
+      vertical: { label: 'Vertical', hint: 'Panel vertical girado hacia el azimut del Sol: incidencia = elevación.' },
+      horizontal: { label: 'Horizontal', hint: 'Panel horizontal: incidencia = 90° − elevación.' },
+      tracking: { label: '2 ejes', hint: 'Seguimiento del Sol en dos ejes: incidencia 0°.' },
+    },
+    invalidFields: (fields) => `Valores no válidos o fuera de rango: ${fields}.`,
+    instantTitle: 'En el instante mostrado',
+    screeningTitle: 'Cribado de la misión',
+    rows: {
+      irradiance: 'Irradiancia solar',
+      diskFraction: 'Disco solar visible sin ocultación',
+      incidence: 'Factor de incidencia',
+      power: 'Potencia estimada',
+      earthElevation: 'Elevación de la Tierra',
+      distance: 'Distancia a la Tierra',
+      freeSpaceLoss: 'Pérdida en espacio libre',
+      margin: 'Margen del enlace',
+    },
+    windowTitle: 'Ventana de un mes sinódico',
+    windowHint: (samples, step) => `${samples} muestras desde el instante mostrado, una cada ${step}. Dos consultas a JPL Horizons.`,
+    windowRun: 'Analizar ventana',
+    windowRetry: 'Reintentar ventana',
+    windowLoading: 'Analizando',
+    windowOutOfRange: 'La ventana saldría del rango admitido (hasta el 31-12-2099).',
+    windowOutOfRangeShort: 'Fuera de rango',
+    windowRows: {
+      powerShare: 'Tiempo con potencia suficiente',
+      linkShare: 'Tiempo con enlace',
+      bothShare: 'Tiempo con ambos',
+      powerGap: 'Mayor hueco sin potencia',
+      linkGap: 'Mayor hueco sin enlace',
+      meanPower: 'Potencia media',
+    },
+    windowUnknown: (samples) => `${samples} muestras sin datos no se cuentan en los porcentajes. El hueco máximo de un criterio con muestras desconocidas queda sin datos.`,
+  },
+  compare: {
+    heading: 'Comparar escenarios',
+    info: [
+      'Pon hasta cuatro escenarios (punto y fecha) uno junto a otro: posiciones del Sol y la Tierra, cribado de la misión y, si lo pides, la ventana de un mes sinódico.',
+      '«+ Actual» añade el punto y la fecha seleccionados; «+1 d», «+7 d» y «+½ mes» los añaden desplazados en el tiempo para comparar fechas en el mismo punto.',
+      '▲ marca el mejor valor de cada fila comparable. El azimut y la elevación no se ordenan: qué es mejor depende de la misión.',
+      'La potencia y el enlace usan los supuestos de «Viabilidad». El relieve no está modelado.',
+    ],
+    open: 'Abrir',
+    dialogTitle: 'Comparación de escenarios',
+    addGroup: 'Añadir la selección actual',
+    add: { none: '+ Actual', day: '+1 d', week: '+7 d', halfMonth: '+½ mes' },
+    addHints: {
+      none: 'Añade el punto y la fecha seleccionados.',
+      day: 'Añade el punto seleccionado un día después.',
+      week: 'Añade el punto seleccionado siete días después.',
+      halfMonth: 'Añade el punto seleccionado medio mes sinódico medio después (14,77 d): aproximadamente del día a la noche lunar.',
+    },
+    empty: 'Aún no hay escenarios. Elige un punto y una fecha en el panel de control y añádelos con los botones de arriba.',
+    emptyShort: 'Sin escenarios. Elige punto y fecha y añádelos.',
+    full: (max) => `Máximo de ${max} escenarios. Quita uno para añadir otro.`,
+    duplicate: 'Ese escenario ya está en la comparación.',
+    outOfRange: 'La fecha desplazada queda fuera del rango admitido.',
+    scenario: (index) => `Escenario ${index}`,
+    criterion: 'Dato',
+    show: 'Ver',
+    remove: 'Quitar',
+    removeNamed: (index) => `Quitar escenario ${index}`,
+    retry: 'Reintentar',
+    loading: 'Consultando…',
+    best: 'mejor valor',
+    windows: 'Analizar ventanas',
+    windowsHint: 'Analiza un mes sinódico desde cada escenario (dos consultas a JPL Horizons por escenario).',
+    windowNotRun: 'sin analizar',
+    limits: 'Cribado geométrico con tus supuestos: el relieve no está modelado y no se garantiza energía, comunicaciones ni idoneidad de aterrizaje.',
   },
   presence: {
     sun: {
@@ -1365,6 +1601,10 @@ const en: Messages = {
         title: 'Reference sites',
         summary: 'Where the names and coordinates of the places you can choose come from.',
       },
+      mission: {
+        title: 'Feasibility and comparison',
+        summary: 'Constants and formulas of the solar power and the Earth link budget. You enter the mission assumptions.',
+      },
       terrain: {
         title: '3D terrain',
         summary: 'Elevation models and tools used to build the first-person terrains.',
@@ -1408,6 +1648,10 @@ const en: Messages = {
       },
     },
     sourceReasons: {
+      iau2015B3: 'Nominal total solar irradiance at 1 au (1361 W/m²) used to estimate array power.',
+      iau2012B2: 'Exact value of the astronomical unit (149,597,870,700 m) used to turn the Earth distance into metres.',
+      siBrochure: 'Exact speed of light and Boltzmann constant used in the link budget.',
+      ituP525: 'Free-space loss formula of the direct-to-Earth link.',
       horizonsApi: 'Computes azimuth, elevation, angular size and range of the Sun and the Earth from the chosen lunar point.',
       horizonsManual: 'Defines the observer quantities and the presence markers we turn into the panel states.',
       jplApiPolicy: 'Usage rules and CORS policy: the reason the query goes through our server route and is cached.',
@@ -1654,6 +1898,145 @@ const en: Messages = {
       `The request limit was reached (searched ${start} to ${end}) without a match. Try wider ranges or another reference date.`,
     otherSite: (site) => `Result for ${site}; the reference point has changed. Search again.`,
     precision: 'JPL Horizons · 1 s resolution · 4 decimals · no terrain',
+  },
+  mission: {
+    heading: 'Feasibility',
+    info: [
+      'Mission screening at the instant shown: compares the estimated solar power with the demand, and the direct-to-Earth link margin with the minimum you ask for.',
+      'Press "Assess" to change the assumptions (arrays, demand, radio), see every step of the calculation and screen about one synodic month.',
+      'It is geometric: terrain is not modeled. A "Meets" does not guarantee power, communications or that the site is suitable for landing.',
+    ],
+    open: 'Assess',
+    dialogTitle: 'Feasibility assessment',
+    limitsTitle: 'Method and limits',
+    limits: [
+      'Power = irradiance × fraction of the solar disk above the horizon × incidence factor × area × efficiency. Irradiance = 1361 W/m² (nominal total solar irradiance, IAU 2015 Resolution B3) divided by the square of the Sun distance in au (JPL Horizons). The part occulted by Earth is deducted using both directions and diameters, jointly clipped to the horizon (small-angle planar disks, numerical integration). The disk is uniform, without limb darkening or Earth atmosphere; missing geometry makes power unknown unless the entire Sun is below the horizon.',
+      'Incidence factor: vertical panel turned to the Sun azimuth = cos(elevation); horizontal panel = sin(elevation); two-axis tracking = 1.',
+      'Link: free-space loss 20·log10(4π·d·f/c) (ITU-R P.525) with the Earth distance from JPL Horizons (1 au = 149,597,870,700 m, IAU 2012 Resolution B2). C/N0 = EIRP − loss − other losses + G/T − 10·log10(k); Eb/N0 = C/N0 − 10·log10(rate); margin = Eb/N0 − required Eb/N0. c and k are exact SI values.',
+      'The link only counts when the Earth center is at or above the mask elevation (mask 0° to 90°; it cannot remove lunar occultation). Whether an Earth station has the Moon in view (Earth rotation, station network), pointing, polarization and Earth atmosphere are not modeled: put them into "other losses".',
+      'Power ignores temperature, dust, degradation, shadows of the lander itself, batteries and conversion losses.',
+      'Terrain is not modeled: a ridge or crater wall can hide the Sun or the Earth even when the geometry places them above the horizon. Results are upper bounds under your assumptions, not a mission assessment.',
+      'Window: 100 samples from the instant shown over about 29.5 days (mean synodic month, NASA GSFC). Percentages count samples and gaps are resolved to the sample spacing.',
+    ],
+    verdictShort: { met: 'MEETS', 'not-met': 'FAILS', unknown: 'NO DATA' },
+    verdict: { met: 'Meets', 'not-met': 'Fails', unknown: 'No data' },
+    verdictLong: {
+      met: 'Meets your requirements at this instant according to the geometry, without terrain. It does not guarantee feasibility.',
+      'not-met': 'Fails at least one of your requirements at this instant according to the geometry, without terrain.',
+      unknown: 'JPL Horizons data needed to decide is missing; it is not replaced with zero.',
+    },
+    power: 'Power',
+    link: 'Link to Earth',
+    overall: 'Overall',
+    powerVsDemand: (power, demand) => `${power} of ${demand}`,
+    marginValue: (margin) => `margin ${margin}`,
+    earthBelowMask: 'Earth below the mask',
+    fixAssumptions: 'Check the mission assumptions: some values are not valid.',
+    sampleData: 'saved sample',
+    assumptionsTitle: 'Mission assumptions',
+    examplesNote: 'The starting values are illustrative examples, not from a real mission, lander or station. Replace them with yours; they are remembered in this browser.',
+    resetExamples: 'Reset examples',
+    powerGroup: 'Solar arrays and demand',
+    linkGroup: 'Direct-to-Earth link',
+    fields: {
+      panelArea: 'Array area',
+      efficiency: 'Efficiency',
+      demand: 'Power demand',
+      transmitPower: 'Transmitter power',
+      transmitGain: 'Antenna gain',
+      frequency: 'Frequency',
+      gOverT: 'Station G/T',
+      dataRate: 'Data rate',
+      requiredEbN0: 'Required Eb/N0',
+      otherLosses: 'Other losses',
+      requiredMargin: 'Minimum margin',
+      earthMask: 'Elevation mask',
+    },
+    fieldHints: {
+      panelArea: 'Active array area, in square metres.',
+      efficiency: 'Fraction of the incident light turned into electricity, in %.',
+      demand: 'Electrical power the mission needs at the instant assessed.',
+      transmitPower: 'RF power at the lander transmitter output.',
+      transmitGain: 'Gain of the lander antenna toward the Earth, in dBi.',
+      frequency: 'Carrier frequency, in GHz.',
+      gOverT: 'Figure of merit of the receiving station on Earth, in dB/K.',
+      dataRate: 'Transmission rate, in kbit/s.',
+      requiredEbN0: 'Eb/N0 the modulation and coding need, in dB.',
+      otherLosses: 'Losses not modeled: pointing, polarization, Earth atmosphere, implementation…',
+      requiredMargin: 'Margin above the required Eb/N0 for the link to count.',
+      earthMask: 'Minimum elevation of the Earth center above the reference horizon, from 0° to 90°.',
+    },
+    orientation: 'Orientation',
+    orientations: {
+      vertical: { label: 'Vertical', hint: 'Vertical panel turned to the Sun azimuth: incidence = elevation.' },
+      horizontal: { label: 'Horizontal', hint: 'Horizontal panel: incidence = 90° − elevation.' },
+      tracking: { label: '2-axis', hint: 'Two-axis Sun tracking: incidence 0°.' },
+    },
+    invalidFields: (fields) => `Invalid or out-of-range values: ${fields}.`,
+    instantTitle: 'At the instant shown',
+    screeningTitle: 'Mission screening',
+    rows: {
+      irradiance: 'Solar irradiance',
+      diskFraction: 'Unocculted visible solar disk',
+      incidence: 'Incidence factor',
+      power: 'Estimated power',
+      earthElevation: 'Earth elevation',
+      distance: 'Distance to Earth',
+      freeSpaceLoss: 'Free-space loss',
+      margin: 'Link margin',
+    },
+    windowTitle: 'One synodic month window',
+    windowHint: (samples, step) => `${samples} samples from the instant shown, one every ${step}. Two JPL Horizons requests.`,
+    windowRun: 'Screen window',
+    windowRetry: 'Retry window',
+    windowLoading: 'Screening',
+    windowOutOfRange: 'The window would leave the supported range (up to 2099-12-31).',
+    windowOutOfRangeShort: 'Out of range',
+    windowRows: {
+      powerShare: 'Time with enough power',
+      linkShare: 'Time with a link',
+      bothShare: 'Time with both',
+      powerGap: 'Longest gap without power',
+      linkGap: 'Longest gap without a link',
+      meanPower: 'Mean power',
+    },
+    windowUnknown: (samples) => `${samples} samples without data are left out of the percentages. The longest gap is unknown for any criterion with missing samples.`,
+  },
+  compare: {
+    heading: 'Compare scenarios',
+    info: [
+      'Put up to four scenarios (point and date) side by side: Sun and Earth positions, mission screening and, on request, the one synodic month window.',
+      '"+ Current" adds the selected point and date; "+1 d", "+7 d" and "+½ month" add them shifted in time to compare dates at the same point.',
+      '▲ marks the best value of each comparable row. Azimuth and elevation are not ranked: which is better depends on the mission.',
+      'Power and link use the "Feasibility" assumptions. Terrain is not modeled.',
+    ],
+    open: 'Open',
+    dialogTitle: 'Scenario comparison',
+    addGroup: 'Add the current selection',
+    add: { none: '+ Current', day: '+1 d', week: '+7 d', halfMonth: '+½ month' },
+    addHints: {
+      none: 'Adds the selected point and date.',
+      day: 'Adds the selected point one day later.',
+      week: 'Adds the selected point seven days later.',
+      halfMonth: 'Adds the selected point half a mean synodic month later (14.77 d): roughly from lunar day to lunar night.',
+    },
+    empty: 'No scenarios yet. Choose a point and a date in the control panel and add them with the buttons above.',
+    emptyShort: 'No scenarios. Choose a point and date and add them.',
+    full: (max) => `At most ${max} scenarios. Remove one to add another.`,
+    duplicate: 'That scenario is already in the comparison.',
+    outOfRange: 'The shifted date falls outside the supported range.',
+    scenario: (index) => `Scenario ${index}`,
+    criterion: 'Value',
+    show: 'Show',
+    remove: 'Remove',
+    removeNamed: (index) => `Remove scenario ${index}`,
+    retry: 'Retry',
+    loading: 'Querying…',
+    best: 'best value',
+    windows: 'Screen windows',
+    windowsHint: 'Screens one synodic month from each scenario (two JPL Horizons requests per scenario).',
+    windowNotRun: 'not screened',
+    limits: 'Geometric screening under your assumptions: terrain is not modeled and power, communications or landing suitability are not guaranteed.',
   },
   presence: {
     sun: {
