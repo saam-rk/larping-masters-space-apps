@@ -1,0 +1,48 @@
+[
+  {
+    "name": "Little West",
+    "searchBoundsLocalM": [
+      40,
+      -25,
+      90,
+      25
+    ],
+    "lowestDtmSampleLocalM": [
+      70.92399330530316,
+      8.210078061270906
+    ],
+    "lowestElevationM": -1932.156005859375,
+    "neighborhoodReliefM": 4.13232421875,
+    "confidenceCounts": {
+      "3": 161,
+      "12": 14,
+      "13": 87,
+      "14": 363
+    },
+    "interpretation": "Position and outline visually cross-checked against co-projected orthophoto; minimum is not a surveyed crater center."
+  },
+  {
+    "name": "West",
+    "searchBoundsLocalM": [
+      450,
+      -180,
+      600,
+      -40
+    ],
+    "lowestDtmSampleLocalM": [
+      552.9239933053032,
+      -105.78992193876184
+    ],
+    "lowestElevationM": -1957.389892578125,
+    "neighborhoodReliefM": 28.3896484375,
+    "confidenceCounts": {
+      "3": 1590,
+      "10": 34,
+      "11": 155,
+      "12": 496,
+      "13": 1128,
+      "14": 1847
+    },
+    "interpretation": "Position and outline visually cross-checked against co-projected orthophoto; minimum is not a surveyed crater center."
+  }
+]

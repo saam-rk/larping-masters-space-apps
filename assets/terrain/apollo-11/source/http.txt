@@ -1,0 +1,13 @@
+HTTP/1.1 206 Partial Content
+Content-Type: application/octet-stream
+Last-Modified: Tue, 01 Mar 2011 19:26:42 GMT
+Accept-Ranges: bytes
+ETag: "08559846d8cb1:0"
+Server: Microsoft-IIS/10.0
+X-Frame-Options: SAMEORIGIN
+X-Xss-Protection: 1; mode=block
+Strict-Transport-Security: max-age=30000000; includeSubDomains
+Date: Sat, 14 Nov 2026 23:31:34 GMT
+Content-Length: 20951040
+Content-Range: bytes 890880000-911831039/943718400
+

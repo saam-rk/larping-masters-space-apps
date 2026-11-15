@@ -1,0 +1,27 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Apollo 11 terrain review</title>
+<style>body{margin:0;background:#111;color:#ddd;font:14px monospace}canvas{display:block;width:100vw;height:85vh}pre{padding:8px}</style>
+<canvas></canvas><pre id="status">Loading terrain...</pre><script type="module">
+import {Scene,Color,PerspectiveCamera,WebGLRenderer,AmbientLight,DirectionalLight,Raycaster,Vector3} from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+const scene=new Scene();scene.background=new Color(0x080808);
+const renderer=new WebGLRenderer({canvas:document.querySelector('canvas'),antialias:true});
+renderer.setSize(innerWidth,innerHeight*.85);
+const camera=new PerspectiveCamera(55,innerWidth/(innerHeight*.85),.05,10000);
+const controls=new OrbitControls(camera,renderer.domElement);
+const gltf=await new GLTFLoader().loadAsync('/terrain/apollo-11.glb');scene.add(gltf.scene);
+const mesh=gltf.scene.children[0];
+const light=new DirectionalLight(0xffffff,3);light.position.set(-30,50,20);scene.add(light,new AmbientLight(0xffffff,.3));
+scene.updateMatrixWorld(true);
+const ray=new Raycaster();
+function ground(x,z){ray.set(new Vector3(x,1000,z),new Vector3(0,-1,0));return ray.intersectObject(mesh)[0].point.y;}
+camera.position.set(0,ground(0,8)+1.7,8);controls.target.set(0,ground(0,-15)+.6,-15);controls.update();
+const mat=mesh.material;
+const report={vertices:mesh.geometry.attributes.position.count,triangles:mesh.geometry.index.count/3,
+  normalMap:!!mat.normalMap,roughnessMap:!!mat.roughnessMap,colorMap:!!mat.map,
+  originHeightM:ground(0,0),normalWidth:mat.normalMap.image.width,
+  clampSamplers:[mat.map,mat.normalMap,mat.roughnessMap].every(t=>t.wrapS===1001&&t.wrapT===1001)};
+if(report.vertices!==40500||report.triangles!==80462||!report.clampSamplers||!report.normalMap)throw Error('Asset validation failed');
+document.querySelector('#status').textContent=JSON.stringify(report)+'\nDrag to orbit; scroll to inspect transitions. Illustrative lighting and grain. LROC stereo sampling 2 m; confidence limitations apply.';
+renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera)});
+</script></html>

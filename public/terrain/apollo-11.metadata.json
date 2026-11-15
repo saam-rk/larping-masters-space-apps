@@ -1,0 +1,89 @@
+{
+  "id": "apollo-11",
+  "latitudeDeg": 0.67416,
+  "longitudeEastDeg": 23.47314,
+  "frame": "LRO lunar planetocentric / Mean Earth convention; catalogue anchor ME/DE421",
+  "radiusM": 1737400.0,
+  "originElevationM": -1927.4377562264772,
+  "originProjectedM": [
+    -4745695.923994704,
+    20442.789921944615
+  ],
+  "crsWkt": "PROJCS[\"Equirectangular Moon\",GEOGCS[\"GCS_Moon\",DATUM[\"D_Moon\",SPHEROID[\"Moon_localRadius\",1737400,0]],PRIMEM[\"Reference_Meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Equirectangular\"],PARAMETER[\"standard_parallel_1\",1],PARAMETER[\"central_meridian\",180],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+  "axes": {
+    "blender": "+X east, +Y north, +Z radial height",
+    "glb": "+X east, +Y radial height, -Z north"
+  },
+  "transform": "Project lon/lat with supplied CRS (standard parallel 1 deg, central meridian 180 deg); subtract originProjectedM; GLB=(dx,elevation-h0,-dy)",
+  "verticalExaggeration": 1,
+  "curvatureCorrection": false,
+  "sourceProduct": "NAC_DTM_APOLLO11 v1.9",
+  "sourceUrl": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/SDP/NAC_DTM/APOLLO11/NAC_DTM_APOLLO11.TIF",
+  "retrievalDate": "2026-11-15",
+  "sampleSpacingM": 2.0,
+  "coverageLocalM": [
+    -800,
+    -800,
+    800,
+    800
+  ],
+  "sourceFiles": {
+    "CONF.IMG": {
+      "bytes": 29513891,
+      "sha256": "463a2e30192b784ff41f12ace7bf6d5985fcdcfb1a66dc65b00f1718ee36ba9c"
+    },
+    "CONF.TIF": {
+      "bytes": 29545483,
+      "sha256": "0a0336ef0984a81e792943a635072139d17713b502c1d356e00151ba02283513"
+    },
+    "DTM.LBL": {
+      "bytes": 3565,
+      "sha256": "f86d7d5c670cb2ff8ce02e04901dac340d92358306f79b539ecd2b20f11f515b"
+    },
+    "DTM.TIF": {
+      "bytes": 118142727,
+      "sha256": "920da622e3d7c3f047c67a970b5429aaadf00f886804e3fc6c72f6e5298043e9"
+    },
+    "ORTHO.TIF": {
+      "bytes": 29545483,
+      "sha256": "06550b1b40879ce4c82825cb0a36fab689bd5012873f91415660e079d54554e0"
+    },
+    "README.TXT": {
+      "bytes": 8641,
+      "sha256": "175d0fe1dc363d733c4e5dcbc44b8e0f2aae21a9172e9725a853f0e021a6925d"
+    }
+  },
+  "coordinateSource": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html",
+  "confidenceCounts": {
+    "3": 48033,
+    "10": 663,
+    "11": 5780,
+    "12": 43865,
+    "13": 197176,
+    "14": 344483
+  },
+  "relativePrecisionReportedM": 0.77,
+  "lolaFitRmsReportedM": 1.81,
+  "rasterToMeshErrorM": {
+    "max": 0.44573974599325084,
+    "p95": 0.11069184460346827,
+    "rms": 0.05424692195300122
+  },
+  "vertices": 40500,
+  "triangles": 80462,
+  "limitations": [
+    "2 m stereo DTM is not centimetre-scale measured relief.",
+    "Confidence class 3 pixels are retained but flagged as suspicious, not corrected or claimed reliable.",
+    "No geographic imagery used as material; orthophoto is validation evidence only.",
+    "Illustrative micrograin and lighting, no invented boulders or craters.",
+    "No curvature correction, no visibility or landing-suitability guarantee."
+  ],
+  "export": {
+    "bytes": 2064284,
+    "sha256": "72e2f11a322ba2f43d292b8b29e25bf7aac50495880bce9fb2e2dfa4525d2373",
+    "blenderVersion": "5.3.0",
+    "roundtripMaxPositionErrorM": 0.0,
+    "compression": null,
+    "normalMapReimported": true
+  }
+}
