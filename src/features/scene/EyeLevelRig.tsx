@@ -17,8 +17,8 @@ import type { PerspectiveCamera } from 'three';
 import type { Vector3Tuple } from './geometry';
 import { MAX_FOV_DEG, MIN_FOV_DEG, ZOOM_EPSILON, fovForLevel, levelForFov } from './zoom';
 
-/** Eye height of a person about 1.70 m tall (illustrative), meters. */
-export const EYE_HEIGHT_M = 1.6;
+/** Shared instrument height above the selected terrain coordinate, meters. */
+export { OBSERVER_EYE_HEIGHT_M as EYE_HEIGHT_M } from '../../../shared/observer';
 
 const DEG_TO_RAD = Math.PI / 180;
 const MIN_PITCH_DEG = -70;

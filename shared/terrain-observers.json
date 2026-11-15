@@ -1,0 +1,82 @@
+{
+  "apollo-11": {
+    "latitudeDeg": 0.67416,
+    "longitudeEastDeg": 23.47314,
+    "groundElevationM": -1927.4377441405668,
+    "eyeHeightM": 1.7,
+    "asset": "/terrain/apollo-11.glb",
+    "sha256": "72e2f11a322ba2f43d292b8b29e25bf7aac50495880bce9fb2e2dfa4525d2373"
+  },
+  "nobile-rim-1": {
+    "latitudeDeg": -85.4381,
+    "longitudeEastDeg": 37.36667,
+    "groundElevationM": 5946.894583940288,
+    "eyeHeightM": 1.7,
+    "asset": "/terrain/nobile-rim-1.glb",
+    "sha256": "a6f4587fa3d6059c5a40578cd10753d8388174169073311253aaadf0a8913c0c"
+  },
+  "nobile-rim-2": {
+    "latitudeDeg": -83.954,
+    "longitudeEastDeg": 58.82206,
+    "groundElevationM": 1009.6510832457716,
+    "eyeHeightM": 1.7,
+    "asset": "/models/nobile-rim-2/nobile-rim-2.glb",
+    "sha256": "89fadf0275547c982b9da20efe4df847a3a3e756bb676053dface5fd47ca8207"
+  },
+  "shackleton-rim": {
+    "latitudeDeg": -89.7668,
+    "longitudeEastDeg": -171.87,
+    "groundElevationM": 769.7190851179766,
+    "eyeHeightM": 1.7,
+    "asset": "/terrain/shackleton-rim.glb",
+    "sha256": "723af579fb22a27e99346d9a8d0e107308765b31ea8b6129ebc31a29f3092a29"
+  },
+  "amundsen-rim": {
+    "latitudeDeg": -84.2287,
+    "longitudeEastDeg": 69.44396,
+    "groundElevationM": 399.45302601302683,
+    "eyeHeightM": 1.7,
+    "asset": "/terrain/amundsen-rim.glb",
+    "sha256": "ac2a4ea2b9ed1ea88999ddd28c5c41364e092c82fd63a374935357ba0ea7f0de"
+  },
+  "haworth": {
+    "latitudeDeg": -86.7639,
+    "longitudeEastDeg": -22.777,
+    "groundElevationM": 1628.5566890831105,
+    "eyeHeightM": 1.7,
+    "asset": "/terrain/haworth.glb",
+    "sha256": "2aa10ae1e51709c8b41f52e4e70fdeca218b01296c63872ca7443b1b5b1d7fa1"
+  },
+  "shoemaker-rim-a": {
+    "latitudeDeg": -88.0792,
+    "longitudeEastDeg": 11.88866,
+    "groundElevationM": -619.5406944020069,
+    "eyeHeightM": 1.7,
+    "asset": "/terrain/shoemaker-rim-a.glb",
+    "sha256": "4d89de7e310411129be24de5b3d25f1feed122515964a56f409c1ccf998a2b02"
+  },
+  "faustini-rim-a": {
+    "latitudeDeg": -87.8897,
+    "longitudeEastDeg": 90,
+    "groundElevationM": 46.56742544703593,
+    "eyeHeightM": 1.7,
+    "asset": "/terrain/faustini-rim-a.glb",
+    "sha256": "41668b39abf157076268606429271adc64f16555ba1d36f5b87284e334680437"
+  },
+  "cabeus-exterior-wall-1": {
+    "latitudeDeg": -86.9243,
+    "longitudeEastDeg": -71.5651,
+    "groundElevationM": -2229.009598491495,
+    "eyeHeightM": 1.7,
+    "asset": "/terrain/cabeus-exterior-wall-1.glb",
+    "sha256": "c87ae9b75028a458d5eaf1de32db73e557db60a24b8607e2755e8712a8a1c95e"
+  },
+  "malapert-crater-1": {
+    "latitudeDeg": -84.8034,
+    "longitudeEastDeg": 8.387032,
+    "groundElevationM": -2267.035254874514,
+    "eyeHeightM": 1.7,
+    "asset": "/terrain/malapert-crater-1.glb",
+    "sha256": "24385f1ccad10583687a965c04b5dcc716b4127b8cccac7d5fd37c76cf9d6632"
+  }
+}

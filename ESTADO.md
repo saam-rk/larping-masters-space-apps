@@ -1,5 +1,13 @@
 # Estado del proyecto
 
+## Bounded geometry/lighting correction — 2026-11-15
+
+- Branch `fix/lunar-geometry-lighting`: implements the integrator's D-022 choices after the geometry/lighting audit. Fixed selected-coordinate observer at mesh height + 1.70 m, exact spherical embedding of existing terrain, receiver-local finite-disk shadow approximation, eclipse suppression and explicit direct/illustrative modes.
+- Ten asset/observer records have reproducible SHA-256 provenance; unknown terrain remains unknown. New single-instant Horizons responses are checked against observer metadata and epoch. Historical saved samples keep their original altitude.
+- Evidence and precision comparison: `docs/LUNAR_LIGHTING_CORRECTION.md`; raw paired Horizons cases and numerical validation summaries: `docs/lighting-validation/`.
+- Local validation observed: typecheck, lint, 674 tests/60 files and production build; Chromium GPU regressions and all ten production UI scenes in Spanish/English and both modes. No physical accuracy certification, regional terrain coverage or independent frame alignment is claimed.
+- Pending: human diff review and any explicitly authorized commit/PR/integration. This task has not committed, pushed or merged.
+
 ## Implementation update — 2026-11-15
 
 - Branch `feat/horizon-playback`: local horizon player with a user-defined UTC

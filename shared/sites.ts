@@ -10,8 +10,8 @@
  *
  * The featured points (`FEATURED_SITE_IDS`) include Apollo 11 and the
  * original demo points (D-015); the site drop-down lists them first, then the others. Every point uses the
- * same geometric method; only some featured points have a first-person
- * terrain model.
+ * same apparent-airless direction method; ten entries have a first-person
+ * terrain model. Their model-derived observer altitude is resolved separately.
  *
  * The user may also enter custom coordinates (`CUSTOM_SITE_ID`). Those are
  * computed with the same method and carry no publication source.

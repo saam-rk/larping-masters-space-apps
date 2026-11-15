@@ -22,9 +22,10 @@
  * longitude L, geographic north (away from the pole, along the meridian)
  * lies at grid bearing L.
  *
- * The projected plane has no lunar curvature correction. The lighting in the
- * view is illustrative and the mesh is not a visibility, power,
- * communications or landing-suitability analysis.
+ * The stored projected plane has no curvature correction. `curvedTerrain.ts`
+ * embeds its radial heights on the reference sphere once at runtime. Finite-
+ * resolution shadows are not a validated visibility, power, communications
+ * or landing-suitability analysis; relief beyond the crop is unknown.
  */
 
 import type { SiteId } from '../../../../shared/sites';

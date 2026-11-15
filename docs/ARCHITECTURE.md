@@ -157,7 +157,10 @@ The full types are in `shared/ephemeris.ts`. Key rules:
 
 One observer-table request per body (Sun `10`, Earth `399`) from a
 topocentric site on the Moon (`CENTER='coord@301'`, geodetic coordinates,
-altitude 0 km on the Horizons reference sphere). Quantities `4,13,20`,
+altitude from `shared/observer.ts`: mesh ground + 1.70 m at the ten covered
+sites; explicitly 0 km on the reference sphere otherwise, not an assumed
+ground height). Historical saved samples retain their original altitude.
+Quantities `4,13,20`,
 `APPARENT='AIRLESS'`, `TIME_TYPE='UT'`, CSV output, one `TLIST` instant. The
 exact parameter list is in `server/horizons/__fixtures__/README.md` and
 pinned by `server/horizons/query.test.ts`.
@@ -167,17 +170,19 @@ route.
 
 ## Limits
 
-- Positions are geometric. Terrain (mountains, craters) is not modeled, so a
-  positive elevation does not prove visibility from the ground, solar power,
-  or a communication link.
+- Positions are apparent body-center directions without atmospheric refraction.
+  A positive reference-plane elevation does not establish terrain visibility,
+  solar power or communications. The surface view separately uses a curved
+  finite mesh and approximate finite-disk shadows, with explicit direct-solar
+  and illustrative modes. Missing regional relief and frame-alignment uncertainty
+  remain unresolved; see [LUNAR_LIGHTING_CORRECTION.md](LUNAR_LIGHTING_CORRECTION.md).
 - Range and range-rate are returned but not shown in the main summary.
-- The 27 predefined points are reference points from the NASA Lunar Surface
-  Data Book (table A2.1-1), not approved landing sites. Three are featured
-  in the selector; the other 24 (docs/LUNAR_ADDITIONAL_SITES_RESEARCH.md)
-  are in a drop-down and use the third-person view only, since they have no
-  terrain model. "Leibnitz Beta Plateau, extended boundaries" (PGDA Site20v2)
-  shares the Site20 coordinates; typed coordinates resolve to Site20. Custom points are user input with no
-  source; they are not checked against any terrain or landing data.
+- The 28 catalog entries represent 27 distinct coordinate pairs (NASA Lunar
+  Surface Data Book plus Apollo 11), not approved landing sites. Ten entries
+  have surface terrain; 18 do not. "Leibnitz Beta Plateau, extended boundaries"
+  (PGDA Site20v2) shares Site20 coordinates; exact typed matches resolve to the
+  reference entry. Arbitrary custom points have no published coordinate source
+  or terrain validation; a nearby mesh is never silently substituted.
 
 ## Deployment
 

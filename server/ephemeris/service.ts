@@ -15,14 +15,12 @@ import {
   type WarningCode,
 } from '../../shared/ephemeris.js';
 import { CUSTOM_SITE_ID, type ObserverSite } from '../../shared/sites.js';
+import { observerAltitudeKm } from '../../shared/observer.js';
 import { toUtcIsoSeconds } from '../../shared/time.js';
 import { fetchObserverTable, type HorizonsClientOptions, type ObserverTableResult } from '../horizons/client.js';
 import { VERIFIED_HORIZONS_API_VERSIONS } from '../horizons/parse.js';
 import { HORIZONS_API_URL, OBSERVER_QUANTITIES } from '../horizons/query.js';
 import { TtlCache } from './cache.js';
-
-/** Observer height: 0 km on the Horizons lunar reference sphere, not measured terrain. */
-export const SITE_ALTITUDE_KM = 0;
 
 export const EPHEMERIS_METHOD: EphemerisMethod = {
   ephemerisType: 'OBSERVER',
@@ -63,7 +61,7 @@ export async function computeEphemeris(
               body,
               latitudeDeg: site.latitudeDeg,
               longitudeEastDeg: site.longitudeEastDeg,
-              altitudeKm: SITE_ALTITUDE_KM,
+              altitudeKm: observerAltitudeKm(site),
               instant,
             },
             options.horizons,
@@ -93,11 +91,19 @@ export function buildEphemerisResponse(
   provenance: Provenance,
 ): EphemerisResponse {
   const bodies = {} as Record<BodyId, BodyResult>;
+  const reference = BODY_IDS.map((body) => results[body]).find((result) => result.ok);
   for (const body of BODY_IDS) {
     const result = results[body];
-    bodies[body] = result.ok
-      ? { status: 'ok', observation: result.table.observation }
-      : { status: 'error', body, error: result.error };
+    const mismatch = result.ok && (Date.parse(result.table.ephemerisUtc) !== instant.getTime()
+      || (reference?.ok && (result.table.observerFrame !== reference.table.observerFrame
+        || result.table.planetaryEphemeris !== reference.table.planetaryEphemeris)));
+    if (mismatch) {
+      bodies[body] = { status: 'error', body, error: { code: 'UPSTREAM_FORMAT', detail: 'Inconsistent body epoch or reference frame' } };
+    } else if (result.ok) {
+      bodies[body] = { status: 'ok', observation: result.table.observation };
+    } else {
+      bodies[body] = { status: 'error', body, error: result.error };
+    }
   }
 
   const firstOk = BODY_IDS.map((body) => results[body]).find((result) => result.ok);
@@ -108,7 +114,7 @@ export function buildEphemerisResponse(
   if (okTable && (apiVersion === null || !VERIFIED_HORIZONS_API_VERSIONS.includes(apiVersion))) {
     warnings.push('HORIZONS_API_VERSION_UNVERIFIED');
   }
-  if (BODY_IDS.some((body) => !results[body].ok)) {
+  if (BODY_IDS.some((body) => bodies[body].status === 'error')) {
     warnings.push('PARTIAL_RESULT');
   }
 
@@ -119,7 +125,8 @@ export function buildEphemerisResponse(
       name: site.name,
       latitudeDeg: site.latitudeDeg,
       longitudeEastDeg: site.longitudeEastDeg,
-      altitudeKm: SITE_ALTITUDE_KM,
+      // Historical saved samples retain their actual reference-sphere observer.
+      altitudeKm: provenance === 'live' ? observerAltitudeKm(site) : 0,
       source: site.source,
     },
     requestedUtc: toUtcIsoSeconds(instant),

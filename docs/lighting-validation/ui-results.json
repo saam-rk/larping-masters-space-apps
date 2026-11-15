@@ -1,0 +1,34 @@
+{
+  "sites": [
+    "apollo-11",
+    "nobile-rim-1",
+    "nobile-rim-2",
+    "shackleton-rim",
+    "amundsen-rim",
+    "haworth",
+    "shoemaker-rim-a",
+    "faustini-rim-a",
+    "cabeus-exterior-wall-1",
+    "malapert-crater-1",
+    "apollo-11",
+    "nobile-rim-1",
+    "nobile-rim-2",
+    "shackleton-rim",
+    "amundsen-rim",
+    "haworth",
+    "shoemaker-rim-a",
+    "faustini-rim-a",
+    "cabeus-exterior-wall-1",
+    "malapert-crater-1"
+  ],
+  "languages": [
+    "es",
+    "en"
+  ],
+  "modes": [
+    "direct",
+    "illustrative"
+  ],
+  "errors": [],
+  "countdown": "Explicit offline failure fixture; no live search performed"
+}

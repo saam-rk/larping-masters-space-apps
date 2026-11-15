@@ -172,6 +172,14 @@ export interface Messages {
   readonly bodies: { readonly sun: string; readonly earth: string };
   readonly scene: {
     readonly heading: string;
+    readonly lighting: {
+      readonly label: string;
+      readonly direct: string;
+      readonly illustrative: string;
+      readonly limits: string;
+      readonly unavailable: string;
+      readonly observer: (altitude: string) => string;
+    };
     /** Help paragraphs per view. */
     readonly info: Readonly<Record<ViewMode, Paragraphs>>;
     readonly views: {
@@ -447,7 +455,7 @@ const es: Messages = {
     tagline: 'NASA Space Apps 2026 · Lunar Landing Site Navigator',
     intro: [
       'Explora el cielo desde puntos de referencia del polo sur lunar. Elige un lugar y una fecha y hora UTC, y verás dónde están el Sol y la Tierra respecto al horizonte local, en una vista 3D y en un resumen con unidades y fuentes.',
-      'Las posiciones proceden de JPL Horizons. El relieve no está modelado: es geometría, no una garantía de luz, comunicaciones ni idoneidad de aterrizaje.',
+      'Las direcciones aparentes sin refracción proceden de JPL Horizons. El relieve de la vista de superficie tiene cobertura limitada y sombras aproximadas: no garantiza luz, comunicaciones ni idoneidad de aterrizaje.',
     ],
     options: 'Preferencias',
     language: 'Idioma',
@@ -523,11 +531,17 @@ const es: Messages = {
   bodies: { sun: 'Sol', earth: 'Tierra' },
   scene: {
     heading: 'Horizonte local',
+    lighting: {
+      label: 'Iluminación', direct: 'Solar directa', illustrative: 'Ilustrativa',
+      limits: 'Sombras aproximadas. Fuera del recorte: relieve desconocido. Estados y línea verde ≠ visibilidad real. Sin garantía de energía, comunicaciones o aterrizaje.',
+      unavailable: 'Luz solar no disponible: faltan datos compatibles del observador, época, marco o discos. Las muestras antiguas requieren una nueva consulta.',
+      observer: (altitude) => `Punto fijo + 1,70 m sobre malla · consulta a ${altitude} km sobre la esfera de 1737,4 km · altura modelada.`,
+    },
     info: {
       'first-person': [
-        'Vista a la altura de los ojos, de pie y quieto en el Apolo 11 o a unos metros de un astronauta de 1,70 m en Nobile Rim 1, Nobile Rim 2, Shackleton Rim, Amundsen Rim, Haworth, Shoemaker Rim A o Faustini Rim A. Arrastra para girar la cabeza: en horizontal para mirar alrededor y en vertical para mirar al suelo o al cielo. La rueda, el pellizco o el control de zoom (+, barra y −) acercan o alejan la imagen, como unos prismáticos, sin moverte del sitio. Con la vista seleccionada, también funcionan las flechas y +/−. El botón Brújula, junto a 1ª P y 3ª P, muestra u oculta la línea del horizonte y los puntos cardinales; el botón de las esquinas abre la vista a pantalla completa.',
-        'El relieve es un recorte de 10 × 10 km (12 × 14 km en Haworth y 12 × 12 km en Shoemaker Rim A y Faustini Rim A) del modelo LOLA de 5 m/píxel (NASA GSFC PGDA, producto 78). La línea verde es el horizonte geométrico (elevación 0). Más allá del recorte no hay datos de relieve: hay un horizonte supuesto (invisible; bajo él solo se ven las estrellas), el de una Luna lisa de 1737,4 km de radio que sigue a la altura del borde del recorte, visto desde los ojos (1,60 m sobre el suelo). No es terreno real. Donde el terreno baja, ese horizonte queda bajo la línea verde y el Sol o la Tierra pueden verse en parte aunque su centro esté bajo el horizonte geométrico. La parte del Sol o de la Tierra que tapan el relieve o ese horizonte supuesto se dibuja translúcida, para poder localizarla; desde allí no se vería.',
-        'El Sol y la Tierra se dibujan con su posición y su diámetro aparente de JPL Horizons. La iluminación es ilustrativa: sin sombras proyectadas; el recorte de relieve es plano y la curvatura lunar solo se supone más allá de él. No es un análisis de visibilidad, energía, comunicaciones ni idoneidad de aterrizaje.',
+        'Vista fija en la coordenada seleccionada, a 1,70 m sobre la malla, en los diez puntos con relieve publicado. Arrastra para girar la cabeza: en horizontal para mirar alrededor y en vertical para mirar al suelo o al cielo. La rueda, el pellizco o el control de zoom (+, barra y −) acercan o alejan la imagen, como unos prismáticos, sin moverte del sitio. Con la vista seleccionada, también funcionan las flechas y +/−. El botón Brújula, junto a 1ª P y 3ª P, muestra u oculta la línea del horizonte y los puntos cardinales; el botón de las esquinas abre la vista a pantalla completa.',
+        'El observador se mantiene en la coordenada seleccionada, a 1,70 m sobre la malla LOLA o LROC. La altura se interpola en los triángulos publicados y se utiliza también en las consultas nuevas a Horizons. La curvatura se aplica una vez. Fuera del recorte no hay relieve conocido: no se certifica cielo despejado. La línea verde marca el plano geométrico de elevación cero, no el horizonte del terreno.',
+        'Las direcciones de Horizons son aparentes y sin refracción atmosférica. Solar directa elimina el relleno artístico y aproxima sombras de disco finito y eclipses. Ilustrativa añade relleno y localizadores translúcidos, que no representan luz transmitida. El mapa de sombras y la integración del disco tienen resolución finita; el marco del terreno no está alineado con precisión certificada con Horizons. No es una predicción de irradiancia, energía, comunicaciones ni idoneidad de aterrizaje.',
         'El astronauta es una figura de escala ilustrativa. Las estrellas son decorativas y no reproducen el cielo real.',
       ],
       'third-person': [
@@ -541,7 +555,7 @@ const es: Messages = {
       label: 'Vista',
       names: { 'first-person': 'Primera persona', 'third-person': 'Tercera persona' },
       short: { 'first-person': '1ª P', 'third-person': '3ª P' },
-      firstPersonUnavailable: 'Primera persona: solo disponible en el Apolo 11, Nobile Rim 1, Nobile Rim 2, Shackleton Rim, Amundsen Rim, Haworth, Shoemaker Rim A y Faustini Rim A, que tienen modelo de relieve.',
+      firstPersonUnavailable: 'Primera persona: solo disponible en los diez puntos con modelo de relieve publicado.',
     },
     compassToggle: {
       label: 'Brújula',
@@ -600,7 +614,7 @@ const es: Messages = {
       },
     },
     apolloReenactmentNote: 'Recreación del Apolo 11 sobre relieve LROC · Collins permaneció en órbita.',
-    firstPersonNote: (crop) => `Relieve LOLA ${crop} km · luz ilustrativa · figura 1,70 m`,
+    firstPersonNote: (crop) => `Relieve LOLA ${crop} km · curvatura aplicada · figura 1,70 m`,
     thirdPersonNote: {
       visual: (exaggeration) =>
         exaggeration
@@ -619,7 +633,7 @@ const es: Messages = {
     heading: 'Datos',
     info: [
       'Azimut: ángulo medido desde el norte en sentido horario.',
-      'Elevación: altura del centro del objeto sobre el plano horizontal de referencia (altura 0 km), sin refracción.',
+      'Elevación: dirección aparente del centro sobre el plano horizontal del observador, sin refracción atmosférica; no incluye obstrucción por relieve.',
       'Estado: indicador de JPL Horizons sobre si el borde superior del objeto queda sobre ese horizonte de referencia. No garantiza que se vea desde el terreno real.',
     ],
     object: 'Objeto',
@@ -628,7 +642,7 @@ const es: Messages = {
     state: 'Estado',
     noValue: 'Sin dato',
     bodyError: 'No se pudo obtener este dato.',
-    terrainWarning: 'Posiciones geométricas. El modelo no incluye montañas ni cráteres del lugar.',
+    terrainWarning: 'Direcciones aparentes sin refracción atmosférica. El estado del horizonte de referencia no es visibilidad desde el terreno. Sin malla, el observador está a 0 km sobre la esfera, no sobre suelo conocido.',
     provenanceSample: (date) => `Muestra guardada de JPL Horizons (obtenida el ${date}). No es una consulta en vivo.`,
     provenanceLive: (date) => `Consulta a JPL Horizons obtenida el ${date}.`,
     sources: 'Fuentes',
@@ -691,7 +705,7 @@ const es: Messages = {
     info: [
       'Busca la fecha y hora en que el Sol y la Tierra están donde indiques, vistos desde el punto elegido en «Punto de referencia».',
       'Abre la ventana de búsqueda para escribir las condiciones. Allí tienes ejemplos y una guía completa sobre unidades, valores posibles, precisión y límites.',
-      'Son posiciones geométricas: el relieve no está modelado. Una coincidencia no garantiza luz, comunicaciones ni idoneidad de aterrizaje.',
+      'Son direcciones aparentes sin refracción. La búsqueda usa el horizonte de referencia, no el relieve. Una coincidencia no garantiza luz, comunicaciones ni idoneidad de aterrizaje.',
     ],
     intro: 'Indica dónde quieres ver el Sol y la Tierra; se busca la fecha.',
     open: 'Abrir',
@@ -819,7 +833,7 @@ const es: Messages = {
       {
         heading: 'Límites',
         paragraphs: [
-          'Son posiciones geométricas: el relieve no está modelado. Una coincidencia no garantiza luz, comunicaciones ni idoneidad de aterrizaje.',
+          'Son direcciones aparentes sin refracción. La búsqueda usa el horizonte de referencia, no el relieve. Una coincidencia no garantiza luz, comunicaciones ni idoneidad de aterrizaje.',
         ],
       },
     ],
@@ -919,7 +933,7 @@ const en: Messages = {
     tagline: 'NASA Space Apps 2026 · Lunar Landing Site Navigator',
     intro: [
       'Explore the sky from reference points at the lunar south pole. Pick a site and a UTC date and time to see where the Sun and the Earth are relative to the local horizon, in a 3D view and in a summary with units and sources.',
-      'Positions come from JPL Horizons. Terrain is not modeled: this is geometry, not a guarantee of light, communications or landing suitability.',
+      'Apparent airless directions come from JPL Horizons. Surface-view terrain has limited coverage and approximate shadows: it is not a guarantee of light, communications or landing suitability.',
     ],
     options: 'Preferences',
     language: 'Language',
@@ -995,11 +1009,17 @@ const en: Messages = {
   bodies: { sun: 'Sun', earth: 'Earth' },
   scene: {
     heading: 'Local horizon',
+    lighting: {
+      label: 'Lighting', direct: 'Direct solar', illustrative: 'Illustrative',
+      limits: 'Approximate shadows; terrain beyond it is unknown. Statuses and green line ≠ actual visibility. No power, communications or landing guarantee.',
+      unavailable: 'Solar light unavailable: compatible observer, epoch, frame or disk data are missing. Historical samples require a new query.',
+      observer: (altitude) => `Fixed point + 1.70 m above mesh · query at ${altitude} km above the 1737.4 km sphere · model-derived height.`,
+    },
     info: {
       'first-person': [
-        'Eye-level view, standing still at Apollo 11 or a few meters from a 1.70 m astronaut at Nobile Rim 1, Nobile Rim 2, Shackleton Rim, Amundsen Rim, Haworth, Shoemaker Rim A or Faustini Rim A. Drag to turn your head: sideways to look around, up or down to look at the ground or the sky. The wheel, a pinch or the zoom control (+, bar and −) zooms the image in or out, like binoculars, without moving you. With the view focused, the arrow keys and +/− also work. The Compass button, next to 1ST and 3RD, shows or hides the horizon line and the cardinal points; the corners button opens the view full screen.',
-        'The relief is a 10 × 10 km crop (12 × 14 km at Haworth, 12 × 12 km at Shoemaker Rim A and Faustini Rim A) of the 5 m/pixel LOLA model (NASA GSFC PGDA, product 78). The green line is the geometric horizon (elevation 0). There is no relief data beyond the crop: there is an assumed horizon (invisible; only stars show below it), that of a smooth Moon of 1,737.4 km radius continuing at the height of the crop edge, seen from the eyes (1.60 m above the ground). It is not real terrain. Where the terrain falls away, that horizon lies below the green line, so the Sun or the Earth may show in part even when its center is below the geometric horizon. The part of the Sun or the Earth hidden by the relief or that assumed horizon is drawn translucent so it can be found; it would not be visible from there.',
-        'The Sun and the Earth are drawn with their JPL Horizons position and apparent diameter. Lighting is illustrative: no cast shadows; the relief crop is flat and lunar curvature is only assumed beyond it. This is not a visibility, power, communications or landing-suitability analysis.',
+        'Fixed view at the selected coordinate, 1.70 m above the mesh, at the ten points with published terrain. Drag to turn your head: sideways to look around, up or down to look at the ground or the sky. The wheel, a pinch or the zoom control (+, bar and −) zooms the image in or out, like binoculars, without moving you. With the view focused, the arrow keys and +/− also work. The Compass button, next to 1ST and 3RD, shows or hides the horizon line and the cardinal points; the corners button opens the view full screen.',
+        'The observer stays at the selected coordinate, 1.70 m above the LOLA or LROC mesh. Height is interpolated on the published triangles and used by new Horizons queries too. Curvature is applied once. Terrain outside the crop is unknown, not certified clear sky. The green line marks the geometric zero-elevation plane, not the terrain horizon.',
+        'Horizons directions are apparent and airless. Direct solar removes artistic fill and approximates finite-disk shadows and eclipses. Illustrative adds fill and translucent locators, which do not represent transmitted light. Shadow maps and disk integration have finite resolution; the terrain frame is not aligned to Horizons with certified accuracy. This is not an irradiance, power, communications or landing-suitability prediction.',
         'The astronaut is an illustrative scale figure. The stars are decorative and do not reproduce the real sky.',
       ],
       'third-person': [
@@ -1013,7 +1033,7 @@ const en: Messages = {
       label: 'View',
       names: { 'first-person': 'First person', 'third-person': 'Third person' },
       short: { 'first-person': '1ST', 'third-person': '3RD' },
-      firstPersonUnavailable: 'First person: only available at Apollo 11, Nobile Rim 1, Nobile Rim 2, Shackleton Rim, Amundsen Rim, Haworth, Shoemaker Rim A and Faustini Rim A, which have a relief model.',
+      firstPersonUnavailable: 'First person: only available at the ten points with a published terrain model.',
     },
     compassToggle: {
       label: 'Compass',
@@ -1072,7 +1092,7 @@ const en: Messages = {
       },
     },
     apolloReenactmentNote: 'Apollo 11 reenactment on LROC terrain · Collins remained in orbit.',
-    firstPersonNote: (crop) => `LOLA relief ${crop} km · illustrative light · 1.70 m figure`,
+    firstPersonNote: (crop) => `LOLA relief ${crop} km · curvature applied · 1.70 m figure`,
     thirdPersonNote: {
       visual: (exaggeration) =>
         exaggeration
@@ -1091,7 +1111,7 @@ const en: Messages = {
     heading: 'Data',
     info: [
       'Azimuth: angle measured clockwise from north.',
-      'Elevation: height of the object center above the horizontal reference plane (0 km height), no refraction.',
+      'Elevation: apparent center direction above the observer horizontal plane, without atmospheric refraction; terrain obstruction is separate.',
       'State: JPL Horizons flag telling whether the upper edge of the object is above that reference horizon. It does not guarantee the object is visible from the real terrain.',
     ],
     object: 'Object',
@@ -1100,7 +1120,7 @@ const en: Messages = {
     state: 'State',
     noValue: 'No data',
     bodyError: 'This value could not be retrieved.',
-    terrainWarning: 'Geometric positions. The model does not include the mountains or craters of the site.',
+    terrainWarning: 'Apparent directions without atmospheric refraction. Reference-horizon status is not terrain visibility. Without a mesh, the observer is at 0 km above the sphere, not at known ground level.',
     provenanceSample: (date) => `Saved JPL Horizons sample (retrieved ${date}). Not a live query.`,
     provenanceLive: (date) => `JPL Horizons query retrieved ${date}.`,
     sources: 'Sources',
@@ -1163,7 +1183,7 @@ const en: Messages = {
     info: [
       'Finds the date and time at which the Sun and the Earth are where you say, seen from the point chosen under "Reference point".',
       'Open the search window to enter the conditions. It has examples and a full guide to units, possible values, precision and limits.',
-      'These are geometric positions: terrain is not modeled. A match does not guarantee light, communications or landing suitability.',
+      'These are apparent airless directions. Search uses the reference horizon, not terrain. A match does not guarantee light, communications or landing suitability.',
     ],
     intro: 'Say where you want the Sun and the Earth; the date is found.',
     open: 'Open',
@@ -1290,7 +1310,7 @@ const en: Messages = {
       },
       {
         heading: 'Limits',
-        paragraphs: ['These are geometric positions: terrain is not modeled. A match does not guarantee light, communications or landing suitability.'],
+        paragraphs: ['These are apparent airless directions. Search uses the reference horizon, not terrain. A match does not guarantee light, communications or landing suitability.'],
       },
     ],
     matchHeading: 'Match',

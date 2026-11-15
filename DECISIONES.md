@@ -38,6 +38,16 @@ Registrar acuerdos con fecha, responsable y evidencia. Propuestas y preguntas no
 - **Limits:** no change to the scientific method or terrain-visibility claims.
   Implementation details and review steps are in `docs/HORIZON_PLAYBACK.md`.
 
+### D-022 — Bounded surface geometry and explicit lighting modes
+
+- **Date:** 2026-11-15.
+- **Status:** explicitly confirmed by the integrator in the lighting-correction questionnaire.
+- **Decision:** correct geometry within the existing terrain coverage; keep missing regional terrain unknown. Do not claim certified physical accuracy or introduce a regional terrain dataset under this task.
+- **Observer:** fixed at the selected coordinates, 1.70 m above the available mesh; use the model-derived radial height for new ephemerides and the surface camera. Where no mesh exists, preserve and label the reference-sphere observer rather than inventing ground height. Historical saved samples retain their original observer.
+- **Display:** two explicit modes, direct solar without artistic fill and illustrative with labeled fill/locator overlays. Direct solar is the initial mode; it is not a radiometric or operational forecast.
+- **Compatibility:** preserve D-020 duplicate-update semantics, playback and search behavior. Search and live ephemerides share the revised observer height. Published meshes remain unchanged; curvature is applied at load time. Frame residuals, finite mesh/shadow resolution and missing regional relief remain limitations.
+- **Evidence and implementation:** `docs/LUNAR_LIGHTING_CORRECTION.md` and `docs/LUNAR_GEOMETRY_LIGHTING_AUDIT.md`.
+
 ## Pendientes
 - [x] Inscripción y acceso de los tres integrantes al repositorio, confirmados por el usuario.
 - [x] Stack base, responsable de backend, idioma predeterminado e inglés seleccionable, alojamiento previsto y tope de DeepSeek acordados.

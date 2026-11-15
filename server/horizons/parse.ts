@@ -118,7 +118,14 @@ export function parseObserverPayload(payload: unknown, body: BodyId): ParseResul
     if (!NUMBER_PATTERN.test(raw)) {
       return { code: 'UPSTREAM_FORMAT', detail: `column "${name}" has non-numeric value "${raw}"` };
     }
-    return Number(raw);
+    const value = Number(raw);
+    if (!Number.isFinite(value)
+      || (name === COLUMN.azimuth && (value < 0 || value > 360))
+      || (name === COLUMN.elevation && Math.abs(value) > 90)
+      || ((name === COLUMN.angularDiameter || name === COLUMN.range) && value <= 0)) {
+      return { code: 'UPSTREAM_FORMAT', detail: `column "${name}" has out-of-domain value "${raw}"` };
+    }
+    return value;
   };
 
   const azimuthDeg = read(COLUMN.azimuth, true);
@@ -205,7 +212,13 @@ export function parseObserverSeries(payload: unknown, body: BodyId): SeriesParse
     for (const index of [azimuthIndex, elevationIndex]) {
       const cell = cells[index]?.trim() ?? '';
       if (cell === 'n.a.') values.push(null);
-      else if (NUMBER_PATTERN.test(cell)) values.push(Number(cell));
+      else if (NUMBER_PATTERN.test(cell)) {
+        const value = Number(cell);
+        if (!Number.isFinite(value) || (index === azimuthIndex ? value < 0 || value > 360 : Math.abs(value) > 90)) {
+          return formatError(`column "${header[index] ?? ''}" has out-of-domain value "${cell}"`);
+        }
+        values.push(value);
+      }
       else return formatError(`column "${header[index] ?? ''}" has non-numeric value "${cell}"`);
     }
     times.push(time);
@@ -226,7 +239,10 @@ export function parseRowTime(cell: string): string | null {
   if (month === undefined) return null;
   const trimmedFraction = fraction.replace(/0+$/, '');
   const fractionPart = trimmedFraction === '' ? '' : `.${trimmedFraction}`;
-  return `${year}-${month}-${day}T${hour}:${minute}:${second}${fractionPart}Z`;
+  const iso = `${year}-${month}-${day}T${hour}:${minute}:${second}${fractionPart}Z`;
+  const date = new Date(iso);
+  if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 19) !== iso.slice(0, 19)) return null;
+  return iso;
 }
 
 function readSignatureVersion(signature: unknown): string | null {

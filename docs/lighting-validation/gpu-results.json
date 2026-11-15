@@ -1,0 +1,468 @@
+{
+  "ordinary": {
+    "blocked": [
+      0,
+      0,
+      0,
+      255
+    ],
+    "clear": [
+      187,
+      187,
+      187,
+      255
+    ],
+    "sourceIntensity": 3.2,
+    "programs": 2
+  },
+  "eclipse": {
+    "blocked": [
+      0,
+      0,
+      0,
+      255
+    ],
+    "clear": [
+      0,
+      0,
+      0,
+      255
+    ],
+    "sourceIntensity": 0,
+    "programs": 2
+  },
+  "fill": {
+    "blocked": [
+      86,
+      86,
+      86,
+      255
+    ],
+    "clear": [
+      86,
+      86,
+      86,
+      255
+    ],
+    "sourceIntensity": 0,
+    "programs": 2
+  },
+  "contacts": [
+    {
+      "elevation": -0.3,
+      "pixel": [
+        0,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "elevation": -0.269127083,
+      "pixel": [
+        0,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "elevation": -0.268,
+      "pixel": [
+        0,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "elevation": -0.259932,
+      "pixel": [
+        6,
+        6,
+        6,
+        255
+      ]
+    },
+    {
+      "elevation": 0,
+      "pixel": [
+        188,
+        188,
+        188,
+        255
+      ]
+    },
+    {
+      "elevation": 0.269127083,
+      "pixel": [
+        254,
+        254,
+        254,
+        255
+      ]
+    },
+    {
+      "elevation": 0.3,
+      "pixel": [
+        254,
+        254,
+        254,
+        255
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "id": "apollo-11",
+      "ground": -0.000012085263733752072,
+      "mapMetersPerTexel": 0.5568866829083755,
+      "renderMs": 1312.9000000059605,
+      "programs": 2
+    },
+    {
+      "id": "nobile-rim-1",
+      "ground": -0.000003606168320402503,
+      "mapMetersPerTexel": 4.903236926636725,
+      "renderMs": 1158.7000000029802,
+      "programs": 2
+    },
+    {
+      "id": "nobile-rim-2",
+      "ground": -0.0000011765368981286883,
+      "mapMetersPerTexel": 4.7549386872484884,
+      "renderMs": 1047.5,
+      "programs": 2
+    },
+    {
+      "id": "shackleton-rim",
+      "ground": -0.0000035484263207763433,
+      "mapMetersPerTexel": 4.028758325696561,
+      "renderMs": 1021.1000000014901,
+      "programs": 2
+    },
+    {
+      "id": "amundsen-rim",
+      "ground": -0.000003174034645780921,
+      "mapMetersPerTexel": 4.4553861666752725,
+      "renderMs": 1141.2999999970198,
+      "programs": 2
+    },
+    {
+      "id": "haworth",
+      "ground": -0.0000031331583159044385,
+      "mapMetersPerTexel": 5.902045623718794,
+      "renderMs": 1178,
+      "programs": 2
+    },
+    {
+      "id": "shoemaker-rim-a",
+      "ground": -0.0000032545067369937897,
+      "mapMetersPerTexel": 4.982755988469533,
+      "renderMs": 1096,
+      "programs": 2
+    },
+    {
+      "id": "faustini-rim-a",
+      "ground": 0.000001620952389203012,
+      "mapMetersPerTexel": 4.178316803560976,
+      "renderMs": 2164.8000000044703,
+      "programs": 2
+    },
+    {
+      "id": "cabeus-exterior-wall-1",
+      "ground": -0.000003429086063988507,
+      "mapMetersPerTexel": 6.106798673006676,
+      "renderMs": 1845.5,
+      "programs": 2
+    },
+    {
+      "id": "malapert-crater-1",
+      "ground": -0.000003576729795895517,
+      "mapMetersPerTexel": 7.822060783305959,
+      "renderMs": 1033.6000000014901,
+      "programs": 2
+    }
+  ],
+  "probes": [
+    {
+      "id": "nobile-rim-1",
+      "ground": -0.000003606168320402503,
+      "mapMetersPerTexel": 4.903236926636725,
+      "renderMs": 26.80000000447035,
+      "programs": 2,
+      "shadowPixel": [
+        180,
+        180,
+        180,
+        255
+      ],
+      "unblockedPixel": [
+        254,
+        254,
+        254,
+        255
+      ],
+      "centerRayHitM": 4477.502819697893,
+      "rayConvergence": [
+        {
+          "count": 128,
+          "fraction": 0.484375
+        },
+        {
+          "count": 256,
+          "fraction": 0.49609375
+        },
+        {
+          "count": 1024,
+          "fraction": 0.4921875
+        }
+      ],
+      "meshDiskFraction": 0.4921875,
+      "gpuDiskFraction": 0.46050858383763976,
+      "absoluteDifference": 0.03167891616236024
+    },
+    {
+      "id": "nobile-rim-2",
+      "ground": -0.0000011765368981286883,
+      "mapMetersPerTexel": 4.7549386872484884,
+      "renderMs": 35.30000000447035,
+      "programs": 2,
+      "shadowPixel": [
+        0,
+        0,
+        0,
+        255
+      ],
+      "unblockedPixel": [
+        254,
+        254,
+        254,
+        255
+      ],
+      "centerRayHitM": 6171.382191222207,
+      "rayConvergence": [
+        {
+          "count": 128,
+          "fraction": 0.0078125
+        },
+        {
+          "count": 256,
+          "fraction": 0.00390625
+        },
+        {
+          "count": 1024,
+          "fraction": 0.0068359375
+        }
+      ],
+      "meshDiskFraction": 0.0068359375,
+      "gpuDiskFraction": 0,
+      "absoluteDifference": 0.0068359375
+    },
+    {
+      "id": "shackleton-rim",
+      "ground": -0.0000035484263207763433,
+      "mapMetersPerTexel": 4.028758325696561,
+      "renderMs": 45.899999998509884,
+      "programs": 3,
+      "shadowPixel": [
+        0,
+        0,
+        0,
+        255
+      ],
+      "unblockedPixel": [
+        254,
+        254,
+        254,
+        255
+      ],
+      "centerRayHitM": 7.063783236570004,
+      "rayConvergence": [
+        {
+          "count": 256,
+          "fraction": 0
+        }
+      ],
+      "meshDiskFraction": 0,
+      "gpuDiskFraction": 0,
+      "absoluteDifference": 0
+    },
+    {
+      "id": "amundsen-rim",
+      "ground": -0.000003174034645780921,
+      "mapMetersPerTexel": 4.4553861666752725,
+      "renderMs": 45.600000001490116,
+      "programs": 2,
+      "shadowPixel": [
+        0,
+        0,
+        0,
+        255
+      ],
+      "unblockedPixel": [
+        254,
+        254,
+        254,
+        255
+      ],
+      "centerRayHitM": 7.7089831314821655,
+      "rayConvergence": [
+        {
+          "count": 256,
+          "fraction": 0
+        }
+      ],
+      "meshDiskFraction": 0,
+      "gpuDiskFraction": 0,
+      "absoluteDifference": 0
+    },
+    {
+      "id": "haworth",
+      "ground": -0.0000031331583159044385,
+      "mapMetersPerTexel": 5.902045623718794,
+      "renderMs": 36.20000000298023,
+      "programs": 2,
+      "shadowPixel": [
+        0,
+        0,
+        0,
+        255
+      ],
+      "unblockedPixel": [
+        254,
+        254,
+        254,
+        255
+      ],
+      "centerRayHitM": 23.276635692363076,
+      "rayConvergence": [
+        {
+          "count": 256,
+          "fraction": 0
+        }
+      ],
+      "meshDiskFraction": 0,
+      "gpuDiskFraction": 0,
+      "absoluteDifference": 0
+    },
+    {
+      "id": "shoemaker-rim-a",
+      "ground": -0.0000032545067369937897,
+      "mapMetersPerTexel": 4.982755988469533,
+      "renderMs": 38,
+      "programs": 2,
+      "shadowPixel": [
+        0,
+        0,
+        0,
+        255
+      ],
+      "unblockedPixel": [
+        254,
+        254,
+        254,
+        255
+      ],
+      "centerRayHitM": 45.38337397239347,
+      "rayConvergence": [
+        {
+          "count": 256,
+          "fraction": 0
+        }
+      ],
+      "meshDiskFraction": 0,
+      "gpuDiskFraction": 0,
+      "absoluteDifference": 0
+    },
+    {
+      "id": "faustini-rim-a",
+      "ground": 0.000001620952389203012,
+      "mapMetersPerTexel": 4.178316803560976,
+      "renderMs": 47.399999998509884,
+      "programs": 3,
+      "shadowPixel": [
+        0,
+        0,
+        0,
+        255
+      ],
+      "unblockedPixel": [
+        254,
+        254,
+        254,
+        255
+      ],
+      "centerRayHitM": 243.09170195451875,
+      "rayConvergence": [
+        {
+          "count": 256,
+          "fraction": 0
+        }
+      ],
+      "meshDiskFraction": 0,
+      "gpuDiskFraction": 0,
+      "absoluteDifference": 0
+    },
+    {
+      "id": "faustini-rim-a",
+      "ground": 0.000001620952389203012,
+      "mapMetersPerTexel": 4.178316803560976,
+      "renderMs": 33.79999999701977,
+      "programs": 2,
+      "shadowPixel": [
+        0,
+        0,
+        0,
+        255
+      ],
+      "unblockedPixel": [
+        254,
+        254,
+        254,
+        255
+      ],
+      "centerRayHitM": 40.24112868869133,
+      "rayConvergence": [
+        {
+          "count": 256,
+          "fraction": 0
+        }
+      ],
+      "meshDiskFraction": 0,
+      "gpuDiskFraction": 0,
+      "absoluteDifference": 0
+    },
+    {
+      "id": "malapert-crater-1",
+      "ground": -0.000003576729795895517,
+      "mapMetersPerTexel": 7.822060783305959,
+      "renderMs": 43.899999998509884,
+      "programs": 3,
+      "shadowPixel": [
+        0,
+        0,
+        0,
+        255
+      ],
+      "unblockedPixel": [
+        254,
+        254,
+        254,
+        255
+      ],
+      "centerRayHitM": 21.019836931121088,
+      "rayConvergence": [
+        {
+          "count": 256,
+          "fraction": 0
+        }
+      ],
+      "meshDiskFraction": 0,
+      "gpuDiskFraction": 0,
+      "absoluteDifference": 0
+    }
+  ],
+  "errors": [],
+  "note": "Synthetic directions exercise rendering, not fresh surface ephemerides or validated terrain illumination. Probe fractions compare GPU integration with 256/1024 actual mesh rays, not observations."
+}

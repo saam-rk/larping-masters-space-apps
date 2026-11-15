@@ -43,7 +43,7 @@ import { CUSTOM_SITE_ID, type ObserverSite } from '../../shared/sites.js';
 import { parseUtcInstant, SUPPORTED_UTC_RANGE, toUtcIsoSeconds } from '../../shared/time.js';
 import { parseSiteQuery } from '../ephemeris/handler.js';
 import { TtlCache } from '../ephemeris/cache.js';
-import { SITE_ALTITUDE_KM } from '../ephemeris/service.js';
+import { observerAltitudeKm } from '../../shared/observer.js';
 import type { HorizonsClientOptions } from '../horizons/client.js';
 import { HORIZONS_API_URL, SEARCH_QUANTITIES } from '../horizons/query.js';
 import { errorResponse, jsonResponse } from '../http.js';
@@ -165,7 +165,7 @@ export async function runSkySearch(query: SkySearchQuery, options: SkySearchServ
 
   const bodies: BodyId[] = BODY_IDS.filter((body) => activeTargets(conditions).some((target) => SKY_TARGET_INFO[target].bodies.includes(body)));
   const sampler = createHorizonsSampler(
-    { latitudeDeg: site.latitudeDeg, longitudeEastDeg: site.longitudeEastDeg, altitudeKm: SITE_ALTITUDE_KM },
+    { latitudeDeg: site.latitudeDeg, longitudeEastDeg: site.longitudeEastDeg, altitudeKm: observerAltitudeKm(site) },
     bodies,
     options.horizons,
     signal,
@@ -199,7 +199,7 @@ export async function runSkySearch(query: SkySearchQuery, options: SkySearchServ
       name: site.name,
       latitudeDeg: site.latitudeDeg,
       longitudeEastDeg: site.longitudeEastDeg,
-      altitudeKm: SITE_ALTITUDE_KM,
+      altitudeKm: observerAltitudeKm(site),
       source: site.source,
     },
     referenceUtc,

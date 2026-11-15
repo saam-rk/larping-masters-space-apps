@@ -61,7 +61,8 @@ export function placeBodies(data: EphemerisResponse): PlacedBodies {
     const observation = result.status === 'ok' ? result.observation : null;
     const az = observation?.azimuthDeg ?? null;
     const el = observation?.elevationDeg ?? null;
-    if (observation === null || az === null || el === null) {
+    if (observation === null || az === null || el === null || !Number.isFinite(az) || !Number.isFinite(el)
+      || az < 0 || az > 360 || Math.abs(el) > 90) {
       missing.push(body);
       continue;
     }

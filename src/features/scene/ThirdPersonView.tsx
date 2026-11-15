@@ -7,12 +7,12 @@
  * results panel, with radii from the Horizons angular diameter.
  *
  * Scene frame as in `geometry.ts` (-Z north, +X east, +Y up at the site);
- * the observer is the origin and the Moon center is at (0, -R, 0). The
+ * the observer is the origin and the Moon center is at (0, -R-altitude, 0). The
  * observer marker, the glow sprites and the horizon plane size are not to
  * scale. Moon, Earth and Sun are the GLB models of `CelestialModel`: the Moon
  * is turned so the site lies under the observer, with its coarse globe relief
- * (an appearance model, not the terrain of the site; the observer stays on the
- * reference sphere); the Earth's and the Sun's rotation are not modeled.
+ * (an appearance model, not the terrain of the site; altitude comes from the
+ * same result as the celestial directions); the Earth's and the Sun's rotation are not modeled.
  *
  * The horizon compass (plane, grid, N/E/S/W and each body's azimuth and
  * elevation guides) grows with the camera distance, so it stays a readable
@@ -25,7 +25,7 @@
 
 import { Html, Line, OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { Vector3, type Camera, type Group, type Quaternion } from 'three';
 import type { EphemerisResponse } from '../../../shared/ephemeris';
 import { useI18n } from '../../i18n/context';
@@ -65,8 +65,8 @@ function initialCamera(placed: readonly SceneBody[]): Vector3Tuple {
 }
 
 /** Pushes the camera out of the Moon when an orbit would take it inside. */
-function keepAboveSurface(camera: Camera) {
-  const center = new Vector3(...MOON_CENTER);
+function keepAboveSurface(camera: Camera, moonCenter: Vector3Tuple = MOON_CENTER) {
+  const center = new Vector3(...moonCenter);
   const offset = camera.position.clone().sub(center);
   const minimum = MOON_RADIUS_KM + MIN_CAMERA_ALTITUDE_KM;
   if (offset.length() < minimum) camera.position.copy(center.add(offset.setLength(minimum)));
@@ -212,14 +212,16 @@ function RealScaleView({
   const cameraPosition = useMemo(() => initialCamera(bodies.placed), [bodies.placed]);
   const sun = bodies.placed.find((body) => body.body === 'sun');
   const { latitudeDeg, longitudeEastDeg } = data.site;
+  const moonCenter = useMemo<Vector3Tuple>(() => [0, -MOON_RADIUS_KM - data.site.altitudeKm, 0], [data.site.altitudeKm]);
+  const constrain = useCallback((camera: Camera) => keepAboveSurface(camera, moonCenter), [moonCenter]);
   const moonQuaternion = useMemo(() => moonOrientation(latitudeDeg, longitudeEastDeg), [latitudeDeg, longitudeEastDeg]);
   const bodyQuaternion = useMemo(() => northAlongLunarAxis(latitudeDeg), [latitudeDeg]);
 
   // Lunar spin axis: geographic north lies at azimuth 0 and elevation = latitude.
   const north = horizontalToDirection(0, data.site.latitudeDeg);
   const axis: [Vector3Tuple, Vector3Tuple] = [
-    [MOON_CENTER[0] - north[0] * MOON_RADIUS_KM * 1.3, MOON_CENTER[1] - north[1] * MOON_RADIUS_KM * 1.3, MOON_CENTER[2] - north[2] * MOON_RADIUS_KM * 1.3],
-    [MOON_CENTER[0] + north[0] * MOON_RADIUS_KM * 1.3, MOON_CENTER[1] + north[1] * MOON_RADIUS_KM * 1.3, MOON_CENTER[2] + north[2] * MOON_RADIUS_KM * 1.3],
+    [moonCenter[0] - north[0] * MOON_RADIUS_KM * 1.3, moonCenter[1] - north[1] * MOON_RADIUS_KM * 1.3, moonCenter[2] - north[2] * MOON_RADIUS_KM * 1.3],
+    [moonCenter[0] + north[0] * MOON_RADIUS_KM * 1.3, moonCenter[1] + north[1] * MOON_RADIUS_KM * 1.3, moonCenter[2] + north[2] * MOON_RADIUS_KM * 1.3],
   ];
 
   return (
@@ -235,7 +237,7 @@ function RealScaleView({
         body="moon"
         radius={MOON_RADIUS_KM}
         quaternion={moonQuaternion}
-        position={MOON_CENTER}
+        position={moonCenter}
         fallback={
           <mesh>
             <sphereGeometry args={[MOON_RADIUS_KM, 128, 64]} />
@@ -244,7 +246,7 @@ function RealScaleView({
         }
       />
       <Line points={axis} color="#6f7d70" lineWidth={1} transparent opacity={0.6} />
-      <Html position={MOON_CENTER} center className="scene__label scene__label--muted">
+      <Html position={moonCenter} center className="scene__label scene__label--muted">
         {messages.scene.moon}
       </Html>
 
@@ -264,7 +266,7 @@ function RealScaleView({
         maxDistance={MAX_CAMERA_DISTANCE_KM}
         zoomSpeed={1.4}
         onChange={(event) => {
-          if (event) keepAboveSurface(event.target.object);
+          if (event) constrain(event.target.object);
         }}
       />
       <OrbitZoom
@@ -272,7 +274,7 @@ function RealScaleView({
         onZoomChange={controls.onZoomChange}
         distanceForLevel={distanceForLevel}
         levelForDistance={levelForDistance}
-        constrain={keepAboveSurface}
+        constrain={constrain}
       />
       {/* After the controls, so it sizes the compass from this frame's camera. */}
       {controls.showHorizon && <HorizonCompass bodies={bodies.placed} />}

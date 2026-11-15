@@ -4,6 +4,7 @@
  */
 
 import type { ApiError } from '../../shared/ephemeris.js';
+import { observerHeaderError } from './observerHeader.js';
 import { parseObserverPayload, parseObserverSeries, type ParsedObserverSeries, type ParsedObserverTable } from './parse.js';
 import { buildObserverRangeUrl, buildObserverUrl, HORIZONS_API_URL, type ObserverQuery, type ObserverRangeQuery } from './query.js';
 
@@ -33,6 +34,10 @@ export async function fetchObserverTable(
   if (!fetched.ok) return fetched;
   const parsed = parseObserverPayload(fetched.payload, query.body);
   if (!parsed.ok) return parsed;
+  const metadataError = observerHeaderError(fetched.payload, query);
+  if (metadataError || Date.parse(parsed.table.ephemerisUtc) !== query.instant.getTime()) {
+    return { ok: false, error: { code: 'UPSTREAM_FORMAT', detail: metadataError ?? 'Returned epoch does not match request' } };
+  }
   return { ok: true, table: parsed.table, retrievedAt: fetched.retrievedAt, url };
 }
 

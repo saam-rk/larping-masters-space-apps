@@ -2,9 +2,8 @@
  * 3D local horizon. Two views read the same Sun/Earth placement
  * (`placeBodies`, from the azimuth/elevation shown in the results panel):
  *
- * - `first-person`: the Apollo 11 surface reenactment, or eye level next to a
- *   1.70 m astronaut on the LOLA terrain of Nobile Rim 1, Nobile Rim 2,
- *   Shackleton Rim, Amundsen Rim, Haworth, Shoemaker Rim A or Faustini Rim A
+ * - `first-person`: fixed selected-coordinate observer 1.70 m above a curved
+ *   LROC/LOLA mesh, with explicit direct-solar and illustrative lighting modes
  *   (only where a terrain model exists, see `terrain/models.ts`).
  * - `third-person`: at visual scale (default), a schematic sky dome with the
  *   true directions and labeled azimuth/elevation guides; at real scale,
@@ -31,6 +30,8 @@ import { AngleLegend } from './AngleLegend';
 import { elevationExaggeration } from './angles';
 import { placeBodies } from './bodies';
 import { FirstPersonView } from './FirstPersonView';
+import type { LightingMode } from './SurfaceLighting';
+import { solarLightingState, surfaceSnapshotReady } from './solarExposure';
 import { HorizonCountdown } from './HorizonCountdown';
 import { ScaleToggle } from './ScaleToggle';
 import { DEFAULT_SCENE_SCALE, type SceneScale } from './sceneScale';
@@ -77,6 +78,7 @@ export default function SkyScene({
   const { messages, locale } = useI18n();
   const bodies = useMemo(() => placeBodies(data), [data]);
   const [scale, setScale] = useState<SceneScale>(DEFAULT_SCENE_SCALE);
+  const [lightingMode, setLightingMode] = useState<LightingMode>('direct');
   const visual = mode === 'third-person' && scale === 'visual';
   const apollo = mode === 'first-person' && data.site.id === APOLLO_11_SITE_ID;
   const zoomKey: ZoomKey = apollo ? 'apollo-11' : mode === 'first-person' ? 'first-person' : `third-person-${scale}`;
@@ -86,7 +88,8 @@ export default function SkyScene({
     (level: number) => setZoomByKey((current) => (current[zoomKey] === level ? current : { ...current, [zoomKey]: level })),
     [zoomKey],
   );
-  const controls = { zoom, onZoomChange: setZoom, showHorizon, scale, animateReenactment };
+  const controls = { zoom, onZoomChange: setZoom, showHorizon, scale, animateReenactment, lightingMode };
+  const solarReady = surfaceSnapshotReady(data) && solarLightingState(bodies.placed).known;
   const zoomText =
     mode === 'first-person'
       ? apollo
@@ -112,7 +115,7 @@ export default function SkyScene({
         Renders on demand (controls invalidate on change), not every frame.
         The logarithmic depth buffer covers meters to astronomical distances.
       */}
-      <Canvas frameloop="demand" dpr={[1, 1.5]} shadows={apollo ? 'percentage' : false} gl={{ logarithmicDepthBuffer: true }}>
+      <Canvas frameloop="demand" dpr={[1, 1.5]} shadows={mode === 'first-person' ? 'basic' : false} gl={{ logarithmicDepthBuffer: true }}>
         <color attach="background" args={['#000000']} />
         {!apollo && <StarSphere />}
         {mode === 'first-person' ? (
@@ -124,6 +127,11 @@ export default function SkyScene({
 
       <div className="scene__notes">
         <p className="scene__note">{note}</p>
+        {mode === 'first-person' && <>
+          <p className="scene__note">{messages.scene.lighting.observer(data.site.altitudeKm.toLocaleString(locale, { maximumFractionDigits: 6 }))}</p>
+          <p className="scene__note scene__note--warning">{messages.scene.lighting.limits}</p>
+          {!solarReady && <p className="scene__note scene__note--warning">{messages.scene.lighting.unavailable}</p>}
+        </>}
         {nominal.map(({ body }) => (
           <p key={body} className="scene__note scene__note--warning">
             {messages.scene.nominal(messages.bodies[body])}
@@ -137,6 +145,18 @@ export default function SkyScene({
       </div>
 
       {!playback && <HorizonCountdown data={data} bodies={bodies} paused={busy} />}
+
+      {mode === 'first-person' && <div className="scene__overlay">
+        <div className="scale-toggle" role="group" aria-label={messages.scene.lighting.label}>
+          <span className="scale-toggle__label">{messages.scene.lighting.label}</span>
+          <div className="view-toggle">
+            {(['direct', 'illustrative'] as const).map((option) => <button key={option} type="button"
+              className="view-toggle__option" aria-pressed={lightingMode === option} onClick={() => setLightingMode(option)}>
+              {messages.scene.lighting[option]}
+            </button>)}
+          </div>
+        </div>
+      </div>}
 
       {mode === 'third-person' && (
         <div className="scene__overlay">

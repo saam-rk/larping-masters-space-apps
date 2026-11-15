@@ -86,7 +86,9 @@ export interface EphemerisSite {
   readonly name: string;
   readonly latitudeDeg: number;
   readonly longitudeEastDeg: number;
-  /** Observer height used in the query. 0 km on the Horizons reference sphere, not measured terrain. */
+  /** Query height above the 1737.4 km sphere: mesh ground + 1.7 m at covered sites;
+   * otherwise explicit reference-sphere height 0, not an invented terrain elevation.
+   * Historical saved samples retain their original altitude. */
   readonly altitudeKm: number;
   /** Publication of the coordinates; `null` for user-entered coordinates. */
   readonly source: DataSource | null;

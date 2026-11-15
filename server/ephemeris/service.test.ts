@@ -4,6 +4,7 @@ import { TtlCache } from './cache.js';
 import { computeEphemeris } from './service.js';
 import { fixtureFetch } from './testing.js';
 import type { EphemerisResponse } from '../../shared/ephemeris.js';
+import { observerAltitudeKm } from '../../shared/observer.js';
 
 const NOBILE = findSite('nobile-rim-1');
 const INSTANT = new Date('2026-11-14T12:00:00Z');
@@ -18,7 +19,11 @@ describe('computeEphemeris', () => {
     expect(response.provenance).toBe('live');
     expect(response.requestedUtc).toBe('2026-11-14T12:00:00Z');
     expect(response.ephemerisUtc).toBe('2026-11-14T12:00:00Z');
-    expect(response.site).toMatchObject({ id: 'nobile-rim-1', altitudeKm: 0 });
+    expect(response.site).toMatchObject({ id: 'nobile-rim-1', altitudeKm: observerAltitudeKm(NOBILE) });
+    // Fixture angles test assembly, not scientific validation at the new height.
+    for (const url of fetch.calls) {
+      expect(new URL(url).searchParams.get('SITE_COORD')).toContain(String(observerAltitudeKm(NOBILE)));
+    }
     expect(response.bodies.sun).toMatchObject({ status: 'ok', observation: { azimuthDeg: 83.301542 } });
     expect(response.bodies.earth).toMatchObject({ status: 'ok', observation: { elevationDeg: -0.587903 } });
     expect(response.source).toEqual({

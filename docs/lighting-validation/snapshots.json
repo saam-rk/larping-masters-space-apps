@@ -1,0 +1,951 @@
+[
+  {
+    "provenance": "live",
+    "site": {
+      "id": "apollo-11",
+      "name": "Apollo 11",
+      "latitudeDeg": 0.67416,
+      "longitudeEastDeg": 23.47314,
+      "altitudeKm": -1.9257377441405668,
+      "source": {
+        "name": "NASA/NSSDCA Apollo Landing Site Coordinates",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html",
+        "locator": "Apollo 11 · Lunar Module"
+      }
+    },
+    "requestedUtc": "2026-11-14T12:00:00Z",
+    "ephemerisUtc": "2026-11-14T12:00:00Z",
+    "bodies": {
+      "sun": {
+        "status": "ok",
+        "observation": {
+          "body": "sun",
+          "targetName": "Sun (10)",
+          "azimuthDeg": 91.485714,
+          "elevationDeg": -7.066568,
+          "angularDiameterArcsec": 1941.821,
+          "rangeAu": 0.98797065521929,
+          "rangeRateKmPerS": 0.345501,
+          "markers": {
+            "solarPresence": " ",
+            "interferingBodyPresence": "i"
+          },
+          "interferingBody": "EARTH"
+        }
+      },
+      "earth": {
+        "status": "ok",
+        "observation": {
+          "body": "earth",
+          "targetName": "Earth (399)",
+          "azimuthDeg": 277.58718,
+          "elevationDeg": 64.319953,
+          "angularDiameterArcsec": 6517.734,
+          "rangeAu": 0.00269863998573,
+          "rangeRateKmPerS": -0.0094736,
+          "markers": {
+            "solarPresence": " ",
+            "interferingBodyPresence": "i"
+          },
+          "interferingBody": "EARTH"
+        }
+      }
+    },
+    "source": {
+      "name": "NASA/JPL Horizons API",
+      "url": "https://ssd.jpl.nasa.gov/api/horizons.api",
+      "apiVersion": "1.2",
+      "planetaryEphemeris": "DE441",
+      "observerFrame": "MEAN_ME (high precision)",
+      "retrievedAt": "2026-11-15T05:57:07.031Z"
+    },
+    "method": {
+      "ephemerisType": "OBSERVER",
+      "quantities": [
+        4,
+        13,
+        20
+      ],
+      "refraction": "AIRLESS",
+      "timeScale": "UT",
+      "terrainModeled": false
+    },
+    "warnings": []
+  },
+  {
+    "provenance": "live",
+    "site": {
+      "id": "nobile-rim-1",
+      "name": "Nobile Rim 1",
+      "latitudeDeg": -85.4381,
+      "longitudeEastDeg": 37.36667,
+      "altitudeKm": 5.948594583940287,
+      "source": {
+        "name": "NASA Lunar Surface Data Book (M2M-30044)",
+        "url": "https://ntrs.nasa.gov/api/citations/20250002845/downloads/M2M-30044%20Lunar%20Surface%20Data%20Book%20Baseline_Final.pdf?attachment=true",
+        "locator": "Table A2.1-1"
+      }
+    },
+    "requestedUtc": "2026-11-14T12:00:00Z",
+    "ephemerisUtc": "2026-11-14T12:00:00Z",
+    "bodies": {
+      "sun": {
+        "status": "ok",
+        "observation": {
+          "body": "sun",
+          "targetName": "Sun (10)",
+          "azimuthDeg": 83.301542,
+          "elevationDeg": 2.09472,
+          "angularDiameterArcsec": 1941.825,
+          "rangeAu": 0.98796880103629,
+          "rangeRateKmPerS": 0.3494003,
+          "markers": {
+            "solarPresence": "*",
+            "interferingBodyPresence": "i"
+          },
+          "interferingBody": "EARTH"
+        }
+      },
+      "earth": {
+        "status": "ok",
+        "observation": {
+          "body": "earth",
+          "targetName": "Earth (399)",
+          "azimuthDeg": 320.816668,
+          "elevationDeg": -0.588744,
+          "angularDiameterArcsec": 6492.343,
+          "rangeAu": 0.00270919336381,
+          "rangeRateKmPerS": -0.0100262,
+          "markers": {
+            "solarPresence": "*",
+            "interferingBodyPresence": "i"
+          },
+          "interferingBody": "EARTH"
+        }
+      }
+    },
+    "source": {
+      "name": "NASA/JPL Horizons API",
+      "url": "https://ssd.jpl.nasa.gov/api/horizons.api",
+      "apiVersion": "1.2",
+      "planetaryEphemeris": "DE441",
+      "observerFrame": "MEAN_ME (high precision)",
+      "retrievedAt": "2026-11-15T05:57:07.526Z"
+    },
+    "method": {
+      "ephemerisType": "OBSERVER",
+      "quantities": [
+        4,
+        13,
+        20
+      ],
+      "refraction": "AIRLESS",
+      "timeScale": "UT",
+      "terrainModeled": false
+    },
+    "warnings": []
+  },
+  {
+    "provenance": "live",
+    "site": {
+      "id": "nobile-rim-2",
+      "name": "Nobile Rim 2",
+      "latitudeDeg": -83.954,
+      "longitudeEastDeg": 58.82206,
+      "altitudeKm": 1.0113510832457717,
+      "source": {
+        "name": "NASA Lunar Surface Data Book (M2M-30044)",
+        "url": "https://ntrs.nasa.gov/api/citations/20250002845/downloads/M2M-30044%20Lunar%20Surface%20Data%20Book%20Baseline_Final.pdf?attachment=true",
+        "locator": "Table A2.1-1"
+      }
+    },
+    "requestedUtc": "2026-11-14T12:00:00Z",
+    "ephemerisUtc": "2026-11-14T12:00:00Z",
+    "bodies": {
+      "sun": {
+        "status": "ok",
+        "observation": {
+          "body": "sun",
+          "targetName": "Sun (10)",
+          "azimuthDeg": 61.979835,
+          "elevationDeg": 4.411932,
+          "angularDiameterArcsec": 1941.826,
+          "rangeAu": 0.98796833307817,
+          "rangeRateKmPerS": 0.3493423,
+          "markers": {
+            "solarPresence": "*",
+            "interferingBodyPresence": "i"
+          },
+          "interferingBody": "EARTH"
+        }
+      },
+      "earth": {
+        "status": "ok",
+        "observation": {
+          "body": "earth",
+          "targetName": "Earth (399)",
+          "azimuthDeg": 299.475344,
+          "elevationDeg": -1.155244,
+          "angularDiameterArcsec": 6492.068,
+          "rangeAu": 0.00270930807097,
+          "rangeRateKmPerS": -0.0100037,
+          "markers": {
+            "solarPresence": "*",
+            "interferingBodyPresence": "i"
+          },
+          "interferingBody": "EARTH"
+        }
+      }
+    },
+    "source": {
+      "name": "NASA/JPL Horizons API",
+      "url": "https://ssd.jpl.nasa.gov/api/horizons.api",
+      "apiVersion": "1.2",
+      "planetaryEphemeris": "DE441",
+      "observerFrame": "MEAN_ME (high precision)",
+      "retrievedAt": "2026-11-15T05:57:08.041Z"
+    },
+    "method": {
+      "ephemerisType": "OBSERVER",
+      "quantities": [
+        4,
+        13,
+        20
+      ],
+      "refraction": "AIRLESS",
+      "timeScale": "UT",
+      "terrainModeled": false
+    },
+    "warnings": []
+  },
+  {
+    "provenance": "live",
+    "site": {
+      "id": "shackleton-rim",
+      "name": "Shackleton Rim",
+      "latitudeDeg": -89.7668,
+      "longitudeEastDeg": -171.87,
+      "altitudeKm": 0.7714190851179767,
+      "source": {
+        "name": "NASA Lunar Surface Data Book (M2M-30044)",
+        "url": "https://ntrs.nasa.gov/api/citations/20250002845/downloads/M2M-30044%20Lunar%20Surface%20Data%20Book%20Baseline_Final.pdf?attachment=true",
+        "locator": "Table A2.1-1"
+      }
+    },
+    "requestedUtc": "2026-11-14T12:00:00Z",
+    "ephemerisUtc": "2026-11-14T12:00:00Z",
+    "bodies": {
+      "sun": {
+        "status": "ok",
+        "observation": {
+          "body": "sun",
+          "targetName": "Sun (10)",
+          "azimuthDeg": 292.387658,
+          "elevationDeg": 1.645439,
+          "angularDiameterArcsec": 1941.825,
+          "rangeAu": 0.98796889326689,
+          "rangeRateKmPerS": 0.3497551,
+          "markers": {
+            "solarPresence": "*",
+            "interferingBodyPresence": " "
+          },
+          "interferingBody": "EARTH"
+        }
+      },
+      "earth": {
+        "status": "ok",
+        "observation": {
+          "body": "earth",
+          "targetName": "Earth (399)",
+          "azimuthDeg": 169.944161,
+          "elevationDeg": -4.351066,
+          "angularDiameterArcsec": 6490.517,
+          "rangeAu": 0.00270995531464,
+          "rangeRateKmPerS": -0.0100495,
+          "markers": {
+            "solarPresence": "*",
+            "interferingBodyPresence": " "
+          },
+          "interferingBody": "EARTH"
+        }
+      }
+    },
+    "source": {
+      "name": "NASA/JPL Horizons API",
+      "url": "https://ssd.jpl.nasa.gov/api/horizons.api",
+      "apiVersion": "1.2",
+      "planetaryEphemeris": "DE441",
+      "observerFrame": "MEAN_ME (high precision)",
+      "retrievedAt": "2026-11-15T05:57:08.558Z"
+    },
+    "method": {
+      "ephemerisType": "OBSERVER",
+      "quantities": [
+        4,
+        13,
+        20
+      ],
+      "refraction": "AIRLESS",
+      "timeScale": "UT",
+      "terrainModeled": false
+    },
+    "warnings": []
+  },
+  {
+    "provenance": "live",
+    "site": {
+      "id": "amundsen-rim",
+      "name": "Amundsen Rim",
+      "latitudeDeg": -84.2287,
+      "longitudeEastDeg": 69.44396,
+      "altitudeKm": 0.4011530260130268,
+      "source": {
+        "name": "NASA Lunar Surface Data Book (M2M-30044)",
+        "url": "https://ntrs.nasa.gov/api/citations/20250002845/downloads/M2M-30044%20Lunar%20Surface%20Data%20Book%20Baseline_Final.pdf?attachment=true",
+        "locator": "Table A2.1-1"
+      }
+    },
+    "requestedUtc": "2026-11-14T12:00:00Z",
+    "ephemerisUtc": "2026-11-14T12:00:00Z",
+    "bodies": {
+      "sun": {
+        "status": "ok",
+        "observation": {
+          "body": "sun",
+          "targetName": "Sun (10)",
+          "azimuthDeg": 51.344529,
+          "elevationDeg": 5.173846,
+          "angularDiameterArcsec": 1941.826,
+          "rangeAu": 0.98796817944186,
+          "rangeRateKmPerS": 0.3494044,
+          "markers": {
+            "solarPresence": "*",
+            "interferingBodyPresence": " "
+          },
+          "interferingBody": "EARTH"
+        }
+      },
+      "earth": {
+        "status": "ok",
+        "observation": {
+          "body": "earth",
+          "targetName": "Earth (399)",
+          "azimuthDeg": 288.914585,
+          "elevationDeg": -2.263102,
+          "angularDiameterArcsec": 6491.53,
+          "rangeAu": 0.00270953252835,
+          "rangeRateKmPerS": -0.0100015,
+          "markers": {
+            "solarPresence": "*",
+            "interferingBodyPresence": " "
+          },
+          "interferingBody": "EARTH"
+        }
+      }
+    },
+    "source": {
+      "name": "NASA/JPL Horizons API",
+      "url": "https://ssd.jpl.nasa.gov/api/horizons.api",
+      "apiVersion": "1.2",
+      "planetaryEphemeris": "DE441",
+      "observerFrame": "MEAN_ME (high precision)",
+      "retrievedAt": "2026-11-15T05:57:09.073Z"
+    },
+    "method": {
+      "ephemerisType": "OBSERVER",
+      "quantities": [
+        4,
+        13,
+        20
+      ],
+      "refraction": "AIRLESS",
+      "timeScale": "UT",
+      "terrainModeled": false
+    },
+    "warnings": []
+  },
+  {
+    "provenance": "live",
+    "site": {
+      "id": "haworth",
+      "name": "Haworth",
+      "latitudeDeg": -86.7639,
+      "longitudeEastDeg": -22.777,
+      "altitudeKm": 1.6302566890831105,
+      "source": {
+        "name": "NASA Lunar Surface Data Book (M2M-30044)",
+        "url": "https://ntrs.nasa.gov/api/citations/20250002845/downloads/M2M-30044%20Lunar%20Surface%20Data%20Book%20Baseline_Final.pdf?attachment=true",
+        "locator": "Table A2.1-1"
+      }
+    },
+    "requestedUtc": "2026-11-14T12:00:00Z",
+    "ephemerisUtc": "2026-11-14T12:00:00Z",
+    "bodies": {
+      "sun": {
+        "status": "ok",
+        "observation": {
+          "body": "sun",
+          "targetName": "Sun (10)",
+          "azimuthDeg": 143.309457,
+          "elevationDeg": -1.038435,
+          "angularDiameterArcsec": 1941.824,
+          "rangeAu": 0.98796943761697,
+          "rangeRateKmPerS": 0.3495947,
+          "markers": {
+            "solarPresence": "*",
+            "interferingBodyPresence": "i"
+          },
+          "interferingBody": "EARTH"
+        }
+      },
+      "earth": {
+        "status": "ok",
+        "observation": {
+          "body": "earth",
+          "targetName": "Earth (399)",
+          "azimuthDeg": 20.80648,
+          "elevationDeg": -1.097547,
+          "angularDiameterArcsec": 6492.096,
+          "rangeAu": 0.00270929636556,
+          "rangeRateKmPerS": -0.0100601,
+          "markers": {
+            "solarPresence": "*",
+            "interferingBodyPresence": "i"
+          },
+          "interferingBody": "EARTH"
+        }
+      }
+    },
+    "source": {
+      "name": "NASA/JPL Horizons API",
+      "url": "https://ssd.jpl.nasa.gov/api/horizons.api",
+      "apiVersion": "1.2",
+      "planetaryEphemeris": "DE441",
+      "observerFrame": "MEAN_ME (high precision)",
+      "retrievedAt": "2026-11-15T05:57:09.603Z"
+    },
+    "method": {
+      "ephemerisType": "OBSERVER",
+      "quantities": [
+        4,
+        13,
+        20
+      ],
+      "refraction": "AIRLESS",
+      "timeScale": "UT",
+      "terrainModeled": false
+    },
+    "warnings": []
+  },
+  {
+    "provenance": "live",
+    "site": {
+      "id": "shoemaker-rim-a",
+      "name": "Shoemaker Rim A",
+      "latitudeDeg": -88.0792,
+      "longitudeEastDeg": 11.88866,
+      "altitudeKm": -0.6178406944020068,
+      "source": {
+        "name": "NASA Lunar Surface Data Book (M2M-30044)",
+        "url": "https://ntrs.nasa.gov/api/citations/20250002845/downloads/M2M-30044%20Lunar%20Surface%20Data%20Book%20Baseline_Final.pdf?attachment=true",
+        "locator": "Table A2.1-1"
+      }
+    },
+    "requestedUtc": "2026-11-14T12:00:00Z",
+    "ephemerisUtc": "2026-11-14T12:00:00Z",
+    "bodies": {
+      "sun": {
+        "status": "ok",
+        "observation": {
+          "body": "sun",
+          "targetName": "Sun (10)",
+          "azimuthDeg": 108.674743,
+          "elevationDeg": 0.942157,
+          "angularDiameterArcsec": 1941.825,
+          "rangeAu": 0.98796903604115,
+          "rangeRateKmPerS": 0.3496033,
+          "markers": {
+            "solarPresence": "*",
+            "interferingBodyPresence": " "
+          },
+          "interferingBody": "EARTH"
+        }
+      },
+      "earth": {
+        "status": "ok",
+        "observation": {
+          "body": "earth",
+          "targetName": "Earth (399)",
+          "azimuthDeg": 346.211905,
+          "elevationDeg": -2.256403,
+          "angularDiameterArcsec": 6491.534,
+          "rangeAu": 0.00270953087963,
+          "rangeRateKmPerS": -0.0100457,
+          "markers": {
+            "solarPresence": "*",
+            "interferingBodyPresence": " "
+          },
+          "interferingBody": "EARTH"
+        }
+      }
+    },
+    "source": {
+      "name": "NASA/JPL Horizons API",
+      "url": "https://ssd.jpl.nasa.gov/api/horizons.api",
+      "apiVersion": "1.2",
+      "planetaryEphemeris": "DE441",
+      "observerFrame": "MEAN_ME (high precision)",
+      "retrievedAt": "2026-11-15T05:57:10.098Z"
+    },
+    "method": {
+      "ephemerisType": "OBSERVER",
+      "quantities": [
+        4,
+        13,
+        20
+      ],
+      "refraction": "AIRLESS",
+      "timeScale": "UT",
+      "terrainModeled": false
+    },
+    "warnings": []
+  },
+  {
+    "provenance": "live",
+    "site": {
+      "id": "faustini-rim-a",
+      "name": "Faustini Rim A",
+      "latitudeDeg": -87.8897,
+      "longitudeEastDeg": 90,
+      "altitudeKm": 0.04826742544703593,
+      "source": {
+        "name": "NASA Lunar Surface Data Book (M2M-30044)",
+        "url": "https://ntrs.nasa.gov/api/citations/20250002845/downloads/M2M-30044%20Lunar%20Surface%20Data%20Book%20Baseline_Final.pdf?attachment=true",
+        "locator": "Table A2.1-1"
+      }
+    },
+    "requestedUtc": "2026-11-14T12:00:00Z",
+    "ephemerisUtc": "2026-11-14T12:00:00Z",
+    "bodies": {
+      "sun": {
+        "status": "ok",
+        "observation": {
+          "body": "sun",
+          "targetName": "Sun (10)",
+          "azimuthDeg": 30.569884,
+          "elevationDeg": 3.374084,
+          "angularDiameterArcsec": 1941.826,
+          "rangeAu": 0.98796854337667,
+          "rangeRateKmPerS": 0.3496591,
+          "markers": {
+            "solarPresence": "*",
+            "interferingBodyPresence": " "
+          },
+          "interferingBody": "EARTH"
+        }
+      },
+      "earth": {
+        "status": "ok",
+        "observation": {
+          "body": "earth",
+          "targetName": "Earth (399)",
+          "azimuthDeg": 268.221198,
+          "elevationDeg": -4.189565,
+          "angularDiameterArcsec": 6490.596,
+          "rangeAu": 0.00270992233723,
+          "rangeRateKmPerS": -0.0100308,
+          "markers": {
+            "solarPresence": "*",
+            "interferingBodyPresence": " "
+          },
+          "interferingBody": "EARTH"
+        }
+      }
+    },
+    "source": {
+      "name": "NASA/JPL Horizons API",
+      "url": "https://ssd.jpl.nasa.gov/api/horizons.api",
+      "apiVersion": "1.2",
+      "planetaryEphemeris": "DE441",
+      "observerFrame": "MEAN_ME (high precision)",
+      "retrievedAt": "2026-11-15T05:57:10.597Z"
+    },
+    "method": {
+      "ephemerisType": "OBSERVER",
+      "quantities": [
+        4,
+        13,
+        20
+      ],
+      "refraction": "AIRLESS",
+      "timeScale": "UT",
+      "terrainModeled": false
+    },
+    "warnings": []
+  },
+  {
+    "provenance": "live",
+    "site": {
+      "id": "cabeus-exterior-wall-1",
+      "name": "Cabeus Exterior Wall 1",
+      "latitudeDeg": -86.9243,
+      "longitudeEastDeg": -71.5651,
+      "altitudeKm": -2.2273095984914955,
+      "source": {
+        "name": "NASA Lunar Surface Data Book (M2M-30044)",
+        "url": "https://ntrs.nasa.gov/api/citations/20250002845/downloads/M2M-30044%20Lunar%20Surface%20Data%20Book%20Baseline_Final.pdf?attachment=true",
+        "locator": "Table A2.1-1"
+      }
+    },
+    "requestedUtc": "2026-11-14T12:00:00Z",
+    "ephemerisUtc": "2026-11-14T12:00:00Z",
+    "bodies": {
+      "sun": {
+        "status": "ok",
+        "observation": {
+          "body": "sun",
+          "targetName": "Sun (10)",
+          "azimuthDeg": 192.088186,
+          "elevationDeg": -1.450919,
+          "angularDiameterArcsec": 1941.824,
+          "rangeAu": 0.98796952058142,
+          "rangeRateKmPerS": 0.349787,
+          "markers": {
+            "solarPresence": " ",
+            "interferingBodyPresence": " "
+          },
+          "interferingBody": "EARTH"
+        }
+      },
+      "earth": {
+        "status": "ok",
+        "observation": {
+          "body": "earth",
+          "targetName": "Earth (399)",
+          "azimuthDeg": 69.473906,
+          "elevationDeg": -3.046941,
+          "angularDiameterArcsec": 6491.152,
+          "rangeAu": 0.0027096903484,
+          "rangeRateKmPerS": -0.0100731,
+          "markers": {
+            "solarPresence": " ",
+            "interferingBodyPresence": " "
+          },
+          "interferingBody": "EARTH"
+        }
+      }
+    },
+    "source": {
+      "name": "NASA/JPL Horizons API",
+      "url": "https://ssd.jpl.nasa.gov/api/horizons.api",
+      "apiVersion": "1.2",
+      "planetaryEphemeris": "DE441",
+      "observerFrame": "MEAN_ME (high precision)",
+      "retrievedAt": "2026-11-15T05:57:11.108Z"
+    },
+    "method": {
+      "ephemerisType": "OBSERVER",
+      "quantities": [
+        4,
+        13,
+        20
+      ],
+      "refraction": "AIRLESS",
+      "timeScale": "UT",
+      "terrainModeled": false
+    },
+    "warnings": []
+  },
+  {
+    "provenance": "live",
+    "site": {
+      "id": "malapert-crater-1",
+      "name": "Malapert Crater 1",
+      "latitudeDeg": -84.8034,
+      "longitudeEastDeg": 8.387032,
+      "altitudeKm": -2.2653352548745143,
+      "source": {
+        "name": "NASA Lunar Surface Data Book (M2M-30044)",
+        "url": "https://ntrs.nasa.gov/api/citations/20250002845/downloads/M2M-30044%20Lunar%20Surface%20Data%20Book%20Baseline_Final.pdf?attachment=true",
+        "locator": "Table A2.1-1"
+      }
+    },
+    "requestedUtc": "2026-11-14T12:00:00Z",
+    "ephemerisUtc": "2026-11-14T12:00:00Z",
+    "bodies": {
+      "sun": {
+        "status": "ok",
+        "observation": {
+          "body": "sun",
+          "targetName": "Sun (10)",
+          "azimuthDeg": 112.185124,
+          "elevationDeg": -0.404746,
+          "angularDiameterArcsec": 1941.824,
+          "rangeAu": 0.98796930893282,
+          "rangeRateKmPerS": 0.3493808,
+          "markers": {
+            "solarPresence": " ",
+            "interferingBodyPresence": "i"
+          },
+          "interferingBody": "EARTH"
+        }
+      },
+      "earth": {
+        "status": "ok",
+        "observation": {
+          "body": "earth",
+          "targetName": "Earth (399)",
+          "azimuthDeg": 349.711393,
+          "elevationDeg": 0.991291,
+          "angularDiameterArcsec": 6493.11,
+          "rangeAu": 0.00270887320394,
+          "rangeRateKmPerS": -0.0100415,
+          "markers": {
+            "solarPresence": " ",
+            "interferingBodyPresence": "i"
+          },
+          "interferingBody": "EARTH"
+        }
+      }
+    },
+    "source": {
+      "name": "NASA/JPL Horizons API",
+      "url": "https://ssd.jpl.nasa.gov/api/horizons.api",
+      "apiVersion": "1.2",
+      "planetaryEphemeris": "DE441",
+      "observerFrame": "MEAN_ME (high precision)",
+      "retrievedAt": "2026-11-15T05:57:11.606Z"
+    },
+    "method": {
+      "ephemerisType": "OBSERVER",
+      "quantities": [
+        4,
+        13,
+        20
+      ],
+      "refraction": "AIRLESS",
+      "timeScale": "UT",
+      "terrainModeled": false
+    },
+    "warnings": []
+  },
+  {
+    "provenance": "live",
+    "site": {
+      "id": "apollo-11",
+      "name": "Apollo 11",
+      "latitudeDeg": 0.67416,
+      "longitudeEastDeg": 23.47314,
+      "altitudeKm": -1.9257377441405668,
+      "source": {
+        "name": "NASA/NSSDCA Apollo Landing Site Coordinates",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html",
+        "locator": "Apollo 11 · Lunar Module"
+      }
+    },
+    "requestedUtc": "2025-03-14T06:58:00Z",
+    "ephemerisUtc": "2025-03-14T06:58:00Z",
+    "bodies": {
+      "sun": {
+        "status": "ok",
+        "observation": {
+          "body": "sun",
+          "targetName": "Sun (10)",
+          "azimuthDeg": 267.967732,
+          "elevationDeg": 69.325285,
+          "angularDiameterArcsec": 1924.49,
+          "rangeAu": 0.99686788642549,
+          "rangeRateKmPerS": 0.4959847,
+          "markers": {
+            "solarPresence": "*",
+            "interferingBodyPresence": "i"
+          },
+          "interferingBody": "EARTH"
+        }
+      },
+      "earth": {
+        "status": "ok",
+        "observation": {
+          "body": "earth",
+          "targetName": "Earth (399)",
+          "azimuthDeg": 267.073154,
+          "elevationDeg": 69.258174,
+          "angularDiameterArcsec": 6580.145,
+          "rangeAu": 0.002673046507,
+          "rangeRateKmPerS": 0.0261345,
+          "markers": {
+            "solarPresence": "*",
+            "interferingBodyPresence": "i"
+          },
+          "interferingBody": "EARTH"
+        }
+      }
+    },
+    "source": {
+      "name": "NASA/JPL Horizons API",
+      "url": "https://ssd.jpl.nasa.gov/api/horizons.api",
+      "apiVersion": "1.2",
+      "planetaryEphemeris": "DE441",
+      "observerFrame": "MEAN_ME (high precision)",
+      "retrievedAt": "2026-11-15T05:57:12.139Z"
+    },
+    "method": {
+      "ephemerisType": "OBSERVER",
+      "quantities": [
+        4,
+        13,
+        20
+      ],
+      "refraction": "AIRLESS",
+      "timeScale": "UT",
+      "terrainModeled": false
+    },
+    "warnings": []
+  },
+  {
+    "provenance": "live",
+    "site": {
+      "id": "faustini-rim-a",
+      "name": "Faustini Rim A",
+      "latitudeDeg": -87.8897,
+      "longitudeEastDeg": 90,
+      "altitudeKm": 0.04826742544703593,
+      "source": {
+        "name": "NASA Lunar Surface Data Book (M2M-30044)",
+        "url": "https://ntrs.nasa.gov/api/citations/20250002845/downloads/M2M-30044%20Lunar%20Surface%20Data%20Book%20Baseline_Final.pdf?attachment=true",
+        "locator": "Table A2.1-1"
+      }
+    },
+    "requestedUtc": "2026-11-05T00:00:00Z",
+    "ephemerisUtc": "2026-11-05T00:00:00Z",
+    "bodies": {
+      "sun": {
+        "status": "ok",
+        "observation": {
+          "body": "sun",
+          "targetName": "Sun (10)",
+          "azimuthDeg": 146.419945,
+          "elevationDeg": -0.259932,
+          "angularDiameterArcsec": 1937.715,
+          "rangeAu": 0.99006414280158,
+          "rangeRateKmPerS": -1.1783576,
+          "markers": {
+            "solarPresence": "*",
+            "interferingBodyPresence": " "
+          },
+          "interferingBody": "EARTH"
+        }
+      },
+      "earth": {
+        "status": "ok",
+        "observation": {
+          "body": "earth",
+          "targetName": "Earth (399)",
+          "azimuthDeg": 275.753061,
+          "elevationDeg": -2.894361,
+          "angularDiameterArcsec": 6857.855,
+          "rangeAu": 0.0025648102362,
+          "rangeRateKmPerS": 0.0410675,
+          "markers": {
+            "solarPresence": "*",
+            "interferingBodyPresence": " "
+          },
+          "interferingBody": "EARTH"
+        }
+      }
+    },
+    "source": {
+      "name": "NASA/JPL Horizons API",
+      "url": "https://ssd.jpl.nasa.gov/api/horizons.api",
+      "apiVersion": "1.2",
+      "planetaryEphemeris": "DE441",
+      "observerFrame": "MEAN_ME (high precision)",
+      "retrievedAt": "2026-11-15T05:57:12.650Z"
+    },
+    "method": {
+      "ephemerisType": "OBSERVER",
+      "quantities": [
+        4,
+        13,
+        20
+      ],
+      "refraction": "AIRLESS",
+      "timeScale": "UT",
+      "terrainModeled": false
+    },
+    "warnings": []
+  },
+  {
+    "provenance": "live",
+    "site": {
+      "id": "nobile-rim-1",
+      "name": "Nobile Rim 1",
+      "latitudeDeg": -85.4381,
+      "longitudeEastDeg": 37.36667,
+      "altitudeKm": 5.948594583940287,
+      "source": {
+        "name": "NASA Lunar Surface Data Book (M2M-30044)",
+        "url": "https://ntrs.nasa.gov/api/citations/20250002845/downloads/M2M-30044%20Lunar%20Surface%20Data%20Book%20Baseline_Final.pdf?attachment=true",
+        "locator": "Table A2.1-1"
+      }
+    },
+    "requestedUtc": "2026-11-20T12:00:00Z",
+    "ephemerisUtc": "2026-11-20T12:00:00Z",
+    "bodies": {
+      "sun": {
+        "status": "ok",
+        "observation": {
+          "body": "sun",
+          "targetName": "Sun (10)",
+          "azimuthDeg": 10.209534,
+          "elevationDeg": 6.032966,
+          "angularDiameterArcsec": 1938.678,
+          "rangeAu": 0.98957256361037,
+          "rangeRateKmPerS": 0.3679539,
+          "markers": {
+            "solarPresence": "*",
+            "interferingBodyPresence": "i"
+          },
+          "interferingBody": "EARTH"
+        }
+      },
+      "earth": {
+        "status": "ok",
+        "observation": {
+          "body": "earth",
+          "targetName": "Earth (399)",
+          "azimuthDeg": 315.10075,
+          "elevationDeg": 7.034355,
+          "angularDiameterArcsec": 6913.706,
+          "rangeAu": 0.00254409281891,
+          "rangeRateKmPerS": -0.0723817,
+          "markers": {
+            "solarPresence": "*",
+            "interferingBodyPresence": "i"
+          },
+          "interferingBody": "EARTH"
+        }
+      }
+    },
+    "source": {
+      "name": "NASA/JPL Horizons API",
+      "url": "https://ssd.jpl.nasa.gov/api/horizons.api",
+      "apiVersion": "1.2",
+      "planetaryEphemeris": "DE441",
+      "observerFrame": "MEAN_ME (high precision)",
+      "retrievedAt": "2026-11-15T05:57:13.146Z"
+    },
+    "method": {
+      "ephemerisType": "OBSERVER",
+      "quantities": [
+        4,
+        13,
+        20
+      ],
+      "refraction": "AIRLESS",
+      "timeScale": "UT",
+      "terrainModeled": false
+    },
+    "warnings": []
+  }
+]

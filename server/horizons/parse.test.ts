@@ -92,6 +92,11 @@ describe('parseObserverPayload', () => {
     ['no rows', []],
     ['two rows', [' 2026-Nov-14 12:00:00.000,*,i, 1, 2, 3, 4, 5,', ' 2026-Nov-14 13:00:00.000,*,i, 1, 2, 3, 4, 5,']],
     ['a non-numeric azimuth', [' 2026-Nov-14 12:00:00.000,*,i, abc, 2, 3, 4, 5,']],
+    ['overflowing azimuth', [' 2026-Nov-14 12:00:00.000,*,i, 1e309, 2, 3, 4, 5,']],
+    ['invalid elevation', [' 2026-Nov-14 12:00:00.000,*,i, 1, 91, 3, 4, 5,']],
+    ['negative diameter', [' 2026-Nov-14 12:00:00.000,*,i, 1, 2, -3, 4, 5,']],
+    ['zero range', [' 2026-Nov-14 12:00:00.000,*,i, 1, 2, 3, 0, 5,']],
+    ['invalid calendar day', [' 2026-Feb-30 12:00:00.000,*,i, 1, 2, 3, 4, 5,']],
     ['an unreadable time', [' 14/11/2026 12:00,*,i, 1, 2, 3, 4, 5,']],
   ])('rejects a table with %s as UPSTREAM_FORMAT', (_label, rows) => {
     const parsed = parseObserverPayload(payloadWithRows(rows), 'sun');

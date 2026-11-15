@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><link rel="icon" href="data:,"><title>Lunar lighting GPU regression harness</title>
+<style>body{margin:0;background:#101018;color:white;font:14px monospace}canvas{display:block}pre{white-space:pre-wrap}</style>
+<pre id="status">Loading numerical/GPU harness (not the product UI)…</pre>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { installSolarMaterials } from '/src/features/scene/solarMaterial.ts';
+import { shadowCoverage, solarLightingState } from '/src/features/scene/solarExposure.ts';
+import { horizontalToDirection } from '/src/features/scene/geometry.ts';
+import { curvedTerrain, terrainGround } from '/src/features/scene/terrain/curvedTerrain.ts';
+import { SITE_TERRAINS } from '/src/features/scene/terrain/models.ts';
+import { findSite } from '/shared/sites.ts';
+import { terrainObserver } from '/shared/observer.ts';
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, logarithmicDepthBuffer: true });
+renderer.setSize(801, 601);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.BasicShadowMap;
+document.body.append(renderer.domElement);
+const camera = new THREE.PerspectiveCamera(50, 801/601, 0.05, 100000);
+let scene;
+let cleanup;
+function body(name, az, el, radius, range) {
+  return { body: name, azimuthDeg: az, elevationDeg: el, direction: horizontalToDirection(az, el), angularDiameterDeg: radius*2, rangeKm: range, nominalSize: false, nominalRange: false };
+}
+function setup(terrain, sun, earth, ground=0, illustrative=false, interiorRadius=null) {
+  if(cleanup) cleanup();
+  scene = new THREE.Scene();
+  scene.add(terrain);
+  const coverage = shadowCoverage(new THREE.Box3().setFromObject(terrain), new THREE.Vector3(...sun.direction));
+  const state = solarLightingState([sun, earth]);
+  const light = new THREE.DirectionalLight(0xffffff, state.intensity);
+  light.position.copy(coverage.position);
+  light.target.position.copy(coverage.center);
+  light.castShadow = true;
+  light.shadow.mapSize.set(coverage.mapSize,coverage.mapSize);
+  Object.assign(light.shadow.camera, {left:-coverage.halfSize,right:coverage.halfSize,top:coverage.halfSize,bottom:-coverage.halfSize,near:coverage.near,far:coverage.far});
+  light.shadow.camera.updateProjectionMatrix();
+  light.shadow.normalBias = 0.03;
+  light.shadow.bias = -0.0000002;
+  const detailCoverage = shadowCoverage(new THREE.Box3().setFromObject(terrain), new THREE.Vector3(...sun.direction), true);
+  const detailLight=light.clone();detailLight.intensity=0;detailLight.position.copy(detailCoverage.position);detailLight.target.position.copy(detailCoverage.center);
+  detailLight.shadow.mapSize.set(detailCoverage.mapSize,detailCoverage.mapSize);
+  Object.assign(detailLight.shadow.camera, {left:-detailCoverage.halfSize,right:detailCoverage.halfSize,top:detailCoverage.halfSize,bottom:-detailCoverage.halfSize,near:detailCoverage.near,far:detailCoverage.far});
+  detailLight.shadow.camera.updateProjectionMatrix();detailLight.shadow.normalBias=0.005;detailLight.shadow.bias=-0.00000002;detailLight.shadow.intensity=0;
+  scene.add(light,light.target,detailLight,detailLight.target,new THREE.AmbientLight(0xffffff,illustrative?0.3:0));
+  const bounds = new THREE.Box3().setFromObject(terrain);
+  cleanup=installSolarMaterials([terrain],{sun,earth,coverage,detailCoverage,sphereCenter:new THREE.Vector3(0,-1737400-ground,0),sphereRadius:interiorRadius??(1737400+ground+Math.min(0,bounds.min.y)-1)},!illustrative);
+  return { light, coverage, state };
+}
+function draw() {camera.updateMatrixWorld();renderer.render(scene,camera);renderer.render(scene,camera);}
+function pixel(point) {
+  const p=new THREE.Vector3(...point).project(camera);
+  const out=new Uint8Array(4);
+  renderer.getContext().readPixels(Math.floor((p.x+1)*400.5),Math.floor((p.y+1)*300.5),1,1,renderer.getContext().RGBA,renderer.getContext().UNSIGNED_BYTE,out);
+  return [...out];
+}
+window.lightingReview = {
+  contact(elevation) {
+    const sun=body('sun',0,elevation,0.269127083,149000000);
+    const earth=body('earth',180,20,0.9,400000);
+    const plane=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshStandardMaterial({color:'white',roughness:1,depthTest:false}));
+    plane.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),new THREE.Vector3(...sun.direction));
+    const terrain=new THREE.Group();terrain.add(plane);
+    setup(terrain,sun,earth,0,false,1737400);
+    plane.castShadow=false;
+    camera.position.copy(new THREE.Vector3(...sun.direction)).multiplyScalar(2);camera.lookAt(0,0,0);draw();
+    return pixel([0,0,0]);
+  },
+  synthetic(eclipse=false, illustrative=false, ridge=true) {
+    const terrain=new THREE.Group();
+    const plane=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshStandardMaterial({color:'white',roughness:1}));
+    plane.rotation.x=-Math.PI/2;
+    terrain.add(plane);
+    if(ridge) {
+      const barrier=new THREE.Mesh(new THREE.BoxGeometry(5,4,1),new THREE.MeshStandardMaterial({color:'#777777'}));
+      barrier.position.set(0,2,-4);terrain.add(barrier);
+    }
+    const sun=eclipse?body('sun',267.967732,69.325285,0.267290278,149000000):body('sun',0,30,0.27,149000000);
+    const earth=eclipse?body('earth',267.073154,69.258076,0.913913056,400000):body('earth',180,20,0.9,400000);
+    const result=setup(terrain,sun,earth,0,illustrative);
+    camera.position.set(0,20,15);camera.lookAt(0,0,0);draw();
+    const output={blocked:pixel([0,0,0]),clear:pixel([8,0,0]),sourceIntensity:result.state.intensity,programs:renderer.info.programs?.length};
+    document.querySelector('#status').textContent=JSON.stringify(output,null,2);
+    return output;
+  },
+  async asset(id, az, el, probe = null) {
+    const model=SITE_TERRAINS.find(m=>m.siteId===id);
+    const site=findSite(id);
+    const height=terrainObserver(site).groundElevationM;
+    const gltf=await new GLTFLoader().loadAsync(model.terrainUrl);
+    const terrain=curvedTerrain(gltf.scene,model,site,height);
+    const sun=body('sun',az,el,0.27,149000000);
+    const earth=body('earth',az+180,20,0.9,400000);
+    let probeMesh=null;
+    if(probe) {
+      const [x,z]=probe;
+      probeMesh=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshStandardMaterial({color:'white',roughness:1,depthTest:false}));
+      probeMesh.position.set(x,terrainGround(terrain,x,z)+0.03,z);
+      probeMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),new THREE.Vector3(...sun.direction));
+      probeMesh.renderOrder=1000;
+      terrain.add(probeMesh);
+    }
+    const result=setup(terrain,sun,earth,height);
+    if(probeMesh)probeMesh.castShadow=false;
+    camera.position.set(0,1.7,0);
+    camera.lookAt(new THREE.Vector3(...horizontalToDirection(az,-8)).add(camera.position));
+    const start=performance.now();draw();renderer.getContext().finish();
+    const output={id,ground:terrainGround(terrain),mapMetersPerTexel:result.coverage.halfSize*2/result.coverage.mapSize,renderMs:performance.now()-start,programs:renderer.info.programs?.length};
+    if (probe) {
+      const point = probeMesh.position.clone();
+      camera.position.copy(point).addScaledVector(new THREE.Vector3(...sun.direction), 2);
+      camera.lookAt(point);draw();
+      output.shadowPixel=pixel(point.toArray());
+      terrain.traverse(o=>{if(o.isMesh)o.castShadow=false});
+      draw();output.unblockedPixel=pixel(point.toArray());
+      terrain.traverse(o=>{if(o.isMesh)o.castShadow=true});
+      terrain.remove(probeMesh);
+      const ray=new THREE.Raycaster(point.clone(), new THREE.Vector3(...sun.direction));
+      const materials=[];
+      terrain.traverse(o=>{if(o.isMesh){materials.push([o.material,o.material.side]);o.material.side=THREE.DoubleSide;}});
+      output.centerRayHitM=ray.intersectObject(terrain,true)[0]?.distance??null;
+      const axis=new THREE.Vector3(...sun.direction);
+      const sx=new THREE.Vector3().crossVectors(axis,new THREE.Vector3(0,1,0)).normalize();
+      const sy=new THREE.Vector3().crossVectors(sx,axis).normalize();
+      output.rayConvergence=[];
+      for(const count of id.startsWith('nobile') ? [128,256,1024] : [256]) {
+        let exposed=0;
+        for(let i=0;i<count;i++){
+          const radius=Math.sqrt((i+0.5)/count)*Math.tan(0.27*Math.PI/180);
+          const angle=i*2.399963229728653;
+          ray.ray.direction.copy(axis).addScaledVector(sx,radius*Math.cos(angle)).addScaledVector(sy,radius*Math.sin(angle)).normalize();
+          if(!ray.intersectObject(terrain,true).length)exposed++;
+        }
+        output.rayConvergence.push({count,fraction:exposed/count});
+      }
+      output.meshDiskFraction=output.rayConvergence.at(-1).fraction;
+      for(const [material,side] of materials)material.side=side;
+    }
+    document.querySelector('#status').textContent=JSON.stringify(output,null,2);
+    return output;
+  }
+};
+document.querySelector('#status').textContent='Ready';
+</script></html>
