@@ -1650,6 +1650,12 @@ input[aria-invalid='true'] {
   pointer-events: none;
 }
 
+/* Keep the canvas mounted so assets can finish loading, with only the jump visible. */
+.scene-stage[data-loading='true'] .scene,
+.scene-stage[data-loading='true'] .horizon-playback {
+  visibility: hidden;
+}
+
 /*
  * The R3F wrapper sets an inline 100% size; pin it to the flexible box instead.
  * Its own stacking context keeps the 3D labels (very large inline z-index)

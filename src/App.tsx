@@ -14,7 +14,7 @@
  * effects or low performance (the same look, static).
  */
 
-import { lazy, Suspense, useCallback, useRef, useState } from 'react';
+import { lazy, useCallback, useRef, useState } from 'react';
 import type { EphemerisResponse } from '../shared/ephemeris';
 import { HorizonPlayback, type CameraFollow } from './features/scene/HorizonPlayback';
 import { Backdrop } from './features/backdrop/Backdrop';
@@ -36,7 +36,7 @@ import { ComparisonPanel } from './features/mission/ComparisonPanel';
 import { dataSelection, useMission, useWindowSamples } from './features/mission/useMission';
 import type { EphemerisSelection } from './api/ephemerisClient';
 import { OptionsButton } from './features/shell/HeaderControls';
-import { Hyperspace } from './features/transition/Hyperspace';
+import { SceneTransition } from './features/transition/SceneTransition';
 import { useUpdateTransition } from './features/transition/useUpdateTransition';
 import { useViewTransition } from './features/transition/useViewTransition';
 import { useEphemeris, type EphemerisState } from './hooks/useEphemeris';
@@ -193,21 +193,18 @@ export function App() {
                 </>
               }
             >
-              <div className="scene-stage" data-jumping={busy || viewSwitch.active} data-warp={warp.kind} data-player={previewFrame !== null}>
-                <Suspense fallback={<p className="scene__note">{messages.scene.loading}</p>}>
-                  <SkyScene
-                    data={displayedData}
-                    mode={view.mode}
-                    showHorizon={showCompass}
-                    showGuides={showGuides}
-                    animateReenactment={streaks}
-                    busy={busy}
-                    playback={playbackActive}
-                    follow={previewFrame ? follow : null}
-                    course={previewFrame && sequence?.selection === selectionKey ? sequence.frames : null}
-                  />
-                </Suspense>
-                {streaks && <Hyperspace active={busy || viewSwitch.active} reverse={warp.reverse} tempo={warp.tempo} />}
+              <SceneTransition jumping={busy || viewSwitch.active} streaks={streaks} warp={warp} playing={previewFrame !== null}>
+                <SkyScene
+                  data={displayedData}
+                  mode={view.mode}
+                  showHorizon={showCompass}
+                  showGuides={showGuides}
+                  animateReenactment={streaks}
+                  busy={busy}
+                  playback={playbackActive}
+                  follow={previewFrame ? follow : null}
+                  course={previewFrame && sequence?.selection === selectionKey ? sequence.frames : null}
+                />
                 {!busy && <HorizonPlayback
                   key={selectionKey}
                   selection={ephemeris.selection}
@@ -219,7 +216,7 @@ export function App() {
                   follow={follow}
                   onFollowChange={setFollow}
                 />}
-              </div>
+              </SceneTransition>
             </Box>
             <ResultsPanel
               data={displayedData}

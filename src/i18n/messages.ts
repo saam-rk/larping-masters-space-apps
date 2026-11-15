@@ -306,8 +306,6 @@ export interface Messages {
       readonly real: string;
     };
     readonly moon: string;
-    readonly loading: string;
-    readonly terrainLoading: string;
     readonly terrainMissing: string;
     readonly missing: (body: string) => string;
     /** Horizons gave no angular diameter or range; a nominal value is drawn. */
@@ -804,8 +802,6 @@ const es: Messages = {
       real: 'A escala · marcador, halos, brújula y eje lunar no a escala',
     },
     moon: 'Luna',
-    loading: 'Cargando vista 3D…',
-    terrainLoading: 'Cargando relieve…',
     terrainMissing: 'No se pudo situar el lugar en el modelo de relieve.',
     missing: (body) => `${body}: sin dato para dibujar.`,
     nominal: (body) => `${body}: tamaño o distancia nominal; Horizons no lo indicó.`,
@@ -1573,8 +1569,6 @@ const en: Messages = {
       real: 'To scale · marker, glows, compass and lunar axis not to scale',
     },
     moon: 'Moon',
-    loading: 'Loading 3D view…',
-    terrainLoading: 'Loading relief…',
     terrainMissing: 'The site could not be placed on the relief model.',
     missing: (body) => `${body}: no data to draw.`,
     nominal: (body) => `${body}: nominal size or distance; Horizons did not provide it.`,
