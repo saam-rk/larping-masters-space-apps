@@ -7,7 +7,8 @@
  * POLAR_TERRAIN_VALIDATION_REPORT, HISTORIC_LUNAR_LANDINGS_RESEARCH and the
  * `docs/research/` READMEs), the terrain and celestial-model READMEs in
  * `assets/`, `tools/lunar-terrain/README.md`, `shared/sites.ts`,
- * `shared/time.ts`, `src/features/scene/playback.ts` and `DECISIONES.md`.
+ * `shared/time.ts`, `src/features/scene/playback.ts`, `shared/missionAssessment.ts`
+ * and `DECISIONES.md`.
  *
  * Direct file downloads (single rasters, ZIPs, labels) are not listed one by
  * one: the product page that publishes them is listed instead.
@@ -28,6 +29,7 @@ export type SourceGroup = 'app' | 'research';
 export const SOURCE_SECTIONS = [
   { id: 'ephemeris', group: 'app' },
   { id: 'sites', group: 'app' },
+  { id: 'mission', group: 'app' },
   { id: 'terrain', group: 'app' },
   { id: 'apollo', group: 'app' },
   { id: 'models', group: 'app' },
@@ -81,6 +83,32 @@ export const SOURCE_CATALOG = [
     section: 'ephemeris',
     title: "NASA GSFC, F. Espenak: Eclipses and the Moon's Orbit",
     url: 'https://eclipse.gsfc.nasa.gov/SEhelp/moonorbit.html',
+  },
+
+  // ── App: mission feasibility screening (shared/missionAssessment.ts) ──
+  {
+    id: 'iau2015B3',
+    section: 'mission',
+    title: 'IAU 2015 Resolution B3: Recommended Nominal Conversion Constants for Selected Solar and Planetary Properties (Prša et al. 2016)',
+    url: 'https://arxiv.org/abs/1510.07674',
+  },
+  {
+    id: 'iau2012B2',
+    section: 'mission',
+    title: 'IAU 2012 Resolution B2: re-definition of the astronomical unit of length',
+    url: 'https://www.iau.org/Iau/Publications/List-of-Resolutions',
+  },
+  {
+    id: 'siBrochure',
+    section: 'mission',
+    title: 'BIPM: The International System of Units (SI Brochure, 9th edition)',
+    url: 'https://www.bipm.org/en/publications/si-brochure',
+  },
+  {
+    id: 'ituP525',
+    section: 'mission',
+    title: 'ITU-R Recommendation P.525: Calculation of free-space attenuation',
+    url: 'https://www.itu.int/rec/R-REC-P.525/en',
   },
 
   // ── App: reference sites ──

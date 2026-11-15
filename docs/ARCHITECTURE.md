@@ -45,6 +45,7 @@ shared/              Contract shared by browser and server            backend + 
   sites.ts             28 reference sites (4 featured), their source, custom points
   time.ts              UTC input parsing and the supported range
   presence.ts          meaning of the Horizons sky-presence markers
+  missionAssessment.ts solar power and direct-to-Earth link screening (pure functions)
   samples/             saved sample derived from the fixtures
 src/                 React application                                 interface
   App.tsx              three-panel dashboard
@@ -56,6 +57,8 @@ src/                 React application                                 interface
                          horizonFloor.ts); full-screen switch
     results/             text summary, sources, limits
     sky-search/          inverse search: summary box, search window (form, examples, guide); a match is shown on the horizon
+    mission/             feasibility screening box and side-by-side scenario comparison
+                         (model in shared/missionAssessment.ts)
   hooks/useEphemeris.ts  selection state and the displayed result
   api/ephemerisClient.ts typed fetch of /api/ephemeris
   i18n/                  es (default) and en messages
@@ -152,6 +155,36 @@ The full types are in `shared/ephemeris.ts`. Key rules:
 | 200 | `SkySearchResponse`; `outcome.status` is `found` or `not-found` |
 | 400 | Invalid site, `from`, `direction` or conditions, or no condition |
 | 502 | A Horizons request failed |
+
+## Mission screening and scenario comparison
+
+Client-side only; no new API route. `shared/missionAssessment.ts` turns one
+`EphemerisResponse` (or a series) plus user assumptions into a screening:
+
+- Power: `1361 W/m²` (IAU 2015 Resolution B3 nominal total solar irradiance)
+  / (Sun range in au)² × fraction of the solar disk above the reference
+  horizon (uniform disk, from the Horizons elevation and angular diameter) ×
+  incidence factor (vertical panel turned to the Sun: cos el; horizontal:
+  sin el; two-axis tracking: 1) × area × efficiency, compared with the demand.
+- Link: free-space loss `20 log10(4π d f / c)` (ITU-R P.525) with the Earth
+  range (1 au = 149 597 870 700 m, IAU 2012 B2); C/N0 = EIRP − loss − other
+  losses + G/T − 10 log10(k); Eb/N0 = C/N0 − 10 log10(Rb); margin against the
+  required Eb/N0. Counts only with the Earth center at or above the mask.
+- Window: 100 samples from the scenario instant over about one mean synodic
+  month (step 430 min) through `/api/ephemeris-series`; shares are sample
+  counts and gaps are resolved to one step.
+- Missing values are `unknown`, never zero. The starting assumptions are
+  illustrative (not from a real mission or station); users replace them and
+  they are kept in `localStorage`.
+- Limits: terrain not modeled; no temperature, dust, degradation, batteries,
+  pointing or Earth-station visibility. A "meets" verdict is a geometric
+  screening, not a guarantee of power, communications or landing suitability.
+
+The comparison (`src/features/mission/ComparisonPanel.tsx`) holds up to four
+scenarios (point + UTC), added from the current selection as is or shifted
+by +1 d, +7 d or +½ mean synodic month. Each is one `/api/ephemeris` request.
+The best value of each comparable row is marked; azimuth and elevation are
+not ranked.
 
 ## Horizons query
 

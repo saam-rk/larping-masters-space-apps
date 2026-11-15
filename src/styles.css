@@ -3152,3 +3152,369 @@ tr:not(.angle-legend__difference) + .angle-legend__difference td {
   }
 }
 
+
+/* ───────────────────────── Mission feasibility and scenario comparison ───────────────────────── */
+
+.text-button:disabled {
+  color: var(--line-dim);
+  border-color: var(--line-dim);
+  cursor: not-allowed;
+}
+
+:where(:root:not([data-curve='on'])) .text-button:disabled:hover,
+.text-button:disabled[data-hover] {
+  color: var(--line-dim);
+  background: var(--panel-solid);
+  border-color: var(--line-dim);
+}
+
+/* Verdict tag: met (accent), not met (red), unknown (amber). */
+.mission-status {
+  white-space: nowrap;
+  letter-spacing: 0.06em;
+}
+
+.mission-status--met {
+  color: var(--accent);
+}
+
+.mission-status--not-met {
+  color: var(--red);
+}
+
+.mission-status--unknown {
+  color: var(--amber);
+}
+
+/* Box in the control column: one line per criterion. */
+.mission__summary {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.mission__summary-row {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.6fr);
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.mission__summary-row dt {
+  color: var(--muted);
+}
+
+.mission__summary-row dd {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0;
+  min-width: 0;
+}
+
+.mission__value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Window: assumptions (left) and results (right), each scrolling on its own on wide screens. */
+.mission-dialog > .dialog__window > .dialog__body,
+.compare-dialog > .dialog__window > .dialog__body {
+  max-height: min(88vh, 50rem);
+}
+
+.mission__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.75rem 1.5rem;
+  align-items: start;
+}
+
+.mission__section-title {
+  margin: 0 0 0.25rem;
+  color: var(--text);
+  font-size: 1em;
+  font-weight: var(--title-weight);
+  letter-spacing: var(--title-spacing);
+  text-transform: var(--title-case);
+}
+
+.mission__section + .mission__section {
+  margin-top: 1rem;
+}
+
+.mission__form .hint {
+  margin: 0 0 0.5rem;
+}
+
+.mission__group {
+  /* Fieldsets default to their min-content width; let them shrink with the window. */
+  min-width: 0;
+  display: grid;
+  gap: 0.3rem;
+  margin: 0 0 0.75rem;
+  padding: 0.4rem 0.6rem 0.6rem;
+  border: 0.0625rem dashed var(--line-dim);
+}
+
+.mission__group legend {
+  padding: 0 0.35rem;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+  text-transform: var(--title-case);
+}
+
+.mission__field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 6.5rem 3.6rem;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.mission__field--wide {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+}
+
+.mission__label {
+  color: var(--muted);
+}
+
+.mission__input {
+  width: 100%;
+  text-align: right;
+}
+
+.mission__input[aria-invalid='true'] {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.mission__unit {
+  color: var(--muted);
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
+.segmented.mission__orientations {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.mission__orientations .segmented__option {
+  padding: 0.25rem 0.4rem;
+}
+
+.mission__verdict {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.6rem;
+  align-items: baseline;
+  margin: 0.4rem 0;
+  padding: 0.3rem 0.6rem;
+  border: 0.0625rem dashed var(--line-dim);
+}
+
+.mission__verdict > span:last-child {
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
+.mission__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.mission__table th,
+.mission__table td {
+  padding: 0.1rem 0.75rem 0.1rem 0;
+  text-align: left;
+  vertical-align: baseline;
+  font-weight: 400;
+}
+
+.mission__table th[scope='row'] {
+  color: var(--muted);
+}
+
+.mission__table td {
+  text-align: right;
+  white-space: nowrap;
+  padding-right: 0;
+}
+
+.mission__table-head th {
+  padding-top: 0.5rem;
+  color: var(--text);
+  letter-spacing: 0.06em;
+  text-transform: var(--title-case);
+  border-bottom: 0.0625rem dashed var(--line-dim);
+}
+
+.mission__aside {
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
+.mission__section > .text-button {
+  margin-top: 0.4rem;
+}
+
+/* Comparison box: add buttons and the list of scenarios. */
+.compare__add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.compare__chips {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.compare__chip {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.compare__chip-index {
+  color: var(--accent);
+}
+
+.compare__chip[data-status='error'] .compare__chip-index {
+  color: var(--red);
+}
+
+.compare__chip-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9em;
+}
+
+.compare__chip-remove {
+  width: 1.2em;
+  height: 1.2em;
+  font-size: 0.8em;
+}
+
+.compare__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Side-by-side table: scrolls sideways on narrow screens, the row labels stay in view. */
+.compare__scroll {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.compare__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.compare__table th,
+.compare__table td {
+  padding: 0.12rem 0.75rem;
+  text-align: left;
+  vertical-align: baseline;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.compare__table tbody th[scope='row'] {
+  position: sticky;
+  left: 0;
+  color: var(--muted);
+  background: var(--panel-solid);
+  padding-left: 0;
+}
+
+.compare__table td + td,
+.compare__table thead th + th {
+  border-left: 0.0625rem dashed var(--line-dim);
+}
+
+.compare__scenario {
+  vertical-align: top;
+  border-bottom: 0.0625rem dashed var(--line-dim);
+}
+
+.compare__scenario > span {
+  display: block;
+}
+
+.compare__scenario-index {
+  color: var(--accent);
+  letter-spacing: 0.06em;
+  text-transform: var(--title-case);
+}
+
+.compare__scenario-name {
+  color: var(--text);
+}
+
+.compare__scenario-meta {
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
+.compare__scenario > .compare__scenario-actions {
+  display: flex;
+  gap: 0.3rem;
+  margin: 0.3rem 0 0.2rem;
+}
+
+.compare__group th {
+  padding-top: 0.6rem;
+  color: var(--text);
+  letter-spacing: 0.06em;
+  text-transform: var(--title-case);
+  border-bottom: 0.0625rem dashed var(--line-dim);
+}
+
+.compare__best {
+  color: var(--accent);
+}
+
+.compare__best-mark {
+  font-size: 0.8em;
+}
+
+.compare__muted {
+  color: var(--line-dim);
+}
+
+@media (max-width: 860px) {
+  .mission__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .mission__field {
+    grid-template-columns: minmax(0, 1fr) 5rem 3.2rem;
+    gap: 0.35rem;
+  }
+
+  .mission__field--wide {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mission__summary-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}

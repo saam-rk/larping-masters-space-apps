@@ -1,5 +1,25 @@
 # Estado del proyecto
 
+## Implementation update — 2026-11-15 (branch `feat/scenario-comparison-assessment`)
+
+- **Compare scenarios** box: up to four scenarios (point + UTC) side by side,
+  added from the current selection as is or shifted by +1 d, +7 d or +½ mean
+  synodic month. Rows: Sun/Earth azimuth, elevation and state; mission
+  screening; optional one-synodic-month window. Best value marked (▲) in
+  comparable rows; "Show" puts a scenario on the main view.
+- **Feasibility** box: screening of the instant on screen against editable
+  mission assumptions — solar power (IAU 2015 B3 irradiance, visible disk
+  fraction, panel orientation, area, efficiency) vs. demand, and a
+  direct-to-Earth link budget (ITU-R P.525 free-space loss, C/N0, Eb/N0,
+  margin, Earth elevation mask). Window over ~29.5 d (100 samples): share of
+  time with power/link/both, longest gaps, mean power.
+- Model: `shared/missionAssessment.ts` (tests in `missionAssessment.test.ts`);
+  method and limits in `docs/ARCHITECTURE.md`. Starting assumptions are
+  illustrative, not mission data. Terrain is still not modeled; results are
+  a geometric screening, not a feasibility guarantee.
+- Pending: integrator review; science review of the power and link model by
+  Diego.
+
 ## Implementation update — 2026-11-15 (branch `feat/interval-toolbar-guides`)
 
 - Interval button in the horizon toolbar; player laid over the view; interval
