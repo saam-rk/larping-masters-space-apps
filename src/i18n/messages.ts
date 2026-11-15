@@ -48,17 +48,17 @@ export interface Messages {
     readonly heading: string;
     readonly effects: string;
     readonly effectStates: Readonly<Record<EffectMode, string>>;
-    /** Short value shown on the sidebar switch (at most 4 characters). */
+    /** Short value shown on the options switch (at most 4 characters). */
     readonly effectGlyphs: Readonly<Record<EffectMode, string>>;
     readonly language: string;
-    /** Fits under the sidebar button. */
+    /** Short language label. */
     readonly languageShort: string;
     readonly languageNames: Readonly<Record<Locale, string>>;
     readonly setup: string;
     /** Accessible label: "<setting>: <current value>. Activate to change." */
     readonly cycle: (setting: string, value: string) => string;
   };
-  /** First-visit landing window (also reopened from the sidebar). */
+  /** First-visit landing window (also reopened from the header options button). */
   readonly setup: {
     /** Event and challenge line under the title (proper nouns). */
     readonly tagline: string;
@@ -382,7 +382,7 @@ const es: Messages = {
     effectNames: { on: 'Efectos completos', off: 'Bajo rendimiento' },
     effectDetails: { on: 'CRT animado con curvatura', off: 'Estático, fuente de alta visibilidad, menos CPU' },
     save: 'Guardar preferencias',
-    storage: 'Se guardan en una cookie de este navegador. Puedes cambiarlas desde el botón de ajustes de la barra lateral.',
+    storage: 'Se guardan en una cookie de este navegador. Puedes cambiarlas desde el botón de opciones de la esquina superior derecha.',
   },
   config: {
     site: 'Punto de referencia',
@@ -792,7 +792,7 @@ const en: Messages = {
     effectNames: { on: 'Full effects', off: 'Low performance' },
     effectDetails: { on: 'Animated, curved CRT', off: 'Static, high-visibility font, less CPU' },
     save: 'Save preferences',
-    storage: 'Stored in a cookie in this browser. You can change them from the settings button in the sidebar.',
+    storage: 'Stored in a cookie in this browser. You can change them from the options button in the top right corner.',
   },
   config: {
     site: 'Reference point',

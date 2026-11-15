@@ -1,5 +1,5 @@
 /**
- * Single-screen dashboard (no page scroll): settings rail, control column
+ * Single-screen dashboard (no page scroll): control column
  * (site and time, then the inverse search), the view column (3D horizon above,
  * data below) and the update bar. The update button belongs to the site and
  * time form but is drawn in the bar (see `ConfigPanel`): above the view on wide
@@ -25,7 +25,7 @@ import { useViewMode } from './features/scene/viewMode';
 import { ViewToggle } from './features/scene/ViewToggle';
 import { SetupScreen } from './features/shell/SetupScreen';
 import { SkySearchPanel } from './features/sky-search/SkySearchPanel';
-import { Sidebar } from './features/shell/Sidebar';
+import { HeaderLogo, OptionsButton } from './features/shell/HeaderControls';
 import { Hyperspace } from './features/transition/Hyperspace';
 import { useUpdateTransition } from './features/transition/useUpdateTransition';
 import { useViewTransition } from './features/transition/useViewTransition';
@@ -109,8 +109,6 @@ export function App() {
       <CrtCurvature enabled={fullEffects} />
 
       <div className="app__frame" inert={!configured}>
-        <Sidebar />
-
         <main className="workspace">
           <h1 className="visually-hidden">{messages.app.title}</h1>
 
@@ -143,7 +141,10 @@ export function App() {
               status={<DataStatus ephemeris={ephemeris} />}
             />
           </div>
-          <div className="update-bar" ref={setUpdateSlot} />
+          <div className="update-bar" ref={setUpdateSlot}>
+            <HeaderLogo />
+            <OptionsButton />
+          </div>
           <div className="column column--control">
             <ConfigPanel
               selection={ephemeris.selection}

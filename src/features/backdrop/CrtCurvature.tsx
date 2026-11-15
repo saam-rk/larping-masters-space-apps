@@ -42,7 +42,7 @@ interface CurvatureMap {
    * Overscan, px: the filter region and the map extend this far beyond each
    * edge of the viewport. Near the sides the barrel samples the source from
    * outside the frame; a region clipped to the frame would leave that
-   * transparent and show the backdrop beside the sidebar.
+   * transparent and show the backdrop beside the frame.
    */
   readonly pad: number;
   /** feDisplacementMap `scale`, px. */
@@ -225,7 +225,6 @@ export function CrtCurvature({ enabled: requested }: { enabled: boolean }) {
   useEffect(() => {
     const root = document.documentElement;
     root.dataset.curve = active ? 'on' : 'off';
-    // The sidebar paints its background into the overscan (see `.sidebar::before`).
     if (active) root.style.setProperty('--curve-pad', `${map.pad}px`);
     return () => {
       root.dataset.curve = 'off';
