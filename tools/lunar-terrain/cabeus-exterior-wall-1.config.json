@@ -1,0 +1,50 @@
+{
+  "id": "cabeus-exterior-wall-1",
+  "displayName": "Cabeus Exterior Wall 1",
+  "sourceUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/NPA/NPA_final_adj_5mpp_surf.tif",
+  "sourceCatalogUrl": "https://pgda.gsfc.nasa.gov/products/78",
+  "sourceReadmeUrl": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+  "siteSource": "docs/LUNAR_ADDITIONAL_SITES_RESEARCH.md catalog row 11 (Cabeus Exterior Wall 1, NPA), NASA Lunar Surface Data Book M2M-30044 Table A2.1-1. PGDA/Data Book reference point; center of an original candidate-region polygon; not an approved landing site.",
+  "frame": "MOON_ME / DE421",
+  "referenceRadiusM": 1737400,
+  "site": {"latitudeDeg": -86.9243, "longitudeEastDeg": -71.5651},
+  "ridge": {"latitudeDeg": -87.04350651665548, "longitudeEastDeg": -74.60337939050781},
+  "third": {"latitudeDeg": -86.85173167797728, "longitudeEastDeg": -72.75912046584315},
+  "cropCenterProjectedM": [-86000, 27000],
+  "cropSizeM": [14000, 14000],
+  "originProjectedM": [-88501, 29500, -2229],
+  "targetVertices": 40400,
+  "baseStridePixels": 20,
+  "candidateStridePixels": 4,
+  "refinementBatchSize": 2500,
+  "ridgePriorityMultiplier": 2.5,
+  "ridgePriorityRadiusM": 1800,
+  "maxGlbBytes": 2097152,
+  "nearDetail": {
+    "centerProjectedM": [-88472.5, 29532.5],
+    "seedBandsRadiusMStridePixels": [[35, 1], [150, 2], [500, 4]],
+    "residualPriorityBoost": 10,
+    "residualPriorityRadiusM": 550,
+    "textureSquareSizeM": 50,
+    "textureFullDetailRadiusM": 15,
+    "textureFadeEndRadiusM": 24,
+    "cameraHorizontalDirection": [0.6427876096865394, -0.766044443118978],
+    "cameraHeightAboveMeshM": 1.65,
+    "astronautDistanceAheadM": 5,
+    "astronautSideOffsetM": 0.65,
+    "initialMovementRadiusM": 2,
+    "illustrativeLightTravelDirection": [0.720, 0.604, -0.342]
+  },
+  "featureNotes": {
+    "ridge": "Highest source pixel within 250 m of the sampled skyline at grid bearing 159 degrees from the site: a crest of a broad rise grid-south-southeast of the site, about 6.05 km away and about 186 m above it, forming the far skyline of the initial view. Descriptive label from numeric NPA elevation and illustrative hillshade; not an IAU feature name.",
+    "third": "Off-grid holdout on the plain grid-west-southwest of the site, about 2.95 km away; no mission significance.",
+    "nearDetail": "Gentlest 25 m window found within 45 m of the saved point (about 0.2 degree plane-fit slope versus 3.3 degrees at the point), about 43 m grid-northeast of it. The surrounding plain slopes about 2 to 3 degrees within 100 m and under 2 degrees within 500 m. Selected for scale-figure footing, not landing suitability.",
+    "crop": "14 x 14 km, shifted 2.5 km grid-east and 2.5 km grid-south of the saved point so that the rises seen from the initial view (grid bearings about 105-175 degrees, 5.5-6.8 km away and 50-185 m above the eye) lie inside the crop. A planar raster scan from the site in 3-degree steps found every skyline point in that sector at least 3.0 km inside the crop boundary.",
+    "light": "Illustrative Blender/QA light from grid bearing about 230 degrees at about 20 degrees elevation, so the view (grid bearing 140 degrees) is side-lit rather than backlit. Not an ephemeris Sun; the application lights terrain with its own Sun direction."
+  },
+  "siteLimitations": [
+    "The saved point lies on a gently sloping cratered plain. Grid-north and grid-northwest of it the terrain rises about 760-870 m within about 10 km, but it is still rising at the north edge of the NPA raster, so the top of that slope is not in the source data. The 14 x 14 km crop keeps only the foot of the rise (to about 4.5 km grid-north); looking grid-north or grid-northwest the modeled skyline is the crop edge, not real terrain.",
+    "Terrain beyond the NPA raster (more than about 10 km from the site) was not checked; higher features outside it can rise above the modeled skyline in every direction.",
+    "The astronaut stands on a gently sloping triangle selected for footing; no claim of walkability, safe footing or landing suitability."
+  ]
+}
